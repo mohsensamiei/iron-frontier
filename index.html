@@ -894,10 +894,10 @@ function nearestDrop(u) {
 // ---------- farms, garrisons ----------
 const FARM_RATE = 1.1;
 const GAR = {
-  tower: { cap: 4, z: 94, rng: 2.5, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
-  wall: { cap: 1, z: 22, rng: 1.5, slots: [[16, 16]] },
-  gate: { cap: 1, z: 30, rng: 1.5, slots: [[16, 16]] },
-  hall: { cap: 6, z: 58, rng: 2.5, slots: [15, 75, 135, 195, 255, 315].map(a => [Math.round(64 + 54 * Math.cos(a * Math.PI / 180)), Math.round(64 + 54 * Math.sin(a * Math.PI / 180))]) }
+  tower: { cap: 4, z: 94, rng: 2.5, atk: 1.6, def: 0.35, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
+  wall: { cap: 1, z: 22, rng: 1.5, atk: 1.3, def: 0.5, slots: [[16, 16]] },
+  gate: { cap: 1, z: 30, rng: 1.5, atk: 1.35, def: 0.45, slots: [[16, 16]] },
+  hall: { cap: 6, z: 58, rng: 2.5, atk: 1.6, def: 0.3, slots: [15, 75, 135, 195, 255, 315].map(a => [Math.round(64 + 54 * Math.cos(a * Math.PI / 180)), Math.round(64 + 54 * Math.sin(a * Math.PI / 180))]) }
 };
 const farmerOf = b => G.units.find(u => !u.dead && u.order && u.order.k === 'farm' && u.order.b === b);
 const garrisonOf = b => G.units.filter(u => !u.dead && u.gar === b);
@@ -930,7 +930,7 @@ function garUpdate(u, dt) {
   }
   if (t) {
     u.face = Math.atan2(posY(t) - u.y, posX(t) - u.x);
-    if (u.cd <= 0) { u.cd = d.cd; u.atkT = G.t; G.proj.push({ x: u.x, y: u.y, t, dmg: d.dmg, src: u, team: u.team, z0: u.z + 16, d0: Math.max(1, Math.hypot(posX(t) - u.x, posY(t) - u.y)), h: u.z + 16 }); }
+    if (u.cd <= 0) { u.cd = d.cd; u.atkT = G.t; G.proj.push({ x: u.x, y: u.y, t, dmg: d.dmg * GAR[u.gar.type].atk, src: u, team: u.team, z0: u.z + 16, d0: Math.max(1, Math.hypot(posX(t) - u.x, posY(t) - u.y)), h: u.z + 16 }); }
   }
 }
 function goDeposit(u, o, dt) {
@@ -1329,7 +1329,8 @@ function hit(src, t, dmg, ranged) {
 function damage(t, dmg, src) {
   if (t.dead) return;
   dmg *= dmgMult(src, t); if (dmg <= 0) return;
-  if (t.gar) dmg *= 0.5;
+  // up on the battlements: the parapet takes most of the blow
+  if (t.gar) dmg *= GAR[t.gar.type].def;
   t.hp -= dmg;
   if (t.kind === 'u' && src && src.kind === 'u' && !src.dead && isMil(t) && (!t.order || t.order.k === 'move' && t.team === 1)) orderAttack(t, src, true);
   if (G.t - (G.alarmAt[t.team] ?? -99) > 12) { G.alarmAt[t.team] = G.t; notify(t.team, t.kind === 'b' ? BDEF[t.type].name + ' زیر حمله است' : 'یگان‌های ما زیر حمله‌اند', true); }
@@ -2562,7 +2563,7 @@ function selHTML() {
     h += `<div class="bar"><i style="width:${Math.max(0, e.hp / e.maxhp * 100).toFixed(1)}%;background:${hpCol(e.hp / e.maxhp)}"></i></div>`;
     h += `<span class="sub">سلامت ${fa(Math.ceil(Math.max(0, e.hp)))} از ${fa(e.maxhp)}</span>`;
     if (e.kind === 'u') {
-      const st = e.gar ? 'روی ' + BDEF[e.gar.type].name + (e.order ? ' · در حال تیراندازی' : '') : !e.order ? 'بیکار' : { move: 'در حال حرکت', amove: 'در حال پیشروی', attack: 'در حال نبرد', gather: e.order.phase === 'ret' ? 'در حال بردن بار به انبار' : 'در حال برداشت ' + RES_NAME[e.order.res], build: 'در حال ساخت', farm: e.order.phase === 'ret' ? 'در حال بردن گندم به انبار' : 'کشاورزی', garrison: 'در راه بالا رفتن', shelter: 'در راه پناه گرفتن در کاخ', enter: 'در راه کاخ', board: 'در راه سوار شدن به کشتی', unload: 'در راه ساحل برای پیاده کردن' }[e.order.k];
+      const st = e.gar ? 'روی ' + BDEF[e.gar.type].name + ' · ضربه ' + fa(Math.round((GAR[e.gar.type].atk - 1) * 100)) + '٪ قوی‌تر، آسیب ' + fa(Math.round((1 - GAR[e.gar.type].def) * 100)) + '٪ کمتر، برد ' + fa(GAR[e.gar.type].rng) + ' کاشی بیشتر' + (e.order ? ' · در حال تیراندازی' : '') : !e.order ? 'بیکار' : { move: 'در حال حرکت', amove: 'در حال پیشروی', attack: 'در حال نبرد', gather: e.order.phase === 'ret' ? 'در حال بردن بار به انبار' : 'در حال برداشت ' + RES_NAME[e.order.res], build: 'در حال ساخت', farm: e.order.phase === 'ret' ? 'در حال بردن گندم به انبار' : 'کشاورزی', garrison: 'در راه بالا رفتن', shelter: 'در راه پناه گرفتن در کاخ', enter: 'در راه کاخ', board: 'در راه سوار شدن به کشتی', unload: 'در راه ساحل برای پیاده کردن' }[e.order.k];
       if (e.type === 'lord') h += `<span class="sub">جنگجوی سرسخت؛ اگر کشته شود بازی را می‌بازی. روی کاخ خودی کلیک کن تا وارد شود.</span>`;
       if (e.type === 'transport') h += `<span class="sub">سرنشین: ${fa((e.cargo || []).length || e.cargoN || 0)} از ${fa(UDEF.transport.cap)} · سربازها را انتخاب کن و روی کشتی کلیک راست کن؛ بعد کشتی را انتخاب کن و روی ساحل مقابل کلیک راست کن</span>`;
       h += `<span class="sub">${st}${e.carry.amt > 0 ? ' · بار: ' + fa(Math.floor(e.carry.amt)) + ' ' + RES_NAME[e.carry.res] : ''}</span>`;
