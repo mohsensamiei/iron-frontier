@@ -68,6 +68,27 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .confirm .yes{background:#7fb24a;color:#13200a}
 .confirm .no{background:#d9534f;color:#2a0b0a}
 .confirm button:hover{filter:brightness(1.12)}
+.groupbar{display:flex;flex-wrap:wrap;gap:6px}
+.groupbar button{font:inherit;font-size:12px;font-weight:700;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:4px 10px;cursor:pointer;font-variant-numeric:tabular-nums}
+.groupbar button.on{border-color:var(--brass);background:#3b3a28}
+.groupbar button.add{color:var(--brass)}
+.armydlg{max-width:620px}
+.typechips{display:flex;flex-wrap:wrap;gap:8px}
+.typechips button{font:inherit;font-size:14px;font-weight:600;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:8px 12px;cursor:pointer}
+.typechips button[aria-pressed="true"]{border-color:var(--brass);background:#3b3a28}
+.typechips button small{color:var(--muted);font-weight:400;margin-right:4px}
+.armyrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.armyrow .primary{padding:9px 16px;font-size:14px}
+.chk{display:flex;gap:6px;align-items:center;font-size:13px;color:#c9c3ac}
+.armies{display:flex;flex-direction:column;gap:6px}
+.army{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel-2);border-radius:4px;padding:8px 10px}
+.army b{min-width:64px}
+.army span{flex:1;min-width:140px;font-size:12px;color:#c9c3ac}
+.army button{font:inherit;font-size:12px;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 9px;cursor:pointer}
+.army button:hover,.typechips button:hover,.groupbar button:hover{border-color:var(--brass)}
+.tipbox{position:absolute;z-index:4;left:50%;bottom:14px;transform:translateX(-50%);width:min(520px,calc(100% - 120px));background:#23261cf2;border:1px solid var(--brass);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.8;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.tipbox b{color:var(--brass);font-size:12px}
+.tipbox div{display:flex;gap:8px}
 .cmd .qn{position:absolute;top:3px;right:5px;font-style:normal;font-size:11px;font-weight:800;background:var(--brass);color:#1d2017;border-radius:8px;min-width:16px;padding:0 4px;text-align:center}
 .cmd .qfill{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--brass);border-radius:0 0 4px 4px}
 .cmd.danger span{color:#f3a8a4}
@@ -77,7 +98,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .dialog h1{margin:0;font-family:var(--display);font-weight:400;font-size:64px;line-height:1;color:var(--brass)}
 .dialog h2{margin:0;font-family:var(--display);font-weight:400;font-size:44px;line-height:1.1}
 .dialog p{margin:0;font-size:15px;line-height:1.8;color:#c9c3ac}
-.diffs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.diffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}
 .diffs button{font:inherit;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:12px 6px;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center}
 .diffs button b{font-size:16px}
 .diffs button span{font-size:11px;color:var(--muted)}
@@ -139,13 +160,14 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       <canvas id="mini" width="512" height="256" aria-label="نقشهٔ کوچک"></canvas>
       <div class="quick">
         <button type="button" data-act="idle" id="idleBtn">کارگر بیکار</button>
-        <button type="button" data-act="army">همهٔ سربازان</button>
+        <button type="button" data-act="armyctl">کنترل ارتش</button>
         <button type="button" data-act="home">کاخ و لرد</button>
       </div>
+      <div class="groupbar" id="groupBar" aria-label="ارتش‌ها"></div>
       <div class="card" id="sel"></div>
       <div class="label" id="cmdLabel">فرمان‌ها</div>
       <div class="cmds" id="cmds"></div>
-      <p class="hint">کلیک: انتخاب و فرمان (حرکت، حمله، برداشت، ساخت) · کلیک راست: رها کردن انتخاب · دوبار کلیک: همهٔ یگان‌های هم‌نوع روی صفحه · فلش‌ها یا لبهٔ صفحه: جابه‌جایی دوربین · چرخ موس، دکمه‌های + و − یا دو انگشت: زوم · دیوار: بکش تا یک ردیف ساخته شود · کماندار روی برج یا دیوار: کلیک راست روی آن · اعداد ۱ تا ۶: دکمه‌های فرمان · Esc: لغو</p>
+      <p class="hint">کلیک: انتخاب و فرمان (حرکت، حمله، برداشت، ساخت) · کلیک راست: رها کردن انتخاب · دوبار کلیک: همهٔ یگان‌های هم‌نوع روی صفحه · فلش‌ها یا لبهٔ صفحه: جابه‌جایی دوربین · چرخ موس، دکمه‌های + و − یا دو انگشت: زوم · دیوار: بکش تا یک ردیف ساخته شود · کماندار روی برج یا دیوار: کلیک راست روی آن · Q تا O: دکمه‌های فرمان · ۱ تا ۵: ارتش‌ها (Ctrl برای ذخیره) · Esc: لغو</p>
     </aside>
     <div class="view" id="view">
       <canvas id="game"></canvas>
@@ -155,6 +177,18 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <span id="zLevel">۱۰۰٪</span>
         <button type="button" data-zoom="out" aria-label="کوچک‌نمایی">−</button>
       </div>
+      <div class="overlay" id="armyOv" hidden>
+        <div class="dialog armydlg" role="dialog" aria-labelledby="armyTitle">
+          <h2 id="armyTitle">کنترل ارتش</h2>
+          <div class="label">انتخاب بر اساس نوع</div>
+          <div class="typechips" id="typeChips"></div>
+          <div class="armyrow"><button type="button" class="primary" id="pickTypes">انتخاب نوع‌های علامت‌خورده</button><label class="chk"><input type="checkbox" id="onlyScreen"> فقط روی صفحه</label></div>
+          <div class="label">ارتش‌ها · کلید ۱ تا ۵ برای انتخاب، Ctrl با عدد برای ذخیره</div>
+          <div class="armies" id="armyList"></div>
+          <div class="armyrow"><button type="button" class="tbtn" id="splitTwo">تقسیم انتخاب فعلی به دو ارتش</button><button type="button" class="tbtn" id="armyClose">بستن</button></div>
+        </div>
+      </div>
+      <div class="tipbox" id="tipBox" hidden><b id="tipStep"></b><span id="tipText"></span><div><button type="button" class="tbtn" id="tipNext">بعدی</button><button type="button" class="tbtn" id="tipClose">بستن راهنما</button></div></div>
       <div class="confirm" id="confirm" hidden role="group" aria-label="تایید">
         <button type="button" class="yes" id="cfYes" aria-label="تایید"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button type="button" class="no" id="cfNo" aria-label="لغو" title="لغو (Esc)"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
@@ -178,6 +212,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
             <button type="button" data-diff="easy"><b>آسان</b><span>اولین حمله: ۶ دقیقه</span></button>
             <button type="button" data-diff="normal"><b>معمولی</b><span>اولین حمله: ۴:۳۰</span></button>
             <button type="button" data-diff="hard"><b>سخت</b><span>اولین حمله: ۳:۲۰</span></button>
+            <button type="button" data-diff="demo"><b>آموزشی</b><span>دشمن حمله نمی‌کند</span></button>
           </div>
           <div class="mp" id="mpBox">
             <div class="label">بازی دونفره روی یک Wi-Fi · بدون نصب، روی گوشی و کامپیوتر</div>
@@ -258,6 +293,7 @@ const BUILD_LIST = ['house', 'farm', 'store', 'barracks', 'workshop', 'tower', '
 const DIFF = {
   easy:   { name: 'آسان', first: 480, interval: 260, trickle: 0.12, bonus: 0, scale: 0.5, cap: n => 3 + n * 2, siegeFrom: 3, start: ['spear'] },
   normal: { name: 'معمولی', first: 330, interval: 200, trickle: 0.45, bonus: 1, scale: 1, cap: n => 5 + n * 3, siegeFrom: 2, start: ['spear', 'archer'] },
+  demo:   { name: 'آموزشی', first: 1e9, interval: 1e9, trickle: 0.3, bonus: 0, scale: 0, cap: n => 6, siegeFrom: 99, start: ['spear', 'spear', 'archer'], demo: true },
   hard:   { name: 'سخت', first: 230, interval: 150, trickle: 0.9, bonus: 2, scale: 1.5, cap: n => 7 + n * 4, siegeFrom: 1, start: ['spear', 'spear', 'archer'] }
 };
 
@@ -499,7 +535,7 @@ function banner(g, P, y, xa, xb, za, zb, tc) {
   const c = P((xa + xb) / 2, y, (za + zb) / 2 + 2); g.fillStyle = '#e8cf7a'; g.beginPath(); g.arc(c[0], c[1], 2, 0, 7); g.fill();
 }
 const BSPR = {
-  hall: { maxZ: 130, top: 70 }, workshop: { maxZ: 90, top: 52 }, gate: { maxZ: 60, top: 40 }, house: { maxZ: 80, top: 46 }, farm: { maxZ: 50, top: 14 }, store: { maxZ: 70, top: 38 },
+  hall: { maxZ: 140, top: 84 }, workshop: { maxZ: 90, top: 52 }, gate: { maxZ: 60, top: 40 }, house: { maxZ: 80, top: 46 }, farm: { maxZ: 50, top: 14 }, store: { maxZ: 70, top: 38 },
   barracks: { maxZ: 90, top: 60 }, tower: { maxZ: 140, top: 100 }, wall: { maxZ: 40, top: 30 }, dock: { maxZ: 70, top: 36 }
 };
 const sprCache = {};
@@ -514,36 +550,68 @@ function getSprite(type, team) {
   let smoke = null;
   switch (type) {
     case 'hall': {
-      // a walled palace: corner towers, curtain walls with battlements, a gatehouse on the front, the keep at the back
-      const SC = ['#b3ae9e', '#a9a596', '#7f7c6e'], CR = ['#c3bfb0', '#aeaa9b', '#86836f'], tw = 12, wh = 34, th = 52;
+      // a hexagonal fortress: six round towers at the corners joined by thick curtain walls, a keep in the middle
+      const R = 54, c = 64, tr = 13, wt = 12, wh = 34, th = 56;
+      const V = [15, 75, 135, 195, 255, 315].map(a => [c + R * Math.cos(a * Math.PI / 180), c + R * Math.sin(a * Math.PI / 180)]);
       poly(g, [P(0, 0), P(L, 0), P(L, L), P(0, L)], '#8f7a58');
-      groundShadow(0, 0, L, L, 30);
-      poly(g, [P(tw, tw), P(L - tw, tw), P(L - tw, L - tw), P(tw, L - tw)], '#b2a27c');
-      for (let k = 22; k < L - 16; k += 12) seg(g, P(k, tw, 0), P(k, L - tw, 0), 'rgba(90,70,40,0.18)', 1);
-      const tower = (x, y) => { prism(g, P, x, y, x + 24, y + 24, 0, th, null, SC[1], SC[2]); courses(g, P, x, y, x + 24, y + 24, 0, th, 'rgba(55,52,45,0.35)'); prism(g, P, x - 2, y - 2, x + 26, y + 26, th, th + 4, SC[0], SC[1], SC[2]); crenel(g, P, x - 2, y - 2, x + 26, y + 26, th + 4, 6, CR); };
-      tower(0, 0);
-      prism(g, P, 24, 0, L - 24, tw, 0, wh, SC[0], SC[1], SC[2]); crenel(g, P, 24, 0, L - 24, tw, wh, 5, CR);
-      prism(g, P, 0, 24, tw, L - 24, 0, wh, SC[0], SC[1], SC[2]); crenel(g, P, 0, 24, tw, L - 24, wh, 5, CR);
-      // the keep
-      prism(g, P, 22, 20, 74, 70, 0, 62, null, '#c2bdac', '#8f8b7c'); courses(g, P, 22, 20, 74, 70, 0, 62, 'rgba(55,52,45,0.3)');
-      for (const x of [30, 46, 60]) lq(g, P, 70, x, x + 5, 30, 42, '#2a2620', '#d8d2c0');
-      for (const y of [30, 52]) rq(g, P, 74, y, y + 5, 30, 42, '#211e19', '#c4bead');
-      lq(g, P, 70, 40, 54, 0, 22, '#4a3523', '#2a1d13');
-      banner(g, P, 70, 26, 32, 18, 54, tc); banner(g, P, 70, 64, 70, 18, 54, tc);
-      hip(g, P, 22, 20, 74, 70, 62, 30, 4, '#3f4247', '#62676e', '#4c5056', 'rgba(20,20,25,0.35)');
-      flag(g, P, 48, 45, 92, 26, tc);
-      tower(L - 24, 0); tower(0, L - 24);
-      prism(g, P, L - tw, 24, L, L - 24, 0, wh, SC[0], SC[1], SC[2]); courses(g, P, L - tw, 24, L, L - 24, 0, wh, 'rgba(55,52,45,0.35)'); crenel(g, P, L - tw, 24, L, L - 24, wh, 5, CR);
-      for (const y of [48, 76]) rq(g, P, L, y, y + 3, 14, 24, '#211e19');
-      // front wall with the gatehouse
-      prism(g, P, 24, L - tw, L - 24, L, 0, wh, SC[0], SC[1], SC[2]); courses(g, P, 24, L - tw, L - 24, L, 0, wh, 'rgba(55,52,45,0.35)'); crenel(g, P, 24, L - tw, L - 24, L, wh, 5, CR);
-      prism(g, P, 46, L - 16, 82, L + 2, 0, wh + 12, SC[0], '#b8b3a3', SC[2]); crenel(g, P, 46, L - 16, 82, L + 2, wh + 12, 5, CR);
-      poly(g, [P(56, L + 2, 0), P(72, L + 2, 0), P(72, L + 2, 20), P(68, L + 2, 25), P(60, L + 2, 25), P(56, L + 2, 20)], '#2a1f15');
-      for (let x = 58; x <= 70; x += 3) seg(g, P(x, L + 2, 0), P(x, L + 2, 23), '#5c5a55', 1.2);
-      for (let z = 4; z <= 20; z += 5) seg(g, P(56, L + 2, z), P(72, L + 2, z), '#5c5a55', 1.2);
-      banner(g, P, L + 2, 48, 54, 14, 42, tc); banner(g, P, L + 2, 74, 80, 14, 42, tc);
-      tower(L - 24, L - 24);
-      flag(g, P, L - 12, L - 12, th + 4, 26, tc); flag(g, P, 12, L - 12, th + 4, 22, tc);
+      poly(g, V.map(([x, y]) => P(x + 10, y + 6)), 'rgba(0,0,0,0.22)');
+      poly(g, V.map(([x, y]) => P(c + (x - c) * 0.9, c + (y - c) * 0.9)), '#b2a27c');
+      const mix = (a, b, t) => { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16); const ch = sh => Math.round(((pa >> sh) & 255) * (1 - t) + ((pb >> sh) & 255) * t); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; };
+      const wallSeg = (A, B, gate) => {
+        const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+        const a = [A[0] + ux * tr * 0.7, A[1] + uy * tr * 0.7], b = [B[0] - ux * tr * 0.7, B[1] - uy * tr * 0.7];
+        const off = (p, s2) => [p[0] + nx * wt / 2 * s2, p[1] + ny * wt / 2 * s2];
+        for (const sgn of [1, -1]) {
+          const fx = nx * sgn, fy = ny * sgn; if (fx + fy <= 0) continue;
+          const t = Math.max(0, Math.min(1, (fy - fx + 1.414) / 2.828)), col = mix('#7f7c6e', '#b8b4a4', t);
+          const p0 = off(a, sgn), p1 = off(b, sgn);
+          poly(g, [P(p0[0], p0[1], 0), P(p1[0], p1[1], 0), P(p1[0], p1[1], wh), P(p0[0], p0[1], wh)], col);
+          for (let z = 7; z < wh; z += 7) seg(g, P(p0[0], p0[1], z), P(p1[0], p1[1], z), 'rgba(55,52,45,0.3)');
+          if (gate) {
+            const q = k => [p0[0] + (p1[0] - p0[0]) * k, p0[1] + (p1[1] - p0[1]) * k];
+            const g0 = q(0.36), g1 = q(0.64), gm = q(0.5);
+            poly(g, [P(g0[0], g0[1], 0), P(g1[0], g1[1], 0), P(g1[0], g1[1], 18), P(gm[0], gm[1], 25), P(g0[0], g0[1], 18)], '#2a1f15');
+            for (let k = 0.39; k < 0.63; k += 0.05) { const m = q(k); seg(g, P(m[0], m[1], 0), P(m[0], m[1], 21), '#5c5a55', 1.2); }
+            for (const z of [5, 11, 17]) seg(g, P(g0[0], g0[1], z), P(g1[0], g1[1], z), '#5c5a55', 1.2);
+            const b0 = q(0.22), b1 = q(0.27), b2 = q(0.73), b3 = q(0.78);
+            for (const [u0, u1] of [[b0, b1], [b2, b3]]) { poly(g, [P(u0[0], u0[1], 30), P(u1[0], u1[1], 30), P(u1[0], u1[1], 12), P((u0[0] + u1[0]) / 2, (u0[1] + u1[1]) / 2, 8), P(u0[0], u0[1], 12)], tc); }
+          }
+        }
+        const t0 = off(a, 1), t1 = off(b, 1), t2 = off(b, -1), t3 = off(a, -1);
+        poly(g, [P(t0[0], t0[1], wh), P(t1[0], t1[1], wh), P(t2[0], t2[1], wh), P(t3[0], t3[1], wh)], '#c3bfb0');
+        // battlements along the outer edge
+        const out = (nx * (a[0] - c) + ny * (a[1] - c)) > 0 ? 1 : -1;
+        for (let k = 0; k < len - tr * 1.4 - 4; k += 9) {
+          const m0 = off([a[0] + ux * k, a[1] + uy * k], out), m1 = off([a[0] + ux * (k + 5), a[1] + uy * (k + 5)], out);
+          poly(g, [P(m0[0], m0[1], wh), P(m1[0], m1[1], wh), P(m1[0], m1[1], wh + 6), P(m0[0], m0[1], wh + 6)], '#aeaa9b');
+        }
+      };
+      const tower = ([x, y], i2) => {
+        const [sx, sy] = P(x, y, 0), rx = tr * 1.414, ry = rx / 2, top = sy - th;
+        const gr = g.createLinearGradient(sx - rx, 0, sx + rx, 0); gr.addColorStop(0, '#c4c0b0'); gr.addColorStop(0.55, '#a29e8f'); gr.addColorStop(1, '#77746a');
+        g.fillStyle = gr; g.beginPath(); g.moveTo(sx - rx, top); g.lineTo(sx - rx, sy); g.ellipse(sx, sy, rx, ry, 0, Math.PI, 0, true); g.lineTo(sx + rx, top); g.closePath(); g.fill();
+        g.strokeStyle = 'rgba(55,52,45,0.3)'; g.lineWidth = 1;
+        for (let z = 8; z < th; z += 8) { g.beginPath(); g.ellipse(sx, sy - z, rx, ry, 0, 0, Math.PI); g.stroke(); }
+        g.fillStyle = '#2a2620'; g.fillRect(sx - 2, sy - th * 0.62, 3, 9);
+        g.fillStyle = '#b7b3a3'; g.beginPath(); g.ellipse(sx, top, rx + 2, ry + 1, 0, 0, 7); g.fill();
+        g.fillStyle = '#8e8a7c'; g.beginPath(); g.ellipse(sx, top, rx - 3, ry - 1.5, 0, 0, 7); g.fill();
+        for (let k = 0; k < 8; k++) { const ang = Math.PI * (k / 7); const mx = sx - Math.cos(ang) * (rx + 1), my = top + Math.sin(ang) * (ry + 0.5); g.fillStyle = k % 2 ? '#c9c5b6' : '#a3a091'; g.fillRect(mx - 2.5, my - 6, 5, 6); }
+        if (i2 === 1 || i2 === 4) { g.strokeStyle = '#3a2c1e'; g.lineWidth = 2; g.beginPath(); g.moveTo(sx, top); g.lineTo(sx, top - 22); g.stroke(); g.fillStyle = tc; g.beginPath(); g.moveTo(sx + 1, top - 22); g.lineTo(sx + 15, top - 19); g.lineTo(sx + 1, top - 14); g.fill(); }
+      };
+      const keep = () => {
+        prism(g, P, 46, 46, 82, 82, 0, 58, null, '#c2bdac', '#8f8b7c'); courses(g, P, 46, 46, 82, 82, 0, 58, 'rgba(55,52,45,0.3)');
+        for (const x of [52, 68]) lq(g, P, 82, x, x + 5, 30, 42, '#2a2620', '#d8d2c0');
+        rq(g, P, 82, 60, 65, 30, 42, '#211e19', '#c4bead');
+        banner(g, P, 82, 58, 64, 10, 50, tc);
+        hip(g, P, 46, 46, 82, 82, 58, 26, 4, '#3f4247', '#62676e', '#4c5056', 'rgba(20,20,25,0.35)');
+        flag(g, P, 64, 64, 84, 24, tc);
+      };
+      // painter's order: everything sorted by how far forward it sits (x + y)
+      const parts = [];
+      V.forEach((v, k) => parts.push({ d: v[0] + v[1], f: () => tower(v, k) }));
+      for (let k = 0; k < 6; k++) { const A = V[k], B = V[(k + 1) % 6]; parts.push({ d: (A[0] + B[0] + A[1] + B[1]) / 2 - 1, f: () => wallSeg(A, B, k === 0) }); }
+      parts.push({ d: 128, f: keep });
+      parts.sort((p1, p2) => p1.d - p2.d).forEach(pt => pt.f());
       break;
     }
     case 'workshop': {
@@ -829,7 +897,7 @@ const GAR = {
   tower: { cap: 4, z: 94, rng: 2.5, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
   wall: { cap: 1, z: 22, rng: 1.5, slots: [[16, 16]] },
   gate: { cap: 1, z: 30, rng: 1.5, slots: [[16, 16]] },
-  hall: { cap: 8, z: 36, rng: 2, slots: [[64, 6], [6, 64], [122, 64], [64, 122], [30, 122], [98, 122], [122, 30], [122, 98]] }
+  hall: { cap: 6, z: 58, rng: 2.5, slots: [15, 75, 135, 195, 255, 315].map(a => [Math.round(64 + 54 * Math.cos(a * Math.PI / 180)), Math.round(64 + 54 * Math.sin(a * Math.PI / 180))]) }
 };
 const farmerOf = b => G.units.find(u => !u.dead && u.order && u.order.k === 'farm' && u.order.b === b);
 const garrisonOf = b => G.units.filter(u => !u.dead && u.gar === b);
@@ -840,6 +908,7 @@ function nearestUnfinished(u, maxTiles) {
 }
 function enterGarrison(u, b) {
   const used = garrisonOf(b).map(x => x.slot), g = GAR[b.type]; let k = 0; while (used.includes(k)) k++;
+  if (k >= g.cap) { u.order = null; return false; }
   u.gar = b; u.slot = k; u.x = b.tx * T + g.slots[k][0]; u.y = b.ty * T + g.slots[k][1]; u.z = g.z; u.order = null; u.path = null;
 }
 function leaveGarrison(u) {
@@ -952,6 +1021,19 @@ function doEnter(u, o, dt) {
 }
 function updPalace(b, dt) {
   if (b.lord) b.lord.hp = Math.min(b.lord.maxhp, b.lord.hp + 8 * dt);
+  const people = (b.shelter ? b.shelter.length : 0) + (b.lord ? 1 : 0);
+  if (people) {
+    b.pcd = (b.pcd || 0) - dt;
+    if (b.pcd <= 0) {
+      let best = null, bd = 8.5 * T;
+      for (const e of G.units) if (e.team !== b.team && !e.dead && dmgMult(b, e) > 0) { const dd = distRect(e.x, e.y, b); if (dd < bd) { bd = dd; best = e; } }
+      if (best) {
+        b.pcd = Math.max(0.45, 1.8 - people * 0.18);
+        const tw = GAR.hall.slots.map(([x, y]) => [b.tx * T + x, b.ty * T + y]).sort((p, q) => Math.hypot(p[0] - best.x, p[1] - best.y) - Math.hypot(q[0] - best.x, q[1] - best.y))[0];
+        G.proj.push({ x: tw[0], y: tw[1], t: best, dmg: 7, src: b, team: b.team, z0: GAR.hall.z, d0: Math.max(1, Math.hypot(best.x - tw[0], best.y - tw[1])), h: GAR.hall.z });
+      }
+    }
+  }
   b.alT = (b.alT || 0) - dt; if (b.alT > 0) return; b.alT = 0.5;
   const threat = G.units.some(e => e.team !== b.team && !e.dead && (isMil(e) || UDEF[e.type].dmg > 0 && isNaval(e)) && distRect(e.x, e.y, b) < 14 * T);
   if (threat || (b.manualT || 0) > G.t) { b.quiet = 0; if (!b.alarm) raiseAlarm(b); else shelterNearby(b); }
@@ -1078,7 +1160,7 @@ function follow(u, dt) {
   const [tx, ty] = u.path[u.pi];
   if (!passFor(u)(tx, ty)) { u.path = null; return false; }
   const nx = tx * T + 16, ny = ty * T + 16, dx = nx - u.x, dy = ny - u.y, d = Math.hypot(dx, dy);
-  const sp = UDEF[u.type].speed * T * dt;
+  const sp = (u.order && u.order.spd || UDEF[u.type].speed) * T * dt;
   if (d > 0.01) u.face = Math.atan2(dy, dx);
   u.walk = (u.walk || 0) + Math.min(d, sp); u.mvT = G.t;
   if (d <= sp) { u.x = nx; u.y = ny; u.pi++; } else { u.x += dx / d * sp; u.y += dy / d * sp; }
@@ -1131,7 +1213,7 @@ function updUnit(u, dt) {
   switch (o.k) {
     case 'move': {
       if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x === o.gx && y === o.gy, o.gx, o.gy, 14000, passFor(u)));
-      if (follow(u, dt) && u.path) u.order = null;
+      if (follow(u, dt) && u.path) { if (o.face !== undefined) u.face = o.face; u.order = null; }
       break;
     }
     case 'amove': {
@@ -1476,7 +1558,7 @@ function newGame(diff, opts = {}) {
   G = { t: 0, diff, mode, res: [{ ...start }, mode === 'vs' ? { ...start } : { wood: 200, stone: 150, gold: 150, food: 250 }],
     units: [], blds: [], proj: [], marks: [], sel: new Set(), nextId: 1, placing: null, waveT: DIFF[diff].first, wave: 0,
     over: false, paused: true, stats: { trained: [0, 0], lost: [0, 0] }, ai: { rot: 0, alarm: null }, aiT: 0, fogT: 0,
-    pop: [0, 0], cap: [0, 0], alarmAt: {}, fx: [], fxOut: [], tileLog: [], loser: -1 };
+    pop: [0, 0], cap: [0, 0], alarmAt: {}, groups: {}, formation: 'line', fx: [], fxOut: [], tileLog: [], loser: -1 };
   const seed = opts.seed ?? ((Math.random() * 1e9) | 0);
   G.seed = seed;
   G.mapType = opts.mapType || 'land';
@@ -1909,7 +1991,7 @@ function drawMini() {
 // ---------- input ----------
 const ptr = { x: 0, y: 0, inside: false, box: null, down: null };
 const keys = new Set();
-const BH = { hall: 74, house: 50, farm: 12, store: 40, barracks: 64, tower: 104, wall: 30, dock: 40, workshop: 54, gate: 42 };
+const BH = { hall: 84, house: 50, farm: 12, store: 40, barracks: 64, tower: 104, wall: 30, dock: 40, workshop: 54, gate: 42 };
 function entityAt(wx, wy) {
   const ix = isoX(wx, wy), iy = isoY(wx, wy);
   let best = null, bd = 1e9;
@@ -1965,21 +2047,74 @@ function command(wx, wy) {
   const workers = us.filter(u => u.type === 'worker'), archers = us.filter(u => u.type === 'archer');
   let busy;
   if (NET.role === 'guest') {
-    netSend({ c: 'cmd', ids: us.map(u => u.id), wx, wy, e: e ? e.id : 0, rt });
+    netSend({ c: 'cmd', ids: us.map(u => u.id), wx, wy, e: e ? e.id : 0, rt, fm: G.formation });
     // predict which workers got a job, to let go of them like the host would
     if (e && e.team === ME && e.kind === 'u' && e.type === 'transport') busy = us.filter(u => !isNaval(u));
     else if (e && e.team === ME && e.kind === 'b' && e.built && GAR[e.type] && archers.length) busy = archers;
     else if (e && e.team === ME && e.kind === 'b' && workers.length && (!e.built || e.type === 'farm' || BDEF[e.type].drop)) busy = e.type === 'farm' ? workers.slice(0, 1) : workers;
     else if (rt && workers.length) busy = workers;
     else busy = [];
-  } else busy = execCommand(ME, us, wx, wy, e, rt) || [];
+  } else busy = execCommand(ME, us, wx, wy, e, rt, G.formation) || [];
   if (e && e.team !== ME) mark(posX(e), posY(e), '#d9534f');
   else if (busy.length) mark(e && e.kind === 'b' ? bcx(e) : rt ? rt.tx * T + 16 : wx, e && e.kind === 'b' ? bcy(e) : rt ? rt.ty * T + 16 : wy, '#d4a84b');
   else mark(wx, wy, '#7fb24a');
   // workers that just got a job are let go, like after a build order
   if (busy.length) { busy.forEach(u => G.sel.delete(u)); hudDirty = true; }
 }
-function execCommand(team, us, wx, wy, e, rt) {
+const FORMS = { line: 'خط نبرد', column: 'ستون', wedge: 'گوه', box: 'مربع', loose: 'آزاد' };
+// formation slots in tiles: f = forward (0 is the front rank, negative is further back), r = right
+function formationLayout(units, kind) {
+  const pick = t => units.filter(u => (t === 'other' ? !['spear', 'archer', 'knight', 'lord'].includes(u.type) && !UDEF[u.type].siege : t === 'siege' ? UDEF[u.type].siege : u.type === t));
+  const sp = pick('spear'), ar = pick('archer'), kn = pick('knight'), lo = pick('lord'), sg = pick('siege'), ot = pick('other');
+  const out = [];
+  const rows = (list, f0, width, gap = 1) => { list.forEach((u, i) => { const row = Math.floor(i / width), n = Math.min(width, list.length - row * width); out.push({ u, f: f0 - row * gap, r: (i % width) - (n - 1) / 2 }); }); return f0 - Math.ceil(list.length / width) * gap; };
+  if (kind === 'column') {
+    const order = [...kn, ...sp, ...lo, ...ar, ...ot, ...sg];
+    rows(order, 0, 3);
+  } else if (kind === 'wedge') {
+    const order = [...kn, ...sp, ...lo, ...ar, ...ot, ...sg]; let k = 0, row = 0;
+    while (k < order.length) { const n = row * 2 + 1; for (let j = 0; j < n && k < order.length; j++, k++) out.push({ u: order[k], f: -row, r: (j - (n - 1) / 2) * 0.9 }); row++; }
+  } else if (kind === 'box') {
+    const all = [...sp, ...kn, ...lo, ...ar, ...ot, ...sg], m = Math.max(2, Math.ceil(Math.sqrt(all.length)));
+    const ring = [], inner = [];
+    for (let y = 0; y < m; y++) for (let x = 0; x < m; x++) (x === 0 || y === 0 || x === m - 1 || y === m - 1 ? ring : inner).push([x, y]);
+    const outer = [...sp, ...kn], mid = [...lo, ...ar, ...ot, ...sg];
+    const cells = [...ring.slice(0, outer.length), ...inner, ...ring.slice(outer.length)];
+    [...outer, ...mid].forEach((u, i) => { const [x, y] = cells[i]; out.push({ u, f: -y, r: x - (m - 1) / 2 }); });
+  } else {
+    // battle line: spears in front, the lord just behind them, archers behind, cavalry on both flanks, engines at the back
+    const width = Math.max(4, Math.min(8, Math.ceil(Math.sqrt((sp.length + ar.length) * 2))));
+    let f = sp.length ? rows(sp, 0, width) : 0;
+    if (lo.length) { rows(lo, f, 1); f -= 1; }
+    f = rows([...ar, ...ot], f, width);
+    rows(sg, f - 0.5, 4, 1.6);
+    const half = Math.min(width, Math.max(sp.length, ar.length, 1)) / 2 + 1.2;
+    kn.forEach((u, i) => out.push({ u, f: -Math.floor(i / 2), r: (i % 2 ? 1 : -1) * half }));
+  }
+  return out;
+}
+function marchInFormation(units, wx, wy, kind, dir) {
+  const cx = units.reduce((a, u) => a + u.x, 0) / units.length, cy = units.reduce((a, u) => a + u.y, 0) / units.length;
+  let fx = dir ? dir[0] : wx - cx, fy = dir ? dir[1] : wy - cy, fl = Math.hypot(fx, fy);
+  if (fl < 1) { fx = 1; fy = -1; fl = Math.SQRT2; }
+  fx /= fl; fy /= fl; const rx = -fy, ry = fx;
+  const slots = formationLayout(units, kind), taken = new Set();
+  const speed = Math.min(...units.map(u => UDEF[u.type].speed));
+  for (const s of slots) {
+    const sp = UDEF[s.u.type].siege ? 1.5 : 1.1;
+    let tx = tileOf(wx + (fx * s.f + rx * s.r) * T * sp), ty = tileOf(wy + (fy * s.f + ry * s.r) * T * sp);
+    if (!passable(tx, ty) || taken.has(ty * W + tx)) {
+      let found = null;
+      for (let r = 1; r <= 5 && !found; r++) for (let dy = -r; dy <= r && !found; dy++) for (let dx = -r; dx <= r; dx++) { const x = tx + dx, y = ty + dy; if (passable(x, y) && !taken.has(y * W + x)) { found = [x, y]; break; } }
+      if (found) [tx, ty] = found;
+    }
+    taken.add(ty * W + tx);
+    if (s.u.gar) leaveGarrison(s.u);
+    orderMove(s.u, tx * T + 16, ty * T + 16);
+    s.u.order.spd = speed; s.u.order.face = Math.atan2(fy, fx);
+  }
+}
+function execCommand(team, us, wx, wy, e, rt, fm, dir) {
   curTeam = team;
   const tx = tileOf(wx), ty = tileOf(wy);
   const navy = us.filter(isNaval), landers = us.filter(u => !isNaval(u));
@@ -2034,6 +2169,9 @@ function execCommand(team, us, wx, wy, e, rt) {
   else if (workers.length && rt) { workers.forEach(u => orderGather(u, rt.tx, rt.ty)); rest = us.filter(isMil); busy = workers; }
   rest = rest.filter(u => !busy.includes(u));
   if (!rest.length) return busy;
+  // soldiers march in the chosen formation; anyone else just gathers around the spot
+  const army = rest.filter(u => isMil(u)), others = rest.filter(u => !isMil(u));
+  if (army.length >= 2 && fm && fm !== 'loose') { marchInFormation(army, wx, wy, fm, dir); rest = others; if (!rest.length) return busy; }
   rest.forEach(u => { if (u.gar) leaveGarrison(u); });
   const spots = formationTiles(tx, ty, rest.length);
   rest.forEach((u, i) => orderMove(u, spots[i][0] * T + 16, spots[i][1] * T + 16));
@@ -2285,13 +2423,15 @@ mini.addEventListener('pointerup', () => { miniDrag = false; });
 window.addEventListener('keydown', e => {
   if (!G) return;
   keys.add(e.code);
+  if (e.code === 'Escape' && !$('armyOv').hidden) { $('armyOv').hidden = true; return; }
   if (e.code === 'Escape') { if (G.pending) cancelBuild(); else if (G.placing) G.placing = null; else selectOnly([]); hudDirty = true; }
   else if ((e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') && G.pending) { e.preventDefault(); confirmBuild(); }
   else if (e.code === 'Equal' || e.code === 'NumpadAdd') zoomBy(1.15);
   else if (e.code === 'Minus' || e.code === 'NumpadSubtract') zoomBy(1 / 1.15);
   else if (e.code === 'KeyP') togglePause();
   else if (e.code === 'KeyH') doAct('home');
-  else if (/^Digit[1-9]$/.test(e.code)) { const btns = [...document.querySelectorAll('#cmds .cmd')]; const b = btns[+e.code.slice(5) - 1]; if (b && !b.disabled) doAct(b.dataset.act); }
+  else if (/^Digit[1-5]$/.test(e.code)) { e.preventDefault(); const n = +e.code.slice(5); if (e.ctrlKey || e.metaKey) saveGroup(n, myUnits()); else pickGroup(n); }
+  else if (HOTKEYS.includes(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) { const btns = [...document.querySelectorAll('#cmds .cmd')]; const b = btns[HOTKEYS.indexOf(e.code)]; if (b && !b.disabled) doAct(b.dataset.act); }
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
 window.addEventListener('keyup', e => keys.delete(e.code));
@@ -2318,6 +2458,94 @@ let hudDirty = true;
 const $ = id => document.getElementById(id);
 const costStr = c => Object.keys(c).map(k => fa(c[k]) + ' ' + RES_NAME[k]).join(' · ');
 const toastBox = $('toast');
+// ---------- the practice-mode guide ----------
+const TIPS = [
+  'کارگرها را با کشیدن یک کادر دورشان انتخاب کن، بعد روی یک درخت کلیک کن تا چوب ببرند. انتخابشان خودبه‌خود رها می‌شود.',
+  'کاخ را انتخاب کن و «کارگر» را بزن تا کارگر تازه آموزش ببیند. نوار طلایی بالای کاخ پیشرفت آموزش را نشان می‌دهد.',
+  'یک کارگر را انتخاب کن، «خانه» یا «مزرعه» را بزن و جایش را روی نقشه انتخاب کن. با ✓ تایید کن. هر مزرعه یک کشاورز لازم دارد.',
+  'برای جمعیت بیشتر خانه بساز. انبار را کنار جنگل یا معدن بساز تا کارگرها راه کمتری بروند.',
+  'سربازخانه بساز و چند نیزه‌دار و کماندار آموزش بده. با دوبار کلیک روی یکی، همهٔ هم‌نوع‌هایش روی صفحه انتخاب می‌شوند.',
+  'با چند سرباز انتخاب‌شده، یکی از آرایش‌ها (خط نبرد، ستون، گوه، مربع) را بزن و روی زمین کلیک کن: مثل یک ارتش حرکت می‌کنند.',
+  'دکمهٔ «کنترل ارتش» یا Ctrl با یک عدد، ارتش می‌سازد؛ با زدن همان عدد دوباره انتخابش می‌کنی.',
+  'دیوار بکش، دروازه بگذار و کماندارها را روی برج‌ها و کاخ بفرست. کاخ وقتی لرد یا کارگر داخلش باشد خودش هم تیر می‌اندازد.',
+  'برای خراب کردن ساختمان‌های سنگی دشمن، کارگاه محاصره بساز و دژکوب و منجنیق بفرست. برای بردن، لرد دشمن را بکش.',
+  'در این حالت دشمن حمله نمی‌کند ولی از اردوگاهش دفاع می‌کند. هر وقت آماده بودی، یک بازی با سطح آسان شروع کن.'
+];
+let tipI = 0;
+function showTip(i) { tipI = i; $('tipStep').textContent = 'راهنما · ' + fa(i + 1) + ' از ' + fa(TIPS.length); $('tipText').textContent = TIPS[i]; $('tipNext').textContent = i < TIPS.length - 1 ? 'بعدی' : 'از اول'; $('tipBox').hidden = false; }
+$('tipNext').addEventListener('click', () => showTip((tipI + 1) % TIPS.length));
+$('tipClose').addEventListener('click', () => { $('tipBox').hidden = true; });
+const HOTKEYS = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyA', 'KeyS', 'KeyD'];
+// ---------- army groups and the army control panel ----------
+function groupUnits(n) { return (G.groups[n] || []).map(byId).filter(u => u && u.kind === 'u' && !u.dead && u.team === ME); }
+function saveGroup(n, units) {
+  const list = units.filter(u => u.kind === 'u' && u.team === ME && !u.dead);
+  if (!list.length) { toast('اول چند یگان انتخاب کن', true); return; }
+  for (const k in G.groups) G.groups[k] = (G.groups[k] || []).filter(id => !list.some(u => u.id === id));
+  G.groups[n] = list.map(u => u.id); toast('ارتش ' + fa(n) + ' ساخته شد: ' + fa(list.length) + ' یگان'); renderGroups(true);
+}
+let lastGroup = { n: 0, t: 0 };
+function pickGroup(n) {
+  const list = groupUnits(n);
+  if (!list.length) { toast('ارتش ' + fa(n) + ' خالی است؛ با Ctrl+' + fa(n) + ' یا پنل کنترل ارتش بسازش', true); return; }
+  const now = performance.now();
+  if (lastGroup.n === n && now - lastGroup.t < 400) { const cx = list.reduce((a, u) => a + u.x, 0) / list.length, cy = list.reduce((a, u) => a + u.y, 0) / list.length; centerOn(cx, cy); }
+  lastGroup = { n, t: now }; selectOnly(list); renderGroups(true);
+}
+const compStr = list => { const c = {}; list.forEach(u => { c[u.type] = (c[u.type] || 0) + 1; }); return Object.keys(c).map(k => fa(c[k]) + ' ' + UDEF[k].name).join('، '); };
+let groupKey = '';
+function renderGroups(force) {
+  const parts = [];
+  for (let n = 1; n <= 5; n++) { const l = groupUnits(n); if (l.length) parts.push(n + ':' + l.length + ':' + (l.every(u => G.sel.has(u)) ? 1 : 0)); }
+  const key = parts.join('|') + (G.sel.size ? 's' : '');
+  if (!force && key === groupKey) return; groupKey = key;
+  let h = '';
+  for (let n = 1; n <= 5; n++) { const l = groupUnits(n); if (!l.length) continue; h += `<button type="button" data-group="${n}" class="${l.every(u => G.sel.has(u)) ? 'on' : ''}" title="${compStr(l)}">ارتش ${fa(n)} (${fa(l.length)})</button>`; }
+  if (myUnits().length) h += `<button type="button" class="add" data-group="new">+ ارتش از انتخاب</button>`;
+  $('groupBar').innerHTML = h;
+}
+$('groupBar').addEventListener('click', e => {
+  const b = e.target.closest('[data-group]'); if (!b) return;
+  if (b.dataset.group === 'new') { let n = 1; while (n < 5 && groupUnits(n).length) n++; saveGroup(n, myUnits()); }
+  else pickGroup(+b.dataset.group);
+});
+const armyPick = new Set();
+function openArmy() {
+  const mine = G.units.filter(u => u.team === ME && !u.dead && u.type !== 'worker');
+  const types = [...new Set(mine.map(u => u.type))];
+  for (const t of [...armyPick]) if (!types.includes(t)) armyPick.delete(t);
+  $('typeChips').innerHTML = types.length ? types.map(t => `<button type="button" data-type="${t}" aria-pressed="${armyPick.has(t)}">${UDEF[t].name}<small>${fa(mine.filter(u => u.type === t).length)}</small></button>`).join('') : '<p class="hint">هنوز سربازی نداری.</p>';
+  let h = '';
+  for (let n = 1; n <= 5; n++) { const l = groupUnits(n); h += `<div class="army"><b>ارتش ${fa(n)}</b><span>${l.length ? fa(l.length) + ' یگان: ' + compStr(l) : 'خالی'}</span>${l.length ? `<button type="button" data-g="pick:${n}">انتخاب</button>` : ''}<button type="button" data-g="save:${n}">${l.length ? 'جایگزینی با انتخاب فعلی' : 'ساخت از انتخاب فعلی'}</button>${l.length ? `<button type="button" data-g="clear:${n}">انحلال</button>` : ''}</div>`; }
+  $('armyList').innerHTML = h;
+  $('splitTwo').disabled = myUnits().filter(isMil).length < 2;
+  $('armyOv').hidden = false;
+}
+$('typeChips').addEventListener('click', e => { const b = e.target.closest('[data-type]'); if (!b) return; const t = b.dataset.type; armyPick.has(t) ? armyPick.delete(t) : armyPick.add(t); b.setAttribute('aria-pressed', String(armyPick.has(t))); });
+$('pickTypes').addEventListener('click', () => {
+  if (!armyPick.size) { toast('اول یک یا چند نوع را علامت بزن', true); return; }
+  const only = $('onlyScreen').checked;
+  const list = G.units.filter(u => u.team === ME && !u.dead && armyPick.has(u.type) && (!only || onScreen(u)));
+  selectOnly(list); $('armyOv').hidden = true; toast(fa(list.length) + ' یگان انتخاب شد');
+});
+$('armyList').addEventListener('click', e => {
+  const b = e.target.closest('[data-g]'); if (!b) return; const [k, n] = b.dataset.g.split(':');
+  if (k === 'pick') { pickGroup(+n); $('armyOv').hidden = true; }
+  else if (k === 'save') { saveGroup(+n, myUnits()); openArmy(); }
+  else if (k === 'clear') { G.groups[n] = []; renderGroups(true); openArmy(); }
+});
+// split the selection into two armies with the same mix of troops
+$('splitTwo').addEventListener('click', () => {
+  const mil = myUnits().filter(isMil); if (mil.length < 2) return;
+  const a = [], b = []; const byType = {};
+  mil.forEach(u => (byType[u.type] = byType[u.type] || []).push(u));
+  let flip = false; for (const t in byType) byType[t].forEach(u => { (flip ? b : a).push(u); flip = !flip; });
+  const free = []; for (let n = 1; n <= 5 && free.length < 2; n++) if (!groupUnits(n).length) free.push(n);
+  while (free.length < 2) free.push(free.length ? (free[0] === 1 ? 2 : 1) : 1);
+  saveGroup(free[0], a); saveGroup(free[1], b);
+  toast('دو ارتش ساخته شد: ارتش ' + fa(free[0]) + ' و ارتش ' + fa(free[1])); openArmy();
+});
+$('armyClose').addEventListener('click', () => { $('armyOv').hidden = true; });
 function toast(msg, warn) {
   const d = document.createElement('div'); d.textContent = msg; if (warn) d.className = 'warn';
   toastBox.prepend(d); while (toastBox.children.length > 3) toastBox.lastChild.remove();
@@ -2340,7 +2568,7 @@ function selHTML() {
       h += `<span class="sub">${st}${e.carry.amt > 0 ? ' · بار: ' + fa(Math.floor(e.carry.amt)) + ' ' + RES_NAME[e.carry.res] : ''}</span>`;
     } else if (!e.built) h += `<span class="sub">در حال ساخت: ${fa(Math.floor(e.progress * 100))}٪</span>`;
     else if (e.type === 'farm' && !enemy) h += `<span class="sub">${farmerOf(e) ? 'یک کشاورز روی آن کار می‌کند' : 'بدون کشاورز: یک کارگر را انتخاب کن و روی مزرعه کلیک راست کن'}</span>`;
-    else if (e.type === 'hall' && !enemy) h += `<span class="sub">${e.lord || e.lordIn ? 'لرد داخل کاخ است و آرام سلامتش برمی‌گردد' : 'لرد در این کاخ نیست'} · ${fa((e.shelter ? e.shelter.length : e.shN) || 0)} کارگر پناه گرفته${e.alarm ? ' · زنگ خطر به صدا درآمده' : ''} · کمانداران روی بارو: ${fa(garrisonOf(e).length)} از ${fa(GAR.hall.cap)}</span>`;
+    else if (e.type === 'hall' && !enemy) h += `<span class="sub">${e.lord || e.lordIn ? 'لرد داخل کاخ است و آرام سلامتش برمی‌گردد' : 'لرد در این کاخ نیست'}${(e.lord || e.lordIn || (e.shelter ? e.shelter.length : e.shN)) ? ' · کاخ از برج‌هایش تیر می‌اندازد' : ''} · ${fa((e.shelter ? e.shelter.length : e.shN) || 0)} کارگر پناه گرفته${e.alarm ? ' · زنگ خطر به صدا درآمده' : ''} · کمانداران روی برج‌ها: ${fa(garrisonOf(e).length)} از ${fa(GAR.hall.cap)}</span>`;
     else if (GAR[e.type] && !enemy) h += `<span class="sub">کمانداران روی آن: ${fa(garrisonOf(e).length)} از ${fa(GAR[e.type].cap)} · کماندار را انتخاب کن و روی آن کلیک راست کن</span>`;
     else if (e.queue.length && !enemy) {
       h += `<span class="sub">${e.blocked ? 'جمعیت پر است؛ خانه بساز' : 'آموزش: ' + UDEF[e.queue[0]].name}</span><div class="bar q"><i style="width:${(e.qt / UDEF[e.queue[0]].time * 100).toFixed(1)}%"></i></div>`;
@@ -2378,14 +2606,15 @@ function cmdHTML() {
   } else if (sel.some(e => e.kind === 'u')) {
     label = 'فرمان‌ها';
     btns = [{ act: 'stop', name: 'ایست', cost: 'توقف فرمان', ok: true }];
-    if (sel.some(e => UDEF[e.type].siege)) label = 'ابزار محاصره';
+    if (sel.filter(e => e.kind === 'u' && isMil(e)).length >= 2) { label = 'آرایش و فرمان'; for (const k in FORMS) btns.push({ act: 'form:' + k, name: FORMS[k], cost: k === G.formation ? 'آرایش فعلی' : 'هنگام حرکت', ok: true, on: k === G.formation }); }
+    if (sel.some(e => UDEF[e.type].siege) && label !== 'آرایش و فرمان') label = 'ابزار محاصره';
     if (sel.some(e => e.gar)) btns.push({ act: 'ungar', name: 'پایین آمدن', cost: 'از برج یا دیوار', ok: true });
     if (sel.some(e => e.type === 'transport' && ((e.cargo || []).length || e.cargoN))) btns.push({ act: 'land', name: 'پیاده کردن', cost: 'در نزدیک‌ترین ساحل', ok: true });
   }
   if (G.placing || G.pending) btns.push({ act: 'cancel', name: 'لغو ساخت', cost: 'Esc', ok: true });
   $('cmdLabel').textContent = label;
   void r;
-  return btns.map((b, i) => `<button type="button" class="cmd${b.on ? ' on' : ''}${b.danger ? ' danger' : ''}" data-act="${b.act}"${b.ok ? '' : ' disabled'}><kbd>${fa(i + 1)}</kbd>${b.n ? `<em class="qn">${fa(b.n)}</em>` : ''}${b.head ? '<i class="qfill" id="qfill"></i>' : ''}<span>${b.name}</span><small>${b.cost}</small></button>`).join('') || `<p class="hint" style="grid-column:1/-1">برای دیدن فرمان‌ها، کارگر، سرباز یا یک ساختمان را انتخاب کن.</p>`;
+  return btns.map((b, i) => `<button type="button" class="cmd${b.on ? ' on' : ''}${b.danger ? ' danger' : ''}" data-act="${b.act}"${b.ok ? '' : ' disabled'}><kbd>${HOTKEYS[i] ? HOTKEYS[i].slice(3) : ''}</kbd>${b.n ? `<em class="qn">${fa(b.n)}</em>` : ''}${b.head ? '<i class="qfill" id="qfill"></i>' : ''}<span>${b.name}</span><small>${b.cost}</small></button>`).join('') || `<p class="hint" style="grid-column:1/-1">برای دیدن فرمان‌ها، کارگر، سرباز یا یک ساختمان را انتخاب کن.</p>`;
 }
 let hudT = 0, miniT = 0;
 function hudTick(dt) {
@@ -2398,11 +2627,12 @@ function hudTick(dt) {
   for (const k of ['wood', 'stone', 'gold', 'food']) $('r-' + k).textContent = fa(Math.floor(r[k]));
   $('r-pop').textContent = fa(G.pop[ME]) + ' / ' + fa(G.cap[ME]);
   $('wave').hidden = G.mode === 'vs';
-  const s = Math.max(0, Math.ceil(G.waveT)); $('wave').textContent = 'موج ' + fa(G.wave + 1) + ' دشمن: ' + fa(Math.floor(s / 60)) + ':' + fa(String(s % 60).padStart(2, '0'));
+  if (DIFF[G.diff].demo) $('wave').textContent = 'حالت آموزشی: دشمن حمله نمی‌کند'; else { const s = Math.max(0, Math.ceil(G.waveT)); $('wave').textContent = 'موج ' + fa(G.wave + 1) + ' دشمن: ' + fa(Math.floor(s / 60)) + ':' + fa(String(s % 60).padStart(2, '0')); }
   const idle = G.units.filter(u => u.team === ME && u.type === 'worker' && !u.order).length;
   $('idleBtn').textContent = 'کارگر بیکار (' + fa(idle) + ')';
   setHTML($('sel'), selHTML());
   setHTML($('cmds'), cmdHTML());
+  renderGroups();
   const qf = $('qfill'), sb = [...G.sel].find(e => e.kind === 'b' && e.team === ME && e.queue && e.queue.length);
   if (qf && sb) qf.style.width = (sb.qt / UDEF[sb.queue[0]].time * 100).toFixed(1) + '%';
 }
@@ -2420,7 +2650,20 @@ function doAct(act) {
   else if (['dequeue', 'cancelb', 'evict', 'ungar', 'stop', 'land', 'lordout', 'bell', 'calm'].includes(a)) runOrSend({ c: 'act', a, t, ids });
   else if (a === 'cancel') { G.placing = null; cancelBuild(); }
   else if (a === 'idle') { const w = G.units.filter(u => u.team === ME && u.type === 'worker' && !u.order && !u.dead); if (w.length) { selectOnly(w); centerOn(w[0].x, w[0].y); } else toast('کارگر بیکاری نداری'); }
-  else if (a === 'army') { const w = G.units.filter(u => u.team === ME && isMil(u) && !u.dead); if (w.length) selectOnly(w); else toast('هنوز سربازی نداری؛ سربازخانه بساز'); }
+  else if (a === 'armyctl') openArmy();
+  else if (a === 'form') {
+    G.formation = t; hudDirty = true;
+    const mil = sel.filter(e => e.kind === 'u' && isMil(e));
+    if (mil.length >= 2 && t !== 'loose') {
+      // form up right where they stand, facing the way they mostly face
+      const cx = mil.reduce((s2, u) => s2 + u.x, 0) / mil.length, cy = mil.reduce((s2, u) => s2 + u.y, 0) / mil.length;
+      const fx = mil.reduce((s2, u) => s2 + Math.cos(u.face), 0), fy = mil.reduce((s2, u) => s2 + Math.sin(u.face), 0);
+      const dir = Math.hypot(fx, fy) > 0.1 ? [fx, fy] : [1, -1];
+      if (NET.role === 'guest') netSend({ c: 'cmd', ids: mil.map(u => u.id), wx: cx, wy: cy, e: 0, rt: null, fm: t, dir });
+      else { curTeam = ME; marchInFormation(mil, cx, cy, t, dir); }
+      toast('آرایش ' + FORMS[t]);
+    }
+  }
   else if (a === 'home') { const l = G.units.find(u => u.team === ME && u.type === 'lord' && !u.dead); const h = G.blds.find(b => b.team === ME && b.type === 'hall' && !b.dead && (b.lord || b.lordIn)) || G.blds.find(b => b.team === ME && b.type === 'hall' && !b.dead); if (l) { centerOn(l.x, l.y); selectOnly([l]); } else if (h) { centerOn(bcx(h), bcy(h)); selectOnly([h]); } }
   hudDirty = true;
 }
@@ -2454,7 +2697,7 @@ function hostExec(team, m) {
     const us = (m.ids || []).map(byId).filter(u => u && u.kind === 'u' && u.team === team && !u.dead);
     const e = m.e ? byId(m.e) : null;
     const rt = m.rt && inb(m.rt.tx, m.rt.ty) && RES_OF[tiles[m.rt.ty * W + m.rt.tx]] ? m.rt : null;
-    if (us.length) execCommand(team, us, +m.wx || 0, +m.wy || 0, e && !e.dead ? e : null, rt);
+    if (us.length) execCommand(team, us, +m.wx || 0, +m.wy || 0, e && !e.dead ? e : null, rt, FORMS[m.fm] ? m.fm : 'loose', Array.isArray(m.dir) ? m.dir.map(Number) : null);
   }
   else if (m.c === 'rally') (m.ids || []).map(byId).forEach(b => { if (b && b.kind === 'b' && b.team === team) b.rally = { tx: m.tx | 0, ty: m.ty | 0 }; });
   else if (m.c === 'place' && BDEF[m.type] && Array.isArray(m.list)) execPlace(team, m.type, m.list.map(q => ({ tx: q.tx | 0, ty: q.ty | 0 })), m.builders || []);
@@ -2473,10 +2716,11 @@ $('cfYes').addEventListener('click', () => confirmBuild());
 $('cfNo').addEventListener('click', () => cancelBuild());
 document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => {
   newGame(b.dataset.diff, { mapType: mapChoice() }); G.paused = false; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
+  if (DIFF[b.dataset.diff].demo) showTip(0); else $('tipBox').hidden = true;
   toast('کارگران را انتخاب کن و روی درختان کلیک راست کن');
 }));
 const mapChoice = () => document.querySelector('input[name="mapType"]:checked')?.value === 'river' ? 'river' : 'land';
-$('againBtn').addEventListener('click', () => { $('confirm').hidden = true; $('endOv').hidden = true; leaveNet(); $('startOv').hidden = false; newGame(G.diff); });
+$('againBtn').addEventListener('click', () => { $('confirm').hidden = true; $('tipBox').hidden = true; $('armyOv').hidden = true; $('endOv').hidden = true; leaveNet(); $('startOv').hidden = false; newGame(G.diff); });
 
 // ---------- two players on one Wi-Fi ----------
 const UT = Object.keys(UDEF), BT = Object.keys(BDEF);
