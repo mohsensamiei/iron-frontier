@@ -85,6 +85,11 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;color:#c9c3ac}
 .keys b{color:var(--text);font-weight:600}
 .primary{font:inherit;font-weight:800;font-size:16px;background:var(--brass);color:#1d2017;border:0;border-radius:4px;padding:12px;cursor:pointer}
+.maptype{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.maptype label{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;background:var(--panel-3);border:1px solid var(--line);border-radius:4px;padding:8px 10px;cursor:pointer}
+.maptype label:has(input:checked){border-color:var(--brass)}
+.maptype small{font-weight:400;font-size:11px;color:var(--muted)}
+.maptype input{accent-color:var(--brass)}
 .mp{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
 .diffs.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .joinrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -162,6 +167,11 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
             <b>فرمان</b><span>کلیک راست روی زمین، درخت، معدن، ساختمان نیمه‌کاره یا دشمن</span>
             <b>لمسی</b><span>ضربه روی یگان خودی برای انتخاب، ضربهٔ بعدی برای فرمان؛ با یک انگشت بکش تا نقشه جابه‌جا شود</span>
           </div>
+          <div class="maptype" role="radiogroup" aria-label="نوع نقشه">
+            <span class="label">نقشه</span>
+            <label><input type="radio" name="mapType" value="land" checked> خشکی <small>راه زمینی تا دشمن همیشه باز است</small></label>
+            <label><input type="radio" name="mapType" value="river"> دو ساحل <small>رودخانه وسط نقشه؛ با کشتی عبور کن</small></label>
+          </div>
           <div class="label">سطح دشواری را انتخاب کن تا بازی شروع شود</div>
           <div class="diffs">
             <button type="button" data-diff="easy"><b>آسان</b><span>اولین حمله: ۶ دقیقه</span></button>
@@ -224,7 +234,9 @@ const UDEF = {
   worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 50 }, time: 10, r: 7, body: '#e2c9a0' },
   spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 50, gold: 20 }, time: 14, r: 8, body: '#9aa0a6' },
   archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 40, wood: 30 }, time: 14, r: 7, body: '#6f8a4a' },
-  knight: { name: 'سوار', hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 10, body: '#7a5a3a' }
+  knight: { name: 'سوار', hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 10, body: '#7a5a3a' },
+  transport: { name: 'کشتی ترابری', hp: 420, speed: 2.5, dmg: 0, range: 0, cd: 1, sight: 7, cost: { wood: 120 }, time: 20, r: 14, naval: true, cap: 8 },
+  warship: { name: 'کشتی جنگی', hp: 380, speed: 2.7, dmg: 10, range: 6, cd: 1.5, sight: 9, cost: { wood: 150, gold: 40 }, time: 24, r: 14, naval: true }
 };
 const BDEF = {
   hall:     { name: 'تالار شهر', size: 3, hp: 1600, cost: {}, time: 1, pop: 10, drop: true, train: ['worker'], sight: 9 },
@@ -233,9 +245,10 @@ const BDEF = {
   store:    { name: 'انبار', size: 2, hp: 500, cost: { wood: 80 }, time: 16, drop: true, sight: 5, desc: 'تحویل منابع' },
   barracks: { name: 'سربازخانه', size: 3, hp: 1100, cost: { wood: 120, stone: 40 }, time: 25, train: ['spear', 'archer', 'knight'], sight: 6, desc: 'آموزش سرباز' },
   tower:    { name: 'برج دیده‌بانی', size: 2, hp: 800, cost: { stone: 80, wood: 20 }, time: 22, range: 7, dmg: 10, cd: 1.3, sight: 9, desc: 'تیراندازی خودکار' },
-  wall:     { name: 'دیوار سنگی', size: 1, hp: 600, cost: { stone: 10 }, time: 4, sight: 2, desc: 'سد راه' }
+  wall:     { name: 'دیوار سنگی', size: 1, hp: 600, cost: { stone: 10 }, time: 4, sight: 2, desc: 'سد راه' },
+  dock:     { name: 'اسکله', size: 2, hp: 700, cost: { wood: 100 }, time: 18, train: ['transport', 'warship'], sight: 7, desc: 'ساخت کشتی؛ باید کنار آب باشد' }
 };
-const BUILD_LIST = ['house', 'farm', 'store', 'barracks', 'tower', 'wall'];
+const BUILD_LIST = ['house', 'farm', 'store', 'barracks', 'tower', 'wall', 'dock'];
 const DIFF = {
   easy:   { name: 'آسان', first: 360, interval: 200, trickle: 0.35, bonus: 1 },
   normal: { name: 'معمولی', first: 270, interval: 160, trickle: 0.7, bonus: 2 },
@@ -243,7 +256,7 @@ const DIFF = {
 };
 
 // ---------- world state ----------
-let tiles, amt, shade, bgrid, vis, explored;
+let tiles, amt, shade, bgrid, vis, explored, river;
 let G = null;
 // ME: the team the person at this screen plays. NET: solo, host (runs the simulation) or guest (mirrors the host).
 let ME = 0;
@@ -285,16 +298,48 @@ function noise(rng, scale) {
   }
   return f;
 }
+// make sure forests and quarries never wall anything in: cut the cheapest road (2 tiles wide, mirrored for fairness)
+// from the town to the enemy (land maps) or to the river (river maps), and to every quarry and gold vein
+function carvePath(goal, mapType) {
+  // only the river itself is off limits; lakes can be crossed by a ford
+  const cost = i => { const t = tiles[i]; return t === GRASS ? 1 : t === FOREST ? 6 : (t === STONE || t === GOLD) ? Infinity : mapType === 'river' && river[i] ? Infinity : 16; };
+  const dist = new Float32Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), done = new Uint8Array(N);
+  const s0 = (P_HALL.y - 1) * W + P_HALL.x + 1;
+  hv.length = 0; hi.length = 0; dist[s0] = 0; hpush(0, s0);
+  let end = -1;
+  while (hv.length) {
+    const c = hpop(); if (done[c]) continue; done[c] = 1;
+    if (goal(c)) { end = c; break; }
+    const cx = c % W, cy = (c / W) | 0;
+    for (const [dx, dy] of DIRS.slice(0, 4)) {
+      const nx = cx + dx, ny = cy + dy; if (!inb(nx, ny)) continue;
+      const ni = ny * W + nx, w = cost(ni); if (w === Infinity) continue;
+      const nd = dist[c] + w; if (nd < dist[ni]) { dist[ni] = nd; prev[ni] = c; hpush(nd, ni); }
+    }
+  }
+  for (let c = end; c >= 0; c = prev[c]) for (const k of [c, c + 1]) {
+    if (k >= N || tiles[k] === GRASS || cost(k) === Infinity) continue;
+    tiles[k] = GRASS; if (!(mapType === 'river' && river[N - 1 - k])) tiles[N - 1 - k] = GRASS;
+  }
+}
+function carveRoutes(mapType, deposits) {
+  const nb = i => DIRS.slice(0, 4).map(([dx, dy]) => [i % W + dx, ((i / W) | 0) + dy]).filter(([x, y]) => inb(x, y));
+  // the goal may be a forest tile: it gets cleared as part of the road
+  const open = i => tiles[i] === GRASS || tiles[i] === FOREST || (tiles[i] === WATER && !river[i]);
+  if (mapType === 'river') carvePath(i => open(i) && nb(i).some(([x, y]) => river[y * W + x]), mapType);
+  else { const e = (E_HALL.y + 3) * W + E_HALL.x + 1; carvePath(i => i === e, mapType); }
+  for (const d of deposits) carvePath(i => open(i) && nb(i).some(([x, y]) => tiles[y * W + x] === d.type && Math.hypot(x - d.x, y - d.y) <= d.r + 1.5), mapType);
+}
 function blob(cx, cy, r, type) {
   for (let y = Math.floor(cy - r); y <= cy + r; y++) for (let x = Math.floor(cx - r); x <= cx + r; x++)
     if (inb(x, y) && Math.hypot(x - cx, y - cy) <= r) tiles[y * W + x] = type;
 }
 const P_HALL = { x: 10, y: H - 13 };
 const E_HALL = { x: W - 3 - P_HALL.x, y: H - 3 - P_HALL.y };
-function genMap(seed) {
+function genMap(seed, mapType = 'land') {
   const rng = mulberry32(seed);
   tiles = new Uint8Array(N); amt = new Float32Array(N); shade = new Float32Array(N);
-  bgrid = new Array(N).fill(null); vis = new Uint8Array(N); explored = new Uint8Array(N);
+  bgrid = new Array(N).fill(null); vis = new Uint8Array(N); explored = new Uint8Array(N); river = new Uint8Array(N);
   const n1 = noise(rng, 9), n2 = noise(rng, 14), n3 = noise(rng, 5);
   for (let i = 0; i < N; i++) {
     shade[i] = n3[i];
@@ -303,23 +348,26 @@ function genMap(seed) {
   }
   const pc = { x: P_HALL.x + 1.5, y: P_HALL.y + 1.5 };
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (Math.hypot(x - pc.x, y - pc.y) < 11) tiles[y * W + x] = GRASS;
-  // a guaranteed corridor along the diagonal so the bases are always connected
-  for (let k = 0; k < W; k++) for (let w = -1; w <= 1; w++) {
-    const x = k, y = H - 1 - k + w; if (inb(x, y) && tiles[y * W + x] === WATER) tiles[y * W + x] = GRASS;
-  }
   // home resources sit a short walk outside the town, the rich deposits toward the middle
   blob(pc.x + 12, pc.y - 11, 3.4, FOREST);
   blob(pc.x + 2, pc.y - 16, 3, FOREST);
   blob(pc.x + 16, pc.y + 4, 2.6, FOREST);
   blob(pc.x - 7, pc.y + 7, 2, FOREST);
-  blob(pc.x + 14, pc.y + 9, 1.9, STONE);
-  blob(pc.x - 6, pc.y - 13, 1.9, GOLD);
-  blob(36, 62, 2.2, GOLD);
-  blob(30, 50, 2, STONE);
-  blob(46, 50, 1.6, GOLD);
-  blob(22, 60, 1.8, STONE);
+  const deposits = [
+    { x: pc.x + 14, y: pc.y + 9, r: 1.9, type: STONE }, { x: pc.x - 6, y: pc.y - 13, r: 1.9, type: GOLD },
+    { x: 36, y: 62, r: 2.2, type: GOLD }, { x: 30, y: 50, r: 2, type: STONE }, { x: 46, y: 50, r: 1.6, type: GOLD }, { x: 22, y: 60, r: 1.8, type: STONE }
+  ];
+  for (const d of deposits) blob(d.x, d.y, d.r, d.type);
+  if (mapType === 'river') {
+    // a wide river along the diagonal splits the two shores: the only way across is by ship
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const d = (x - y) + Math.sin((x + y - (W - 1)) * 0.07) * 5;
+      if (Math.abs(d) < 3.6) { tiles[y * W + x] = WATER; river[y * W + x] = 1; }
+    }
+  }
   // point-symmetric mirror: the enemy corner is an exact copy of ours
-  for (let i = 0; i < N / 2; i++) { tiles[i] = tiles[N - 1 - i]; shade[i] = shade[N - 1 - i]; }
+  for (let i = 0; i < N / 2; i++) { tiles[i] = tiles[N - 1 - i]; shade[i] = shade[N - 1 - i]; river[i] = river[N - 1 - i]; }
+  carveRoutes(mapType, deposits.filter(d => mapType !== 'river' || Math.abs(d.x - d.y) > 6));
   for (let i = 0; i < N; i++) amt[i] = tiles[i] === FOREST ? 100 : tiles[i] === STONE ? 300 : tiles[i] === GOLD ? 300 : 0;
 }
 // ---------- ground texture (flat, later drawn through the isometric transform) ----------
@@ -439,7 +487,7 @@ function banner(g, P, y, xa, xb, za, zb, tc) {
 }
 const BSPR = {
   hall: { maxZ: 120, top: 76 }, house: { maxZ: 80, top: 46 }, farm: { maxZ: 50, top: 14 }, store: { maxZ: 70, top: 38 },
-  barracks: { maxZ: 90, top: 60 }, tower: { maxZ: 140, top: 100 }, wall: { maxZ: 40, top: 30 }
+  barracks: { maxZ: 90, top: 60 }, tower: { maxZ: 140, top: 100 }, wall: { maxZ: 40, top: 30 }, dock: { maxZ: 70, top: 36 }
 };
 const sprCache = {};
 function getSprite(type, team) {
@@ -557,6 +605,17 @@ function getSprite(type, team) {
       flag(g, P, 32, 32, 94, 34, tc);
       break;
     }
+    case 'dock': {
+      poly(g, [P(0, 0), P(L, 0), P(L, L), P(0, L)], '#7a5c3a');
+      for (let k = 4; k < L; k += 6) seg(g, P(k, 0, 0), P(k, L, 0), 'rgba(40,25,10,0.45)', 1);
+      for (const [x, y] of [[2, 2], [L - 2, 2], [2, L - 2], [L - 2, L - 2], [L / 2, L - 2], [L - 2, L / 2]]) { const a = P(x, y, -6), b = P(x, y, 6); seg(g, a, b, '#4a3220', 3); }
+      prism(g, P, 6, 6, 26, 26, 0, 18, null, '#a37c4d', '#7d5d38');
+      poly(g, [P(4, 4, 26), P(28, 4, 26), P(28, 28, 18), P(4, 28, 18)], '#6e4f2f');
+      const m = P(46, 18, 0), mt = P(46, 18, 44); seg(g, m, mt, '#4a3220', 3); seg(g, mt, P(30, 40, 38), '#4a3220', 2); seg(g, P(30, 40, 38), P(30, 40, 16), '#c9c0a8', 1);
+      prism(g, P, 40, 40, 50, 50, 0, 9, '#c79c63', '#b08657', '#8a6a44');
+      flag(g, P, 8, 8, 26, 24, tc);
+      break;
+    }
     case 'wall': {
       groundShadow(0, 0, 32, 32, 12);
       prism(g, P, 0, 0, 32, 32, 0, 22, '#a8a495', STONE_C.left, STONE_C.right); courses(g, P, 0, 0, 32, 32, 0, 22, STONE_C.line);
@@ -617,7 +676,7 @@ const hv = [], hi = [];
 function hpush(f, i) { hv.push(f); hi.push(i); let c = hv.length - 1; while (c > 0) { const p = (c - 1) >> 1; if (hv[p] <= hv[c]) break; [hv[p], hv[c]] = [hv[c], hv[p]]; [hi[p], hi[c]] = [hi[c], hi[p]]; c = p; } }
 function hpop() { const r = hi[0]; const lv = hv.pop(), li = hi.pop(); if (hv.length) { hv[0] = lv; hi[0] = li; let c = 0; for (;;) { const l = 2 * c + 1, rr = l + 1; let m = c; if (l < hv.length && hv[l] < hv[m]) m = l; if (rr < hv.length && hv[rr] < hv[m]) m = rr; if (m === c) break; [hv[m], hv[c]] = [hv[c], hv[m]]; [hi[m], hi[c]] = [hi[c], hi[m]]; c = m; } } return r; }
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
-function findPath(sx, sy, goal, gx, gy, limit = 14000) {
+function findPath(sx, sy, goal, gx, gy, limit = 14000, pass = passable) {
   stamp++; hv.length = 0; hi.length = 0;
   const hd = (x, y) => { const dx = Math.abs(x - gx), dy = Math.abs(y - gy); return Math.max(dx, dy) + 0.414 * Math.min(dx, dy); };
   const s = sy * W + sx; gS[s] = 0; stampA[s] = stamp; came[s] = -1; hpush(hd(sx, sy), s);
@@ -630,8 +689,8 @@ function findPath(sx, sy, goal, gx, gy, limit = 14000) {
     if (++n > limit) break;
     for (const [dx, dy] of DIRS) {
       const nx = cx + dx, ny = cy + dy;
-      if (!passable(nx, ny)) continue;
-      if (dx && dy && (!passable(cx + dx, cy) || !passable(cx, cy + dy))) continue;
+      if (!pass(nx, ny)) continue;
+      if (dx && dy && (!pass(cx + dx, cy) || !pass(cx, cy + dy))) continue;
       const ni = ny * W + nx; if (closedA[ni] === stamp) continue;
       const g = gS[c] + (dx && dy ? 1.414 : 1);
       if (stampA[ni] !== stamp || g < gS[ni]) { stampA[ni] = stamp; gS[ni] = g; came[ni] = c; hpush(g + hd(nx, ny), ni); }
@@ -667,15 +726,19 @@ function distRect(x, y, b) { const dx = Math.max(b.tx * T - x, 0, x - (b.tx + b.
 function distTo(x, y, t) { return t.kind === 'u' ? Math.hypot(x - t.x, y - t.y) - UDEF[t.type].r : distRect(x, y, t); }
 function adjBld(u, b) { const x = tileOf(u.x), y = tileOf(u.y); return x >= b.tx - 1 && x <= b.tx + b.size && y >= b.ty - 1 && y <= b.ty + b.size; }
 function adjTile(u, rx, ry) { return Math.abs(tileOf(u.x) - rx) <= 1 && Math.abs(tileOf(u.y) - ry) <= 1; }
-function nearFree(tx, ty, maxR = 8) {
+function nearFree(tx, ty, maxR = 8, pass = passable) {
   for (let r = 0; r <= maxR; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
     if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-    if (passable(tx + dx, ty + dy)) return [tx + dx, ty + dy];
+    if (pass(tx + dx, ty + dy)) return [tx + dx, ty + dy];
   }
   return null;
 }
-function unstick(u) { const p = nearFree(tileOf(u.x), tileOf(u.y)); if (p) { u.x = p[0] * T + 16; u.y = p[1] * T + 16; u.path = null; } }
-const isMil = u => u.type !== 'worker';
+function unstick(u) { const p = nearFree(tileOf(u.x), tileOf(u.y), 8, passFor(u)); if (p) { u.x = p[0] * T + 16; u.y = p[1] * T + 16; u.path = null; } }
+const isMil = u => u.type !== 'worker' && !UDEF[u.type].naval;
+const isNaval = u => !!UDEF[u.type].naval;
+const waterPass = (x, y) => inb(x, y) && tiles[y * W + x] === WATER;
+const passFor = u => UDEF[u.type].naval ? waterPass : passable;
+const terrainPass = (x, y) => inb(x, y) && tiles[y * W + x] === GRASS;
 const hasOpenSide = (x, y) => { for (const [dx, dy] of DIRS) if (passable(x + dx, y + dy)) return true; return false; };
 function claimCount(xx, yy, self) {
   let n = 0;
@@ -771,6 +834,67 @@ function doGarrison(u, o, dt) {
   if (follow(u, dt) && !adjBld(u, b)) { u.path = null; if (++o.fails > 12) u.order = null; }
 }
 
+// ---------- ships ----------
+function orderBoard(u, ship) { setOrder(u, { k: 'board', ship, fails: 0 }); }
+function orderUnload(ship, tx, ty) { setOrder(ship, { k: 'unload', tx, ty, fails: 0 }); }
+const boardingFor = ship => G.units.filter(u => u.order && u.order.k === 'board' && u.order.ship === ship).length;
+function doBoard(u, o, dt) {
+  const ship = o.ship;
+  if (ship.dead || (ship.cargo || []).length >= UDEF[ship.type].cap) { u.order = null; u.path = null; return; }
+  if (Math.hypot(u.x - ship.x, u.y - ship.y) <= 1.8 * T) {
+    // aboard: the soldier leaves the map and travels inside the ship
+    ship.cargo = ship.cargo || []; ship.cargo.push(u);
+    u.order = null; u.path = null; u.carry.amt = 0; u.aboard = true;
+    G.sel.delete(u); hudDirty = true;
+    return;
+  }
+  u.rp -= dt;
+  if (!u.path || u.rp <= 0) {
+    u.rp = 1;
+    setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => Math.hypot(x * T + 16 - ship.x, y * T + 16 - ship.y) <= 1.6 * T, tileOf(ship.x), tileOf(ship.y), 9000));
+    if (!u.path.length && ++o.fails > 8) { u.order = null; notify(u.team, 'یگان‌ها به کشتی نمی‌رسند؛ کشتی را کنار ساحل ببر', true); }
+  }
+  follow(u, dt);
+}
+// a landing spot: a water tile next to dry, free land, as close as possible to where the player clicked
+function findLanding(tx, ty, fromX, fromY) {
+  let best = null, bd = 1e9;
+  for (let r = 0; r <= 22 && !best; r++) for (let y = ty - r; y <= ty + r; y++) for (let x = tx - r; x <= tx + r; x++) {
+    if (Math.max(Math.abs(x - tx), Math.abs(y - ty)) !== r || !waterPass(x, y)) continue;
+    for (const [dx, dy] of DIRS.slice(0, 4)) if (passable(x + dx, y + dy)) {
+      const d = Math.hypot(x - tx, y - ty) + (fromX !== undefined ? Math.hypot(x - fromX, y - fromY) * 0.01 : 0);
+      if (d < bd) { bd = d; best = { wx: x, wy: y, lx: x + dx, ly: y + dy }; }
+    }
+  }
+  return best;
+}
+function unloadShip(ship, lx, ly) {
+  const cargo = ship.cargo || []; if (!cargo.length) return 0;
+  const spots = formationTiles(lx, ly, cargo.length);
+  cargo.forEach((u, i) => { u.x = spots[i][0] * T + 16; u.y = spots[i][1] * T + 16; u.aboard = false; u.order = null; u.path = null; G.units.push(u); });
+  const n = cargo.length; ship.cargo = [];
+  if (ship.team === 1 && G.mode !== 'vs') { const tg = G.blds.find(b => b.team === 0 && b.type === 'hall' && !b.dead) || G.blds.find(b => b.team === 0 && !b.dead); if (tg) cargo.forEach(u => orderAMove(u, bcx(tg), bcy(tg))); }
+  notify(ship.team, fa(n) + ' یگان پیاده شدند');
+  return n;
+}
+function doUnload(u, o, dt) {
+  if (!o.spot) {
+    o.spot = findLanding(o.tx, o.ty, tileOf(u.x), tileOf(u.y));
+    if (!o.spot) { u.order = null; notify(u.team, 'ساحلی برای پیاده شدن نزدیک آنجا نیست', true); return; }
+    u.path = null;
+  }
+  const sp = o.spot;
+  if (tileOf(u.x) === sp.wx && tileOf(u.y) === sp.wy || Math.hypot(u.x - (sp.wx * T + 16), u.y - (sp.wy * T + 16)) < 10) { unloadShip(u, sp.lx, sp.ly); u.order = null; return; }
+  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x === sp.wx && y === sp.wy, sp.wx, sp.wy, 14000, waterPass));
+  if (follow(u, dt)) {
+    // couldn't get all the way (another lake?): drop them at the nearest shore if there is one right here
+    const near = findLanding(tileOf(u.x), tileOf(u.y));
+    if (near && Math.abs(near.wx - tileOf(u.x)) <= 1 && Math.abs(near.wy - tileOf(u.y)) <= 1) { unloadShip(u, near.lx, near.ly); u.order = null; }
+    else if (++o.fails > 3) { u.order = null; notify(u.team, 'کشتی از این آب به آن ساحل راه ندارد', true); }
+    else u.path = null;
+  }
+}
+
 // ---------- orders ----------
 function setOrder(u, o) { u.order = o; u.path = null; u.rp = 0; }
 function orderMove(u, x, y) { setOrder(u, { k: 'move', gx: tileOf(x), gy: tileOf(y) }); }
@@ -788,7 +912,7 @@ function orderAttack(u, t, auto) { setOrder(u, { k: 'attack', t, auto: !!auto, h
 function follow(u, dt) {
   if (!u.path || u.pi >= u.path.length) return true;
   const [tx, ty] = u.path[u.pi];
-  if (!passable(tx, ty)) { u.path = null; return false; }
+  if (!passFor(u)(tx, ty)) { u.path = null; return false; }
   const nx = tx * T + 16, ny = ty * T + 16, dx = nx - u.x, dy = ny - u.y, d = Math.hypot(dx, dy);
   const sp = UDEF[u.type].speed * T * dt;
   if (d > 0.01) u.face = Math.atan2(dy, dx);
@@ -796,11 +920,11 @@ function follow(u, dt) {
   if (d <= sp) { u.x = nx; u.y = ny; u.pi++; } else { u.x += dx / d * sp; u.y += dy / d * sp; }
   return u.pi >= u.path.length;
 }
-function losClear(x0, y0, x1, y1) {
+function losClear(x0, y0, x1, y1, pass = passable) {
   const d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 6);
   for (let i = 1; i <= n; i++) {
     const x = x0 + (x1 - x0) * i / n, y = y0 + (y1 - y0) * i / n;
-    for (const [ox, oy] of [[0, 0], [7, 7], [-7, 7], [7, -7], [-7, -7]]) if (!passable(Math.floor((x + ox) / T), Math.floor((y + oy) / T))) return false;
+    for (const [ox, oy] of [[0, 0], [7, 7], [-7, 7], [7, -7], [-7, -7]]) if (!pass(Math.floor((x + ox) / T), Math.floor((y + oy) / T))) return false;
   }
   return true;
 }
@@ -810,7 +934,7 @@ function smoothPath(u, path) {
   const out = []; let cx = u.x, cy = u.y, i = 0;
   while (i < path.length) {
     let j = Math.min(path.length - 1, i + 14);
-    while (j > i && !losClear(cx, cy, path[j][0] * T + 16, path[j][1] * T + 16)) j--;
+    while (j > i && !losClear(cx, cy, path[j][0] * T + 16, path[j][1] * T + 16, passFor(u))) j--;
     out.push(path[j]); cx = path[j][0] * T + 16; cy = path[j][1] * T + 16; i = j + 1;
   }
   return out;
@@ -819,7 +943,7 @@ function setPath(u, p) { u.path = smoothPath(u, p); u.pi = 0; }
 function steer(u, x, y, dt) {
   const dx = x - u.x, dy = y - u.y, d = Math.hypot(dx, dy); if (d < 1) return;
   const sp = UDEF[u.type].speed * T * dt, nx = u.x + dx / d * sp, ny = u.y + dy / d * sp;
-  if (passable(tileOf(nx), tileOf(ny))) { u.x = nx; u.y = ny; u.walk = (u.walk || 0) + sp; u.mvT = G.t; } u.face = Math.atan2(dy, dx);
+  if (passFor(u)(tileOf(nx), tileOf(ny))) { u.x = nx; u.y = ny; u.walk = (u.walk || 0) + sp; u.mvT = G.t; } u.face = Math.atan2(dy, dx);
 }
 function scanEnemy(u, radius, withBuildings) {
   let best = null, bd = radius * T;
@@ -836,12 +960,12 @@ function updUnit(u, dt) {
   u.cd = Math.max(0, u.cd - dt);
   const o = u.order;
   if (!o) {
-    if (isMil(u)) { u.scan -= dt; if (u.scan <= 0) { u.scan = 0.5; const e = scanEnemy(u, UDEF[u.type].sight, false); if (e) orderAttack(u, e, true); } }
+    if (isMil(u) || UDEF[u.type].dmg > 0 && isNaval(u)) { u.scan -= dt; if (u.scan <= 0) { u.scan = 0.5; const e = scanEnemy(u, UDEF[u.type].sight, false); if (e) orderAttack(u, e, true); } }
     return;
   }
   switch (o.k) {
     case 'move': {
-      if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x === o.gx && y === o.gy, o.gx, o.gy));
+      if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x === o.gx && y === o.gy, o.gx, o.gy, 14000, passFor(u)));
       if (follow(u, dt) && u.path) u.order = null;
       break;
     }
@@ -863,6 +987,8 @@ function updUnit(u, dt) {
     case 'build': return doBuild(u, o, dt);
     case 'farm': return doFarm(u, o, dt);
     case 'garrison': return doGarrison(u, o, dt);
+    case 'board': return doBoard(u, o, dt);
+    case 'unload': return doUnload(u, o, dt);
   }
 }
 function doAttack(u, o, dt) {
@@ -880,7 +1006,7 @@ function doAttack(u, o, dt) {
   if (!u.path || u.rp <= 0) {
     u.rp = 0.8;
     const gx = tileOf(posX(t)), gy = tileOf(posY(t));
-    setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => distTo(x * T + 16, y * T + 16, t) <= rng, gx, gy, 4000));
+    setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => distTo(x * T + 16, y * T + 16, t) <= rng, gx, gy, 4000, passFor(u)));
     if (!u.path.length && dist > 3 * T) { if (++o.fails > 6) { u.order = o.resume || null; u.path = null; } }
   }
   if (follow(u, dt) && dist < 3 * T) steer(u, posX(t), posY(t), dt);
@@ -972,7 +1098,8 @@ function kill(e) {
     notify(e.team, BDEF[e.type].name + ' ویران شد', true);
   } else {
     G.stats.lost[e.team]++;
-    addFx({ k: 'corpse', x: e.x, y: e.y, team: e.team, type: e.type, t: 9, flip: Math.random() < 0.5 });
+    if (e.cargo && e.cargo.length) { G.stats.lost[e.team] += e.cargo.length; notify(e.team, UDEF[e.type].name + ' با ' + fa(e.cargo.length) + ' سرنشین غرق شد', true); e.cargo = []; }
+    if (!isNaval(e)) addFx({ k: 'corpse', x: e.x, y: e.y, team: e.team, type: e.type, t: 9, flip: Math.random() < 0.5 });
   }
   G.sel.delete(e);
 }
@@ -992,7 +1119,7 @@ function updBuilding(b, dt) {
     if (G.pop[b.team] >= G.cap[b.team]) { b.blocked = true; return; }
     b.blocked = false; b.qt += dt;
     if (b.qt >= UDEF[type].time) {
-      const p = nearFree(b.tx + 1, b.ty + b.size, 6) || nearFree(b.tx, b.ty, 8);
+      const p = UDEF[type].naval ? nearFree(b.tx + 1, b.ty + 1, 6, waterPass) : nearFree(b.tx + 1, b.ty + b.size, 6) || nearFree(b.tx, b.ty, 8);
       if (!p) return;
       b.qt = 0; b.queue.shift();
       const u = addUnit(type, b.team, p[0] * T + 16, p[1] * T + 16);
@@ -1024,7 +1151,7 @@ function separate() {
     if (ghost(a)) continue;
     const ra = UDEF[a.type].r, aa = anchored(a), am = moving(a);
     for (let j = i + 1; j < n; j++) {
-      const b = us[j]; if (b.gar || ghost(b)) continue;
+      const b = us[j]; if (b.gar || ghost(b) || isNaval(a) !== isNaval(b)) continue;
       const bm = moving(b);
       if (am && bm) continue;
       const rr = ra + UDEF[b.type].r - 3, dx = b.x - a.x, dy = b.y - a.y;
@@ -1036,8 +1163,8 @@ function separate() {
       if (d < 0.01) { const r = (a.id * 7 + b.id) % 6.28; nx = Math.cos(r); ny = Math.sin(r); d = 0.01; } else { nx = dx / d; ny = dy / d; }
       const push = (rr - d) * 0.3 / (wa + wb);
       const ax = a.x - nx * push * wa, ay = a.y - ny * push * wa, bx = b.x + nx * push * wb, by = b.y + ny * push * wb;
-      if (wa && passable(tileOf(ax), tileOf(ay))) { a.x = ax; a.y = ay; }
-      if (wb && passable(tileOf(bx), tileOf(by))) { b.x = bx; b.y = by; }
+      if (wa && passFor(a)(tileOf(ax), tileOf(ay))) { a.x = ax; a.y = ay; }
+      if (wb && passFor(b)(tileOf(bx), tileOf(by))) { b.x = bx; b.y = by; }
     }
   }
 }
@@ -1065,6 +1192,7 @@ function aiBuild(type, hall, workers) {
   return true;
 }
 function aiTick() {
+  aiNavy();
   const A = G.ai, R = G.res[1], df = DIFF[G.diff];
   R.food += df.trickle * 1.2; R.gold += df.trickle * 0.6; R.wood += df.trickle * 0.8; R.stone += df.trickle * 0.4;
   const hall = G.blds.find(b => b.team === 1 && b.type === 'hall' && !b.dead);
@@ -1102,6 +1230,26 @@ function aiTick() {
     A.alarm = null;
   }
 }
+// is there a road on dry land (ignoring buildings) from one base to the other?
+function landRoute(a, b) {
+  const p = findPath(a.tx + 1, a.ty + a.size, (x, y) => Math.abs(x - (b.tx + 1)) <= 2 && Math.abs(y - (b.ty + 1)) <= 2, b.tx + 1, b.ty + 1, 30000, terrainPass);
+  if (!p.length) return false;
+  const [x, y] = p[p.length - 1]; return Math.abs(x - (b.tx + 1)) <= 2 && Math.abs(y - (b.ty + 1)) <= 2;
+}
+function navalWave(hall, target, army) {
+  const dock = G.blds.find(b => b.team === 1 && b.type === 'dock' && !b.dead);
+  const start = dock ? nearFree(dock.tx + 1, dock.ty + 1, 6, waterPass) : nearFree(hall.tx + 1, hall.ty + 1, 30, waterPass);
+  if (!start || !army.length) return;
+  const ships = [];
+  for (let k = 0; k < Math.ceil(army.length / 8); k++) { const p = nearFree(start[0], start[1], 6, waterPass) || start; ships.push(addUnit('transport', 1, p[0] * T + 16, p[1] * T + 16)); }
+  army.forEach((u, i) => orderBoard(u, ships[Math.floor(i / 8)]));
+  G.ai.landing = { ships, t: G.t, target: { tx: target.tx + 1, ty: target.ty + 1 }, sailed: false };
+}
+function aiNavy() {
+  const L = G.ai.landing; if (!L || L.sailed) return;
+  const waiting = G.units.some(u => u.team === 1 && u.order && u.order.k === 'board');
+  if (!waiting || G.t - L.t > 40) { L.sailed = true; L.ships.forEach(s => { if (!s.dead) orderUnload(s, L.target.tx, L.target.ty); }); }
+}
 function launchWave() {
   const df = DIFF[G.diff], n = G.wave++;
   const hall = G.blds.find(b => b.team === 1 && b.type === 'hall' && !b.dead);
@@ -1112,7 +1260,9 @@ function launchWave() {
     const p = nearFree(hall.tx + 1, hall.ty + 4, 6); if (p) addUnit(t, 1, p[0] * T + 16, p[1] * T + 16);
   }
   const target = G.blds.find(b => b.team === 0 && b.type === 'hall' && !b.dead) || G.blds.find(b => b.team === 0 && !b.dead);
-  if (target) G.units.filter(u => u.team === 1 && isMil(u)).forEach(u => orderAMove(u, bcx(target), bcy(target)));
+  const army = G.units.filter(u => u.team === 1 && isMil(u) && !(u.order && u.order.k === 'board'));
+  if (target && landRoute(hall, target)) army.forEach(u => orderAMove(u, bcx(target), bcy(target)));
+  else if (target) navalWave(hall, target, army);
   G.waveT = df.interval;
   notifyAll('موج ' + fa(n + 1) + ' سپاه دشمن به سوی دهکده می‌آید', true);
 }
@@ -1140,9 +1290,16 @@ function newGame(diff, opts = {}) {
     pop: [0, 0], cap: [0, 0], alarmAt: {}, fx: [], fxOut: [], tileLog: [], loser: -1 };
   const seed = opts.seed ?? ((Math.random() * 1e9) | 0);
   G.seed = seed;
-  genMap(seed);
+  G.mapType = opts.mapType || 'land';
+  genMap(seed, G.mapType);
   addBuilding('hall', 0, P_HALL.x, P_HALL.y, true);
   addBuilding('hall', 1, E_HALL.x, E_HALL.y, true);
+  if (mode !== 'vs' && G.mapType === 'river') {
+    // the enemy camp starts with a dock on its shore
+    let best = null, bd = 1e9;
+    for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) { const d = Math.hypot(x - E_HALL.x, y - E_HALL.y); if (d < bd && d > 5 && placeValid('dock', x, y, 1) && [[x - 1, y], [x + 2, y], [x, y - 1], [x, y + 2], [x + 1, y - 1], [x + 1, y + 2], [x - 1, y + 1], [x + 2, y + 1]].some(([a, b]) => inb(a, b) && river[b * W + a])) { bd = d; best = [x, y]; } }
+    if (best) addBuilding('dock', 1, best[0], best[1], true);
+  }
   if (mode !== 'vs') {
     addBuilding('barracks', 1, E_HALL.x - 5, E_HALL.y + 1, true);
     addBuilding('tower', 1, E_HALL.x + 1, E_HALL.y + 5, true);
@@ -1243,7 +1400,38 @@ function drawBuilding(b) {
   }
 }
 function ell(x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 7); }
+function drawShip(u) {
+  const war = u.type === 'warship', tc = TEAM[u.team], c = Math.cos(u.face), s = Math.sin(u.face);
+  const bob = Math.sin(G.t * 2 + u.id) * 1.5;
+  const P = (lx, ly, z = 0) => { const wx = u.x + c * lx - s * ly, wy = u.y + s * lx + c * ly; return [isoX(wx, wy), isoY(wx, wy) - z + bob]; };
+  const moving = G.t - (u.mvT || -9) < 0.15;
+  if (moving) { ctx.strokeStyle = 'rgba(230,240,240,0.45)'; ctx.lineWidth = 2; ctx.beginPath(); const a = P(-22, -6), b = P(-38, -14), d = P(-22, 6), e = P(-38, 14); ctx.moveTo(...a); ctx.lineTo(...b); ctx.moveTo(...d); ctx.lineTo(...e); ctx.stroke(); }
+  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(isoX(u.x, u.y), isoY(u.x, u.y), 30, 15); ctx.stroke(); }
+  const hull = [[24, 0], [12, 9], [-18, 9], [-22, 0], [-18, -9], [12, -9]];
+  poly(ctx, hull.map(([x, y]) => P(x, y, 0)), 'rgba(0,0,0,0.25)');
+  poly(ctx, hull.map(([x, y]) => P(x, y, 7)), '#6b4a2a', '#3d2a17', 1);
+  poly(ctx, [[18, 0], [9, 6], [-15, 6], [-18, 0], [-15, -6], [9, -6]].map(([x, y]) => P(x, y, 8)), '#a37c4d');
+  for (const lx of [-10, 0, 10]) { const a = P(lx, -6, 8), b = P(lx, 6, 8); seg(ctx, a, b, 'rgba(60,40,20,0.5)', 1); }
+  const masts = war ? [6, -10] : [-2];
+  for (const mx of masts) {
+    const base = P(mx, 0, 8), top = [base[0], base[1] - (war ? 34 : 40)];
+    seg(ctx, base, top, '#3a2c1e', 2);
+    const w = war ? 12 : 15;
+    ctx.fillStyle = '#e8e0c8'; ctx.beginPath(); ctx.moveTo(top[0] - w, top[1] + 5); ctx.quadraticCurveTo(top[0] + (c - s > 0 ? 5 : -5), top[1] + 15, top[0] - w, top[1] + 27); ctx.lineTo(top[0] + w, top[1] + 27); ctx.quadraticCurveTo(top[0] + (c - s > 0 ? 9 : -1), top[1] + 15, top[0] + w, top[1] + 5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = tc; ctx.fillRect(top[0] - w, top[1] + 12, w * 2, 5);
+    ctx.fillStyle = tc; ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.lineTo(top[0] + 10, top[1] + 3); ctx.lineTo(top[0], top[1] + 6); ctx.fill();
+  }
+  if (war) { const a = P(16, 0, 9); ctx.fillStyle = '#5b4126'; ctx.fillRect(a[0] - 3, a[1] - 6, 6, 6); }
+  const n = u.cargo ? u.cargo.length : u.cargoN || 0;
+  const top = isoY(u.x, u.y) - 52 + bob;
+  if (u.type === 'transport' && (n || G.sel.has(u))) {
+    ctx.fillStyle = 'rgba(20,22,15,0.85)'; ctx.fillRect(isoX(u.x, u.y) - 16, top - 22, 32, 15);
+    ctx.fillStyle = '#ece6d2'; ctx.font = '700 11px Vazirmatn, Tahoma, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.direction = 'ltr'; ctx.fillText(fa(n) + '/' + fa(UDEF.transport.cap), isoX(u.x, u.y), top - 14); ctx.direction = 'inherit';
+  }
+  if (G.sel.has(u) || u.hp < u.maxhp) bar(isoX(u.x, u.y) - 16, top - 5, 32, u.hp / u.maxhp, hpCol(u.hp / u.maxhp));
+}
 function drawUnit(u) {
+  if (isNaval(u)) return drawShip(u);
   const sx = isoX(u.x, u.y), sy = isoY(u.x, u.y) - (u.z || 0), d = UDEF[u.type], tc = TEAM[u.team], dk = shadeHex(tc, -0.35);
   const sdx = Math.cos(u.face) - Math.sin(u.face), flip = sdx < 0 ? -1 : 1;
   const moving = G.t - (u.mvT || -9) < 0.12, ph = moving ? Math.sin((u.walk || 0) * 0.32) : 0;
@@ -1322,6 +1510,11 @@ function drawRubble(f) {
 function placeValid(type, tx, ty, team = ME) {
   const s = BDEF[type].size;
   for (let y = ty; y < ty + s; y++) for (let x = tx; x < tx + s; x++) if (!freeTile(x, y) || (team === ME && !explored[y * W + x])) return false;
+  if (type === 'dock') {
+    let shore = false;
+    for (let y = ty - 1; y <= ty + s && !shore; y++) for (let x = tx - 1; x <= tx + s; x++) if ((x < tx || x >= tx + s || y < ty || y >= ty + s) && (x === tx - 1 || x === tx + s) !== (y === ty - 1 || y === ty + s) && waterPass(x, y)) { shore = true; break; }
+    if (!shore) return false;
+  }
   return true;
 }
 function ghostTile(type, wx, wy) { const s = BDEF[type].size; return { tx: Math.floor(wx / T - s / 2 + 0.5), ty: Math.floor(wy / T - s / 2 + 0.5) }; }
@@ -1454,13 +1647,13 @@ function drawMini() {
 // ---------- input ----------
 const ptr = { x: 0, y: 0, inside: false, box: null, down: null };
 const keys = new Set();
-const BH = { hall: 80, house: 50, farm: 12, store: 40, barracks: 64, tower: 104, wall: 30 };
+const BH = { hall: 80, house: 50, farm: 12, store: 40, barracks: 64, tower: 104, wall: 30, dock: 40 };
 function entityAt(wx, wy) {
   const ix = isoX(wx, wy), iy = isoY(wx, wy);
   let best = null, bd = 1e9;
   for (const u of G.units) {
     if (u.dead || !seen(u)) continue;
-    const ux = isoX(u.x, u.y), uy = isoY(u.x, u.y) - (u.z || 0), big = u.type === 'knight', hw = big ? 16 : 9, top = big ? 42 : 30;
+    const ux = isoX(u.x, u.y), uy = isoY(u.x, u.y) - (u.z || 0), ship = isNaval(u), big = u.type === 'knight', hw = ship ? 26 : big ? 16 : 9, top = ship ? 50 : big ? 42 : 30;
     if (Math.abs(ix - ux) <= hw && iy <= uy + 5 && iy >= uy - top) { const d = Math.abs(ix - ux) + Math.abs(iy - (uy - top / 2)) - (u.x + u.y) * 0.01; if (d < bd) { bd = d; best = u; } }
   }
   if (best) return best;
@@ -1485,12 +1678,12 @@ function resTileAt(wx, wy) {
 }
 function selectOnly(list) { G.sel = new Set(list); G.placing = null; hudDirty = true; }
 function myUnits() { return [...G.sel].filter(e => e.kind === 'u' && e.team === ME && !e.dead); }
-function formationTiles(gx, gy, n) {
+function formationTiles(gx, gy, n, pass = passable) {
   const out = [], seenT = new Set(), q = [[gx, gy]]; seenT.add(gy * W + gx);
-  if (!passable(gx, gy)) { const p = nearFree(gx, gy, 6); if (!p) return [[gx, gy]]; q[0] = p; seenT.add(p[1] * W + p[0]); }
+  if (!pass(gx, gy)) { const p = nearFree(gx, gy, 10, pass); if (!p) return [[gx, gy]]; q[0] = p; seenT.add(p[1] * W + p[0]); }
   while (q.length && out.length < n) {
-    const [x, y] = q.shift(); if (passable(x, y)) out.push([x, y]);
-    for (const [dx, dy] of DIRS.slice(0, 4)) { const nx = x + dx, ny = y + dy, k = ny * W + nx; if (inb(nx, ny) && !seenT.has(k) && passable(nx, ny)) { seenT.add(k); q.push([nx, ny]); } }
+    const [x, y] = q.shift(); if (pass(x, y)) out.push([x, y]);
+    for (const [dx, dy] of DIRS.slice(0, 4)) { const nx = x + dx, ny = y + dy, k = ny * W + nx; if (inb(nx, ny) && !seenT.has(k) && pass(nx, ny)) { seenT.add(k); q.push([nx, ny]); } }
   }
   while (out.length < n) out.push(out[0] || [gx, gy]);
   return out;
@@ -1512,7 +1705,8 @@ function command(wx, wy) {
   if (NET.role === 'guest') {
     netSend({ c: 'cmd', ids: us.map(u => u.id), wx, wy, e: e ? e.id : 0, rt });
     // predict which workers got a job, to let go of them like the host would
-    if (e && e.team === ME && e.kind === 'b' && e.built && GAR[e.type] && archers.length) busy = archers;
+    if (e && e.team === ME && e.kind === 'u' && e.type === 'transport') busy = us.filter(u => !isNaval(u));
+    else if (e && e.team === ME && e.kind === 'b' && e.built && GAR[e.type] && archers.length) busy = archers;
     else if (e && e.team === ME && e.kind === 'b' && workers.length && (!e.built || e.type === 'farm' || BDEF[e.type].drop)) busy = e.type === 'farm' ? workers.slice(0, 1) : workers;
     else if (rt && workers.length) busy = workers;
     else busy = [];
@@ -1525,7 +1719,25 @@ function command(wx, wy) {
 }
 function execCommand(team, us, wx, wy, e, rt) {
   const tx = tileOf(wx), ty = tileOf(wy);
+  const navy = us.filter(isNaval), landers = us.filter(u => !isNaval(u));
+  // soldiers clicked onto our own transport: walk aboard
+  if (e && e.kind === 'u' && e.type === 'transport' && e.team === team && landers.length) {
+    let free = UDEF.transport.cap - (e.cargo || []).length - boardingFor(e), left = 0;
+    landers.forEach(u => { if (free > 0) { if (u.gar) leaveGarrison(u); orderBoard(u, e); free--; } else left++; });
+    if (left) notify(team, 'کشتی پر است؛ ' + fa(left) + ' یگان جا نشدند', true);
+    return landers;
+  }
+  if (navy.length && !(e && e.team !== team)) {
+    const land = inb(tx, ty) && !waterPass(tx, ty);
+    const toMove = [];
+    navy.forEach(sh => { if (land && sh.type === 'transport' && (sh.cargo || []).length) orderUnload(sh, tx, ty); else toMove.push(sh); });
+    const spots = formationTiles(tx, ty, toMove.length, waterPass);
+    toMove.forEach((sh, i) => orderMove(sh, spots[i][0] * T + 16, spots[i][1] * T + 16));
+    us = landers;
+    if (!us.length) return [];
+  }
   if (e && e.team !== team) {
+    us = us.filter(u => UDEF[u.type].dmg > 0);
     us.forEach(u => {
       if (u.gar && distTo(u.x, u.y, e) <= (UDEF[u.type].range + GAR[u.gar.type].rng) * T) { u.order = { k: 'attack', t: e }; return; }
       if (u.gar) leaveGarrison(u);
@@ -1700,9 +1912,10 @@ cv.addEventListener('pointerup', e => {
       const ent = entityAt(w.x, w.y), mine = myUnits();
       const workersSel = mine.some(u => u.type === 'worker'), archersSel = mine.some(u => u.type === 'archer');
       const ownBldSel = [...G.sel].some(s => s.kind === 'b' && s.team === ME);
-      const jobFor = ent && ent.team === ME && ent.kind === 'b' && (
+      const jobFor = ent && ent.team === ME && (ent.kind === 'b' &&
         (workersSel && (!ent.built || ent.type === 'farm' || BDEF[ent.type].drop && mine.some(u => u.carry.amt > 0))) ||
-        (archersSel && ent.built && GAR[ent.type]));
+        (archersSel && ent.built && GAR[ent.type])) ||
+        (ent && ent.team === ME && ent.kind === 'u' && ent.type === 'transport' && mine.some(u => !isNaval(u)));
       if (jobFor) command(w.x, w.y);
       else if (ent && ent.team === ME) selectOnly([ent]);
       else if (mine.length || ownBldSel) command(w.x, w.y);
@@ -1763,7 +1976,7 @@ window.addEventListener('keydown', e => {
   else if (e.code === 'Minus' || e.code === 'NumpadSubtract') zoomBy(1 / 1.15);
   else if (e.code === 'KeyP') togglePause();
   else if (e.code === 'KeyH') doAct('home');
-  else if (/^Digit[1-6]$/.test(e.code)) { const btns = [...document.querySelectorAll('#cmds .cmd')]; const b = btns[+e.code.slice(5) - 1]; if (b && !b.disabled) doAct(b.dataset.act); }
+  else if (/^Digit[1-9]$/.test(e.code)) { const btns = [...document.querySelectorAll('#cmds .cmd')]; const b = btns[+e.code.slice(5) - 1]; if (b && !b.disabled) doAct(b.dataset.act); }
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
 window.addEventListener('keyup', e => keys.delete(e.code));
@@ -1799,7 +2012,8 @@ function selHTML() {
     h += `<div class="bar"><i style="width:${Math.max(0, e.hp / e.maxhp * 100).toFixed(1)}%;background:${hpCol(e.hp / e.maxhp)}"></i></div>`;
     h += `<span class="sub">سلامت ${fa(Math.ceil(Math.max(0, e.hp)))} از ${fa(e.maxhp)}</span>`;
     if (e.kind === 'u') {
-      const st = e.gar ? 'روی ' + BDEF[e.gar.type].name + (e.order ? ' · در حال تیراندازی' : '') : !e.order ? 'بیکار' : { move: 'در حال حرکت', amove: 'در حال پیشروی', attack: 'در حال نبرد', gather: e.order.phase === 'ret' ? 'در حال بردن بار به انبار' : 'در حال برداشت ' + RES_NAME[e.order.res], build: 'در حال ساخت', farm: e.order.phase === 'ret' ? 'در حال بردن گندم به انبار' : 'کشاورزی', garrison: 'در راه بالا رفتن' }[e.order.k];
+      const st = e.gar ? 'روی ' + BDEF[e.gar.type].name + (e.order ? ' · در حال تیراندازی' : '') : !e.order ? 'بیکار' : { move: 'در حال حرکت', amove: 'در حال پیشروی', attack: 'در حال نبرد', gather: e.order.phase === 'ret' ? 'در حال بردن بار به انبار' : 'در حال برداشت ' + RES_NAME[e.order.res], build: 'در حال ساخت', farm: e.order.phase === 'ret' ? 'در حال بردن گندم به انبار' : 'کشاورزی', garrison: 'در راه بالا رفتن', board: 'در راه سوار شدن به کشتی', unload: 'در راه ساحل برای پیاده کردن' }[e.order.k];
+      if (e.type === 'transport') h += `<span class="sub">سرنشین: ${fa((e.cargo || []).length || e.cargoN || 0)} از ${fa(UDEF.transport.cap)} · سربازها را انتخاب کن و روی کشتی کلیک راست کن؛ بعد کشتی را انتخاب کن و روی ساحل مقابل کلیک راست کن</span>`;
       h += `<span class="sub">${st}${e.carry.amt > 0 ? ' · بار: ' + fa(Math.floor(e.carry.amt)) + ' ' + RES_NAME[e.carry.res] : ''}</span>`;
     } else if (!e.built) h += `<span class="sub">در حال ساخت: ${fa(Math.floor(e.progress * 100))}٪</span>`;
     else if (e.type === 'farm' && !enemy) h += `<span class="sub">${farmerOf(e) ? 'یک کشاورز روی آن کار می‌کند' : 'بدون کشاورز: یک کارگر را انتخاب کن و روی مزرعه کلیک راست کن'}</span>`;
@@ -1837,6 +2051,7 @@ function cmdHTML() {
     label = 'فرمان‌ها';
     btns = [{ act: 'stop', name: 'ایست', cost: 'توقف فرمان', ok: true }];
     if (sel.some(e => e.gar)) btns.push({ act: 'ungar', name: 'پایین آمدن', cost: 'از برج یا دیوار', ok: true });
+    if (sel.some(e => e.type === 'transport' && ((e.cargo || []).length || e.cargoN))) btns.push({ act: 'land', name: 'پیاده کردن', cost: 'در نزدیک‌ترین ساحل', ok: true });
   }
   if (G.placing || G.pending) btns.push({ act: 'cancel', name: 'لغو ساخت', cost: 'Esc', ok: true });
   $('cmdLabel').textContent = label;
@@ -1873,7 +2088,7 @@ function doAct(act) {
     runOrSend({ c: 'act', a, t, ids });
   }
   else if (a === 'demolish') { const b = sel.find(e => e.kind === 'b' && e.built); if (b) { G.placing = null; G.pending = { kind: 'demolish', b }; showConfirm(); } }
-  else if (a === 'dequeue' || a === 'cancelb' || a === 'evict' || a === 'ungar' || a === 'stop') runOrSend({ c: 'act', a, t, ids });
+  else if (a === 'dequeue' || a === 'cancelb' || a === 'evict' || a === 'ungar' || a === 'stop' || a === 'land') runOrSend({ c: 'act', a, t, ids });
   else if (a === 'cancel') { G.placing = null; cancelBuild(); }
   else if (a === 'idle') { const w = G.units.filter(u => u.team === ME && u.type === 'worker' && !u.order && !u.dead); if (w.length) { selectOnly(w); centerOn(w[0].x, w[0].y); } else toast('کارگر بیکاری نداری'); }
   else if (a === 'army') { const w = G.units.filter(u => u.team === ME && isMil(u) && !u.dead); if (w.length) selectOnly(w); else toast('هنوز سربازی نداری؛ سربازخانه بساز'); }
@@ -1896,6 +2111,7 @@ function execAct(team, a, t, ids) {
   else if (a === 'evict') { if (bld) garrisonOf(bld).forEach(leaveGarrison); }
   else if (a === 'ungar') sel.forEach(u => { if (u.kind === 'u' && u.gar) leaveGarrison(u); });
   else if (a === 'stop') sel.forEach(u => { if (u.kind === 'u') { u.order = null; u.path = null; } });
+  else if (a === 'land') sel.forEach(u => { if (u.type === 'transport' && (u.cargo || []).length) orderUnload(u, tileOf(u.x), tileOf(u.y)); });
 }
 const byId = id => G.units.find(u => u.id === id) || G.blds.find(b => b.id === id) || null;
 // the guest's game-changing input travels to the host; everyone else runs it right here
@@ -1919,9 +2135,10 @@ $('pauseBtn').addEventListener('click', togglePause);
 $('cfYes').addEventListener('click', () => confirmBuild());
 $('cfNo').addEventListener('click', () => cancelBuild());
 document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => {
-  newGame(b.dataset.diff); G.paused = false; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
+  newGame(b.dataset.diff, { mapType: mapChoice() }); G.paused = false; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
   toast('کارگران را انتخاب کن و روی درختان کلیک راست کن');
 }));
+const mapChoice = () => document.querySelector('input[name="mapType"]:checked')?.value === 'river' ? 'river' : 'land';
 $('againBtn').addEventListener('click', () => { $('confirm').hidden = true; $('endOv').hidden = true; leaveNet(); $('startOv').hidden = false; newGame(G.diff); });
 
 // ---------- two players on one Wi-Fi ----------
@@ -1937,6 +2154,7 @@ function snapshot() {
       if (o) r.o = [o.k, o.phase || 0, o.res || 0, o.b ? o.b.id : 0];
       if (u.gar) { r.g = u.gar.id; r.s = u.slot; }
       if (u.carry.amt > 0) r.c = [u.carry.res, Math.round(u.carry.amt)];
+      if (u.cargo && u.cargo.length) r.n = u.cargo.length;
       if (now - (u.wkT || -9) < 0.15) r.w = 1;
       if (now - (u.atkT || -9) < 0.25) r.a = 1;
       return r;
@@ -1972,6 +2190,7 @@ function applySnapshot(s) {
     u.gar = r.g ? byB.get(r.g) || null : null; u.slot = r.s || 0; u.z = u.gar ? GAR[u.gar.type].z : 0;
     u.carry = r.c ? { res: r.c[0], amt: r.c[1] } : { res: null, amt: 0 };
     if (r.w) u.wkT = G.t; if (r.a) u.atkT = G.t;
+    u.cargoN = r.n || 0;
     um.delete(r.i); units.push(u);
   }
   for (const u of um.values()) { u.dead = true; G.sel.delete(u); }
@@ -2076,8 +2295,8 @@ function hostGame(mode) {
       hostExec(NET.guestTeam, m);
     });
     conn.onClose(() => { if (NET.role !== 'host' || !NET.conn) return; NET.conn = null; if (G && !G.over) { G.paused = true; $('pauseBtn').textContent = 'ادامه'; } toast('ارتباط دوستت قطع شد؛ بازی متوقف شد', true); });
-    newGame('normal', { mode });
-    conn.send({ t: 'init', seed: G.seed, mode, diff: G.diff, team: NET.guestTeam });
+    newGame('normal', { mode, mapType: mapChoice() });
+    conn.send({ t: 'init', seed: G.seed, mode, diff: G.diff, team: NET.guestTeam, mapType: G.mapType });
     G.paused = false; $('lobbyOv').hidden = true; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
     toast(mode === 'vs' ? 'دوستت وارد شد: تو آبی هستی، او نارنجی' : 'دوستت وارد شد: دهکده مشترک است');
   }, c => showLobby(null, c), err => { if (err === 'retry') { hostGame(mode); return; } showLobby(err, null, true); });
@@ -2095,7 +2314,7 @@ function joinGame(code) {
     conn.onData(m => {
       if (m.t === 'init') {
         ME = m.team; NET.mode = m.mode;
-        newGame(m.diff, { mode: m.mode, seed: m.seed });
+        newGame(m.diff, { mode: m.mode, seed: m.seed, mapType: m.mapType === 'river' ? 'river' : 'land' });
         // the host owns every unit and building: start empty and mirror its snapshots
         G.units = []; G.blds = []; bgrid.fill(null); G.paused = false;
         $('lobbyOv').hidden = true; $('startOv').hidden = true; hudDirty = true;
@@ -2137,17 +2356,17 @@ if (window.claude) $('mpBox').hidden = true;
 function update(dt) {
   G.t += dt;
   for (const t of [0, 1]) { G.pop[t] = 0; G.cap[t] = 0; }
-  for (const u of G.units) G.pop[u.team]++;
+  for (const u of G.units) { G.pop[u.team]++; if (u.cargo) G.pop[u.team] += u.cargo.length; }
   for (const b of G.blds) if (b.built && BDEF[b.type].pop) G.cap[b.team] = Math.min(100, G.cap[b.team] + BDEF[b.type].pop);
   for (const t of [0, 1]) if (G.blds.some(b => b.team === t && b.type === 'hall' && !b.dead)) G.res[t].food += 0.15 * dt;
-  for (const u of G.units) if (!u.dead) { updUnit(u, dt); if (!u.gar && !passable(tileOf(u.x), tileOf(u.y))) unstick(u); }
+  for (const u of G.units) if (!u.dead && !u.aboard) { updUnit(u, dt); if (!u.gar && !passFor(u)(tileOf(u.x), tileOf(u.y))) unstick(u); }
   for (const b of G.blds) if (!b.dead) updBuilding(b, dt);
   for (const p of G.proj) updProj(p, dt);
   separate();
   for (const m of G.marks) m.t -= dt;
   for (const f of G.fx) f.t -= dt;
   G.fx = G.fx.filter(f => f.t > 0);
-  G.units = G.units.filter(u => !u.dead); G.blds = G.blds.filter(b => !b.dead);
+  G.units = G.units.filter(u => !u.dead && !u.aboard); G.blds = G.blds.filter(b => !b.dead);
   G.proj = G.proj.filter(p => !p.dead); G.marks = G.marks.filter(m => m.t > 0);
   G.fogT -= dt; if (G.fogT <= 0) { G.fogT = 0.2; computeFog(); updateFogImage(); }
   if (G.mode !== 'vs') {
