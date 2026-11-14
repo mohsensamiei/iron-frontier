@@ -97,26 +97,58 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;color:#c9c3ac}
 .keys b{color:var(--text);font-weight:600}
 .primary{font:inherit;font-weight:800;font-size:16px;background:var(--brass);color:#1d2017;border:0;border-radius:4px;padding:12px;cursor:pointer}
-.maptype{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
-.maptype label{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;background:var(--panel-3);border:1px solid var(--line);border-radius:4px;padding:8px 10px;cursor:pointer}
-.maptype label:has(input:checked){border-color:var(--brass)}
-.maptype small{font-weight:400;font-size:11px;color:var(--muted)}
-.maptype input{accent-color:var(--brass)}
-.mp{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
-.diffs.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .joinrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .joinrow label{font-size:13px;color:var(--muted)}
-.joinrow input{flex:1;min-width:120px;font:inherit;font-size:18px;letter-spacing:.2em;text-transform:uppercase;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.joinrow input{width:120px;font:inherit;font-size:16px;letter-spacing:.2em;text-transform:uppercase;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 10px}
 .joinrow input:focus{outline:2px solid var(--brass);outline-offset:1px}
-.joinrow .primary{padding:9px 18px}
-.lobby{align-items:center;text-align:center}
-.lobby .code{font-size:44px;font-weight:800;letter-spacing:.25em;color:var(--brass);font-variant-numeric:tabular-nums}
-#lbCodeBox{display:flex;flex-direction:column;align-items:center;gap:8px}
-#lbQr{width:180px;height:180px;image-rendering:pixelated;background:#fff;border-radius:4px}
+#startOv{position:fixed;z-index:20;background:rgba(14,16,10,.9)}
+.dialog.setup{max-width:1080px;gap:18px}
+.setup-head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 24px}
+.setup-head p{flex:1;min-width:260px;font-size:14px}
+.setup-grid{display:grid;grid-template-columns:230px minmax(0,1fr) 330px;gap:18px;align-items:start}
+.maps-col,.prev-col,.lobby-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.maplist{display:flex;flex-direction:column;gap:6px;outline:none}
+.maplist:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:4px}
+.mapopt{display:grid;grid-template-columns:1fr auto;gap:2px 8px;background:var(--panel-3);border:1px solid var(--line);border-radius:4px;padding:9px 11px;cursor:pointer}
+.mapopt b{font-size:15px}
+.mapopt .n{font-size:11px;color:var(--brass);font-variant-numeric:tabular-nums;align-self:center}
+.mapopt small{grid-column:1 / -1;font-size:11px;color:var(--muted);line-height:1.6}
+.mapopt:hover,.mapopt.hot{border-color:#8a7a4a}
+.mapopt[aria-selected="true"]{border-color:var(--brass);background:#3b3a28}
+.maplist[aria-disabled="true"] .mapopt{cursor:default}
+#mapPrev{width:100%;height:auto;aspect-ratio:440/230;display:block;background:#0c0e09;border:1px solid var(--line);border-radius:4px}
+.prev-info{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.prev-info b{font-family:var(--display);font-weight:400;font-size:26px;color:var(--brass)}
+.prev-info span{font-size:12px;color:var(--muted)}
+.prev-desc{font-size:13px!important;line-height:1.8}
+.prev-col .tbtn{align-self:flex-start}
+.seats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.seat{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-height:36px}
+.seat .sw{flex-shrink:0;width:14px;height:14px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.seat .who{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seat .who small{font-weight:400;color:var(--muted);margin-right:4px}
+.seat.open .who{color:var(--muted);font-weight:400}
+.seat select{font:inherit;font-size:12px;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:4px 4px;max-width:96px}
+.seat select:disabled{opacity:.75}
+.seat .x{font:inherit;font-size:15px;line-height:1;width:28px;height:28px;flex-shrink:0;background:transparent;color:var(--muted);border:1px solid transparent;border-radius:4px;cursor:pointer}
+.seat .x:hover{color:var(--bad);border-color:var(--line)}
+.seat-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tbtn:disabled{opacity:.45;cursor:not-allowed}
+.invite{display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--panel-2);border-radius:4px;padding:12px}
+.invite-code{display:flex;align-items:baseline;gap:10px}
+.invite-code b{font-size:30px;font-weight:800;letter-spacing:.22em;color:var(--brass);font-variant-numeric:tabular-nums}
+#lbQr{width:150px;height:150px;image-rendering:pixelated;background:#fff;border-radius:4px}
 .linkrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:100%}
-.linkrow span{font-size:12px;color:var(--muted);word-break:break-all;min-width:0}
-#lbStatus{margin:0;font-size:14px;line-height:1.8;color:#c9c3ac}
-#lbStatus.bad{color:#f3a8a4}
+.linkrow span{font-size:11px;color:var(--muted);word-break:break-all;min-width:0}
+.lobby-status{margin:0;font-size:13px!important;line-height:1.8;min-height:1.8em}
+.lobby-status.bad{color:#f3a8a4!important}
+.setup-foot{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;border-top:1px solid var(--line);padding-top:16px}
+.setup-foot .primary{padding:12px 34px}
+.setup-foot .joinrow{margin-right:auto}
+.keys-box summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.keys-box .keys{margin-top:10px}
+@media (max-width:980px){.setup-grid{grid-template-columns:200px minmax(0,1fr)}.lobby-col{grid-column:1 / -1}}
+@media (max-width:640px){.setup-grid{grid-template-columns:minmax(0,1fr)}.maplist{flex-direction:row;overflow-x:auto;padding-bottom:4px}.mapopt{min-width:150px}.setup-foot .joinrow{margin-right:0}.dialog.setup{padding:18px}}
 @media (max-width:760px){
   .main{flex-direction:column}
   .view{order:0;flex:1 1 auto}
@@ -185,52 +217,57 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <button type="button" class="no" id="cfNo" aria-label="لغو" title="لغو (Esc)"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
       </div>
       <div class="overlay" id="startOv">
-        <div class="dialog">
-          <h1>مرز آهنین</h1>
-          <p>دهکده‌ای در مرز شمال‌شرقی. از جنگل چوب ببر، از معدن سنگ و طلا بیاور، مزرعه و خانه بساز، سربازخانه و برج بالا ببر. سپاه اردوگاه نارنجی هر چند دقیقه یک‌بار حمله می‌کند. لرد تو در کاخ زندگی می‌کند؛ اگر کشته شود می‌بازی. با دژکوب و منجنیق دیوارهای کاخ دشمن را بشکن و لردش را بکش.</p>
-          <div class="keys">
-            <b>انتخاب</b><span>کلیک روی یگان، کشیدن کادر، یا دوبار کلیک برای همهٔ یگان‌های هم‌نوع</span>
-            <b>فرمان</b><span>با یگان انتخاب‌شده روی زمین، درخت، معدن، ساختمان یا دشمن کلیک کن؛ کلیک راست انتخاب را رها می‌کند</span>
-            <b>لمسی</b><span>ضربه روی یگان خودی برای انتخاب، ضربهٔ بعدی برای فرمان؛ با یک انگشت بکش تا نقشه جابه‌جا شود</span>
+        <div class="dialog setup" role="dialog" aria-labelledby="setupTitle">
+          <div class="setup-head">
+            <h1 id="setupTitle">مرز آهنین</h1>
+            <p>نقشه را انتخاب کن، بات یا دوستت را به لابی بیاور و تیم‌ها را بچین. لرد هر طرف در کاخش زندگی می‌کند؛ هر تیمی که همهٔ لردهایش کشته شوند می‌بازد.</p>
           </div>
-          <div class="maptype" role="radiogroup" aria-label="نوع نقشه">
-            <span class="label">نقشه</span>
-            <label><input type="radio" name="mapType" value="land" checked> خشکی <small>راه زمینی تا دشمن همیشه باز است</small></label>
-            <label><input type="radio" name="mapType" value="river"> دو ساحل <small>رودخانه وسط نقشه؛ با کشتی عبور کن</small></label>
+          <div class="setup-grid">
+            <section class="maps-col" aria-labelledby="mapsLbl">
+              <div class="label" id="mapsLbl">نقشه</div>
+              <div class="maplist" id="mapList" role="listbox" aria-labelledby="mapsLbl" tabindex="0"></div>
+            </section>
+            <section class="prev-col" aria-live="polite">
+              <canvas id="mapPrev" width="440" height="230" aria-label="پیش‌نمایش نقشه"></canvas>
+              <div class="prev-info"><b id="prevName"></b><span id="prevSeats"></span></div>
+              <p class="prev-desc" id="prevDesc"></p>
+              <button type="button" class="tbtn" id="rerollBtn">ساخت دوبارهٔ همین نقشه</button>
+            </section>
+            <section class="lobby-col" aria-labelledby="seatsLbl">
+              <div class="label" id="seatsLbl">لابی · بازیکن‌ها <span id="seatCount"></span></div>
+              <ol class="seats" id="seatList"></ol>
+              <div class="seat-actions">
+                <button type="button" class="tbtn" id="addBot">+ افزودن بات</button>
+                <button type="button" class="tbtn" id="inviteBtn">دعوت دوست</button>
+              </div>
+              <div class="invite" id="invite" hidden>
+                <div class="invite-code"><span class="label">کد بازی</span><b id="lbCode" dir="ltr"></b></div>
+                <img id="lbQr" alt="QR کد لینک پیوستن" hidden>
+                <div class="linkrow"><span id="lbLink" dir="ltr"></span><button type="button" class="tbtn" id="lbCopy">کپی لینک</button></div>
+                <button type="button" class="tbtn" id="inviteStop">بستن لابی به روی دوستان</button>
+              </div>
+              <p class="lobby-status" id="lobbyStatus" role="status"></p>
+            </section>
           </div>
-          <div class="label">سطح دشواری را انتخاب کن تا بازی شروع شود</div>
-          <div class="diffs">
-            <button type="button" data-diff="easy"><b>آسان</b><span>اولین حمله: ۶ دقیقه</span></button>
-            <button type="button" data-diff="normal"><b>معمولی</b><span>اولین حمله: ۴:۳۰</span></button>
-            <button type="button" data-diff="hard"><b>سخت</b><span>اولین حمله: ۳:۲۰</span></button>
-            <button type="button" data-diff="demo"><b>آموزشی</b><span>دشمن حمله نمی‌کند</span></button>
-          </div>
-          <div class="mp" id="mpBox">
-            <div class="label">بازی دونفره روی یک Wi-Fi · بدون نصب، روی گوشی و کامپیوتر</div>
-            <div class="diffs two">
-              <button type="button" data-mp="vs"><b>ساخت بازی رودررو</b><span>تو در برابر دوستت</span></button>
-              <button type="button" data-mp="coop"><b>ساخت بازی همکاری</b><span>دو نفر در برابر دشمن</span></button>
-            </div>
-            <div class="joinrow">
+          <div class="setup-foot">
+            <button type="button" class="primary" id="startBtn">شروع نبرد</button>
+            <button type="button" class="tbtn" id="practiceBtn" title="روی نقشهٔ انتخاب‌شده، با یک دشمن که حمله نمی‌کند و راهنمای قدم‌به‌قدم">آموزش</button>
+            <button type="button" class="tbtn" id="leaveBtn" hidden>ترک لابی</button>
+            <div class="joinrow" id="joinRow">
               <label for="joinCode">کد بازی دوستت</label>
               <input id="joinCode" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="مثلاً K7M2Q" dir="ltr">
-              <button type="button" class="primary" id="joinBtn">پیوستن</button>
+              <button type="button" class="tbtn" id="joinBtn">پیوستن</button>
             </div>
-            <p class="hint" id="mpStatus"></p>
           </div>
-        </div>
-      </div>
-      <div class="overlay" id="lobbyOv" hidden>
-        <div class="dialog lobby">
-          <h2>لابی</h2>
-          <div id="lbCodeBox" hidden>
-            <div class="label">کد بازی</div>
-            <div class="code" id="lbCode" dir="ltr"></div>
-            <img id="lbQr" alt="QR کد لینک پیوستن" hidden>
-            <div class="linkrow"><span id="lbLink" dir="ltr"></span><button type="button" class="tbtn" id="lbCopy">کپی لینک</button></div>
-          </div>
-          <p id="lbStatus"></p>
-          <button type="button" class="tbtn" id="lbCancel">انصراف</button>
+          <details class="keys-box">
+            <summary>کنترل‌ها</summary>
+            <div class="keys">
+              <b>انتخاب</b><span>کلیک روی یگان، کشیدن کادر، یا دوبار کلیک برای همهٔ یگان‌های هم‌نوع</span>
+              <b>فرمان</b><span>با یگان انتخاب‌شده روی زمین، درخت، معدن، ساختمان یا دشمن کلیک کن؛ کلیک راست انتخاب را رها می‌کند</span>
+              <b>کشتی</b><span>سربازها را انتخاب کن و روی کشتی ترابری کلیک کن؛ کشتی به نزدیک‌ترین ساحل می‌آید و منتظر می‌ماند</span>
+              <b>لمسی</b><span>ضربه روی یگان خودی برای انتخاب، ضربهٔ بعدی برای فرمان؛ با یک انگشت بکش تا نقشه جابه‌جا شود</span>
+            </div>
+          </details>
         </div>
       </div>
       <div class="overlay" id="endOv" hidden>
@@ -253,20 +290,22 @@ const RES_OF = { [FOREST]: 'wood', [STONE]: 'stone', [GOLD]: 'gold' };
 const RES_NAME = { wood: 'چوب', stone: 'سنگ', gold: 'طلا', food: 'غذا' };
 const RES_COL = { wood: '#8a5a2e', stone: '#a5a396', gold: '#e2bf4f', food: '#d8bf5a' };
 const GATHER_RATE = { wood: 2, stone: 1.5, gold: 1.2 };
-const TEAM = ['#3f86e0', '#e0703a'];
+// one color per seat in the lobby
+const TEAM = ['#3f86e0', '#e0703a', '#5fae4a', '#a463d6'];
+const TEAM_NAME = ['آبی', 'نارنجی', 'سبز', 'بنفش'];
 const CARRY = 10;
 const fa = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 
 const UDEF = {
-  worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 50 }, time: 10, r: 7, body: '#e2c9a0' },
-  spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 50, gold: 20 }, time: 14, r: 8, body: '#9aa0a6' },
-  archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 40, wood: 30 }, time: 14, r: 7, body: '#6f8a4a' },
-  knight: { name: 'سوار', hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 10, body: '#7a5a3a' },
-  ram: { name: 'دژکوب', hp: 520, speed: 1.3, dmg: 70, range: 0.9, cd: 2.5, sight: 6, cost: { wood: 160, gold: 40 }, time: 30, r: 13, siege: true },
-  catapult: { name: 'منجنیق', hp: 260, speed: 1.2, dmg: 45, range: 9, cd: 4, sight: 10, cost: { wood: 180, stone: 60, gold: 60 }, time: 35, r: 13, siege: true, splash: true },
-  lord: { name: 'لرد', hp: 900, speed: 2.4, dmg: 28, range: 0.9, cd: 0.9, sight: 9, cost: {}, time: 1, r: 10, hero: true },
-  transport: { name: 'کشتی ترابری', hp: 420, speed: 2.5, dmg: 0, range: 0, cd: 1, sight: 7, cost: { wood: 120 }, time: 20, r: 14, naval: true, cap: 8 },
-  warship: { name: 'کشتی جنگی', hp: 380, speed: 2.7, dmg: 10, range: 6, cd: 1.5, sight: 9, cost: { wood: 150, gold: 40 }, time: 24, r: 14, naval: true }
+  worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 50 }, time: 10, r: 5, body: '#e2c9a0' },
+  spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 50, gold: 20 }, time: 14, r: 5, body: '#9aa0a6' },
+  archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 40, wood: 30 }, time: 14, r: 5, body: '#6f8a4a' },
+  knight: { name: 'سوار', load: 2, hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 8, body: '#7a5a3a' },
+  ram: { name: 'دژکوب', load: 5, hp: 520, speed: 1.3, dmg: 70, range: 0.9, cd: 2.5, sight: 6, cost: { wood: 160, gold: 40 }, time: 30, r: 19, siege: true },
+  catapult: { name: 'منجنیق', load: 5, hp: 260, speed: 1.2, dmg: 45, range: 9, cd: 4, sight: 10, cost: { wood: 180, stone: 60, gold: 60 }, time: 35, r: 19, siege: true, splash: true },
+  lord: { name: 'لرد', load: 2, hp: 900, speed: 2.4, dmg: 28, range: 0.9, cd: 0.9, sight: 9, cost: {}, time: 1, r: 7, hero: true },
+  transport: { name: 'کشتی ترابری', hp: 420, speed: 2.5, dmg: 0, range: 0, cd: 1, sight: 7, cost: { wood: 120 }, time: 20, r: 36, naval: true, cap: 10 },
+  warship: { name: 'کشتی جنگی', hp: 380, speed: 2.7, dmg: 10, range: 6, cd: 1.5, sight: 9, cost: { wood: 150, gold: 40 }, time: 24, r: 36, naval: true }
 };
 const BDEF = {
   hall:     { name: 'کاخ', size: 4, hp: 3400, cost: { stone: 300, wood: 150, gold: 100 }, time: 90, pop: 10, drop: true, train: ['worker'], sight: 10, desc: 'خانهٔ لرد و پناهگاه کارگران' },
@@ -278,7 +317,7 @@ const BDEF = {
   tower:    { name: 'برج دیده‌بانی', size: 2, hp: 800, cost: { stone: 80, wood: 20 }, time: 22, range: 7, dmg: 10, cd: 1.3, sight: 9, desc: 'تیراندازی خودکار' },
   wall:     { name: 'دیوار سنگی', size: 1, hp: 600, cost: { stone: 10 }, time: 4, sight: 2, desc: 'سد راه' },
   gate:     { name: 'دروازه', size: 1, hp: 900, cost: { stone: 20, wood: 10 }, time: 8, sight: 3, desc: 'نیروهای خودی رد می‌شوند، دشمن نه' },
-  dock:     { name: 'اسکله', size: 2, hp: 700, cost: { wood: 100 }, time: 18, train: ['transport', 'warship'], sight: 7, desc: 'ساخت کشتی؛ باید کنار آب باشد' }
+  dock:     { name: 'اسکله', size: 3, hp: 700, cost: { wood: 100 }, time: 18, train: ['transport', 'warship'], sight: 7, desc: 'ساخت کشتی؛ باید کنار آب باشد' }
 };
 const BUILD_LIST = ['house', 'farm', 'store', 'barracks', 'workshop', 'tower', 'wall', 'gate', 'dock', 'hall'];
 const DIFF = {
@@ -291,14 +330,20 @@ const DIFF = {
 // ---------- world state ----------
 let tiles, amt, shade, bgrid, vis, explored, river;
 let G = null;
+// seats are players; each seat sits on a team (ally). Allies share sight and never fight each other.
+const ally = (a, b) => a === b || !!(G && G.players && G.players[a] && G.players[b] && G.players[a].ally === G.players[b].ally);
+const foe = (a, b) => !ally(a, b);
+const isBot = t => !!(G && G.players && G.players[t] && G.players[t].bot);
 // ME: the team the person at this screen plays. NET: solo, host (runs the simulation) or guest (mirrors the host).
 let ME = 0;
-const NET = { role: 'solo', mode: 'solo', guestTeam: 0, conn: null, peer: null, sendT: 0 };
-function netSend(o) { if (NET.conn) try { NET.conn.send(o); } catch (e) { /* link dropped */ } }
-// a message for one side's player: shown here if it's ours, sent across if it belongs to the guest
+// the host keeps one link per friend (peers: [{ conn, id, seat }]); a guest has a single link to the host
+const NET = { role: 'solo', peers: [], conn: null, peer: null, sendT: 0, code: null };
+const safeSend = (c, o) => { try { c.send(o); } catch (e) { /* link dropped */ } };
+function netSend(o) { if (NET.role === 'host') NET.peers.forEach(p => safeSend(p.conn, o)); else if (NET.conn) safeSend(NET.conn, o); }
+// a message for one player: shown here if it's ours, sent across if it belongs to a friend
 function notify(team, msg, warn) {
   if (team === ME) toast(msg, warn);
-  if (NET.role === 'host' && NET.guestTeam === team) netSend({ t: 'toast', m: msg, w: !!warn });
+  if (NET.role === 'host') NET.peers.forEach(p => { if (p.seat === team) safeSend(p.conn, { t: 'toast', m: msg, w: !!warn }); });
 }
 function notifyAll(msg, warn) { toast(msg, warn); if (NET.role === 'host') netSend({ t: 'toast', m: msg, w: !!warn }); }
 function addFx(f) { G.fx.push(f); if (NET.role === 'host') G.fxOut.push(f); }
@@ -335,7 +380,7 @@ function noise(rng, scale) {
 }
 // make sure forests and quarries never wall anything in: cut the cheapest road (2 tiles wide, mirrored for fairness)
 // from the town to the enemy (land maps) or to the river (river maps), and to every quarry and gold vein
-function carvePath(goal, mapType) {
+function carvePath(goal, mapType, sym = 2) {
   // only the river itself is off limits; lakes can be crossed by a ford
   const cost = i => { const t = tiles[i]; return t === GRASS ? 1 : t === FOREST ? 6 : (t === STONE || t === GOLD) ? Infinity : mapType === 'river' && river[i] ? Infinity : 16; };
   const dist = new Float32Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), done = new Uint8Array(N);
@@ -354,24 +399,39 @@ function carvePath(goal, mapType) {
   }
   for (let c = end; c >= 0; c = prev[c]) for (const k of [c, c + 1]) {
     if (k >= N || tiles[k] === GRASS || cost(k) === Infinity) continue;
-    tiles[k] = GRASS; if (!(mapType === 'river' && river[N - 1 - k])) tiles[N - 1 - k] = GRASS;
+    tiles[k] = GRASS; for (const j of images(k, sym)) if (!(mapType === 'river' && river[j])) tiles[j] = GRASS;
   }
 }
-function carveRoutes(mapType, deposits) {
+function carveRoutes(mapType, deposits, sym) {
   const nb = i => DIRS.slice(0, 4).map(([dx, dy]) => [i % W + dx, ((i / W) | 0) + dy]).filter(([x, y]) => inb(x, y));
   // the goal may be a forest tile: it gets cleared as part of the road
   const open = i => tiles[i] === GRASS || tiles[i] === FOREST || (tiles[i] === WATER && !river[i]);
-  if (mapType === 'river') carvePath(i => open(i) && nb(i).some(([x, y]) => river[y * W + x]), mapType);
-  else { const e = (E_HALL.y + 5) * W + E_HALL.x + 1; carvePath(i => i === e, mapType); }
-  for (const d of deposits) carvePath(i => open(i) && nb(i).some(([x, y]) => tiles[y * W + x] === d.type && Math.hypot(x - d.x, y - d.y) <= d.r + 1.5), mapType);
+  if (mapType === 'river') carvePath(i => open(i) && nb(i).some(([x, y]) => river[y * W + x]), mapType, sym);
+  else { const e = (SPOTS[1].y + 5) * W + SPOTS[1].x + 1; carvePath(i => i === e, mapType, sym); }
+  for (const d of deposits) carvePath(i => open(i) && nb(i).some(([x, y]) => tiles[y * W + x] === d.type && Math.hypot(x - d.x, y - d.y) <= d.r + 1.5), mapType, sym);
 }
 function blob(cx, cy, r, type) {
   for (let y = Math.floor(cy - r); y <= cy + r; y++) for (let x = Math.floor(cx - r); x <= cx + r; x++)
     if (inb(x, y) && Math.hypot(x - cx, y - cy) <= r) tiles[y * W + x] = type;
 }
 const P_HALL = { x: 10, y: H - 13 };
-const E_HALL = { x: W - 4 - P_HALL.x, y: H - 4 - P_HALL.y };
-function genMap(seed, mapType = 'land') {
+// the four palace corners, in seat order: seats 0 and 1 face each other across the diagonal
+// (a quarter turn about the centre maps a tile (x, y) to (W-1-y, x); a 4x4 palace at (x, y) goes to (W-4-y, x))
+const SPOTS = [P_HALL, { x: W - 4 - P_HALL.x, y: H - 4 - P_HALL.y }, { x: W - 4 - P_HALL.y, y: P_HALL.x }, { x: P_HALL.y, y: H - 4 - P_HALL.x }];
+const MAPS = {
+  frontier: { name: 'دشت مرزی', seats: 2, kind: 'land', sym: 2, desc: 'دو دهکده در دو گوشهٔ یک دشت جنگلی. راه زمینی تا دشمن همیشه باز است.' },
+  shores: { name: 'دو ساحل', seats: 2, kind: 'river', sym: 2, desc: 'رودخانه‌ای پهن نقشه را دو نیم کرده است. راه زمینی نیست؛ اسکله بساز و با کشتی عبور کن.' },
+  realms: { name: 'چهار سرزمین', seats: 4, kind: 'land', sym: 4, desc: 'چهار دهکده در چهار گوشه، معدن‌های پربار در میانه. برای نبرد سه یا چهار طرفه.' },
+  isles: { name: 'چهار ساحل', seats: 4, kind: 'river', sym: 4, desc: 'دو رود به شکل صلیب نقشه را چهار تکه کرده‌اند. هر دهکده جزیرهٔ خودش را دارد و جنگ فقط با کشتی است.' }
+};
+// the tiles that mirror tile i under the map's symmetry (i itself excluded)
+function images(i, sym) {
+  const x = i % W, y = (i / W) | 0;
+  if (sym === 2) return [N - 1 - i];
+  return [x * W + (W - 1 - y), (H - 1 - y) * W + (W - 1 - x), (H - 1 - x) * W + y];
+}
+function genMap(seed, mapId = 'frontier') {
+  const MD = MAPS[mapId] || MAPS.frontier, mapType = MD.kind;
   const rng = mulberry32(seed);
   tiles = new Uint8Array(N); amt = new Float32Array(N); shade = new Float32Array(N);
   bgrid = new Array(N).fill(null); vis = new Uint8Array(N); explored = new Uint8Array(N); river = new Uint8Array(N);
@@ -393,16 +453,27 @@ function genMap(seed, mapType = 'land') {
     { x: 36, y: 62, r: 2.2, type: GOLD }, { x: 30, y: 50, r: 2, type: STONE }, { x: 46, y: 50, r: 1.6, type: GOLD }, { x: 22, y: 60, r: 1.8, type: STONE }
   ];
   for (const d of deposits) blob(d.x, d.y, d.r, d.type);
-  if (mapType === 'river') {
+  if (mapType === 'river' && MD.sym === 2) {
     // a wide river along the diagonal splits the two shores: the only way across is by ship
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const d = (x - y) + Math.sin((x + y - (W - 1)) * 0.07) * 5;
-      if (Math.abs(d) < 3.6) { tiles[y * W + x] = WATER; river[y * W + x] = 1; }
+      if (Math.abs(d) < 4.4) { tiles[y * W + x] = WATER; river[y * W + x] = 1; }
+    }
+  } else if (mapType === 'river') {
+    // two rivers in a cross: drawn in our quarter, the quarter turns finish the cross
+    for (let y = H / 2; y < H; y++) for (let x = 0; x < W / 2; x++) {
+      const dv = (x - (W / 2 - 0.5)) + Math.sin(y * 0.11) * 2, dh = (y - (H / 2 - 0.5)) + Math.sin(x * 0.11) * 2;
+      if (Math.abs(dv) < 4.2 || Math.abs(dh) < 4.2) { tiles[y * W + x] = WATER; river[y * W + x] = 1; }
     }
   }
-  // point-symmetric mirror: the enemy corner is an exact copy of ours
-  for (let i = 0; i < N / 2; i++) { tiles[i] = tiles[N - 1 - i]; shade[i] = shade[N - 1 - i]; river[i] = river[N - 1 - i]; }
-  carveRoutes(mapType, deposits.filter(d => mapType !== 'river' || Math.abs(d.x - d.y) > 6));
+  if (MD.sym === 2) {
+    // point-symmetric mirror: the far corner is an exact copy of ours
+    for (let i = 0; i < N / 2; i++) { tiles[i] = tiles[N - 1 - i]; shade[i] = shade[N - 1 - i]; river[i] = river[N - 1 - i]; }
+  } else {
+    // four-fold: our quarter (bottom-left) is turned into the other three
+    for (let y = H / 2; y < H; y++) for (let x = 0; x < W / 2; x++) { const i = y * W + x; for (const j of images(i, 4)) { tiles[j] = tiles[i]; shade[j] = shade[i]; river[j] = river[i]; } }
+  }
+  carveRoutes(mapType, deposits.filter(d => mapType !== 'river' || (MD.sym === 2 ? Math.abs(d.x - d.y) > 6 : Math.abs(d.x - W / 2) > 7 && Math.abs(d.y - H / 2) > 7)), MD.sym);
   for (let i = 0; i < N; i++) amt[i] = tiles[i] === FOREST ? 100 : tiles[i] === STONE ? 300 : tiles[i] === GOLD ? 300 : 0;
 }
 // ---------- ground texture (flat, later drawn through the isometric transform) ----------
@@ -427,7 +498,7 @@ function genGround(seed) {
   const fm = blur(mask(t => t === FOREST));
   const rm = blur(mask(t => t === STONE || t === GOLD));
   const dm = new Float32Array(N);
-  for (const c of [{ x: P_HALL.x + 2, y: P_HALL.y + 2 }, { x: E_HALL.x + 2, y: E_HALL.y + 2 }])
+  for (const c of (G && G.players ? G.players.map(p => SPOTS[p.spot]) : SPOTS.slice(0, 2)).map(h => ({ x: h.x + 2, y: h.y + 2 })))
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) dm[y * W + x] = Math.max(dm[y * W + x], Math.min(1, Math.max(0, 1.25 - Math.hypot(x + 0.5 - c.x, y + 0.5 - c.y) / 6)));
   const FW = Math.ceil(Math.max(W, H) * T / 8) + 2, fine = new Float32Array(FW * FW); for (let i = 0; i < fine.length; i++) fine[i] = rng();
   const img = tctx.createImageData(W * T, H * T), d = img.data;
@@ -525,16 +596,24 @@ function banner(g, P, y, xa, xb, za, zb, tc) {
   lq(g, P, y, xa, xb, zb - 3, zb, shadeHex(tc, -0.4));
   const c = P((xa + xb) / 2, y, (za + zb) / 2 + 2); g.fillStyle = '#e8cf7a'; g.beginPath(); g.arc(c[0], c[1], 2, 0, 7); g.fill();
 }
+// ---------- one scale for everything ----------
+// 1 m is about 9.4 px, so a tile (32 px) is about 3.4 m. A man (1.7 m) stands ~16 px, a horse is ~2.7 m long,
+// a mangonel ~4.5 m and a ram ~6 m, a cog ~13 m; a house is ~7 m across and ~5 m high, a curtain wall ~5 m,
+// a watchtower ~13 m, a palace keep ~11 m; trees 8-12 m, quarry boulders 2-4 m, the river ~30 m wide.
+const UNIT_S = 0.62, HORSE_K = 1.25, SIEGE_K = 1.5, SHIP_K = 2.8, TREE_K = 1.5, ROCK_K = 1.15;
+// how much taller than first drawn each building is (footprints stay, so maps and paths don't change)
+const HZ = { hall: 1.3, wall: 1.7, gate: 1.6, tower: 1.25 };
 const BSPR = {
   hall: { maxZ: 140, top: 84 }, workshop: { maxZ: 90, top: 52 }, gate: { maxZ: 60, top: 40 }, house: { maxZ: 80, top: 46 }, farm: { maxZ: 50, top: 14 }, store: { maxZ: 70, top: 38 },
   barracks: { maxZ: 90, top: 60 }, tower: { maxZ: 140, top: 100 }, wall: { maxZ: 40, top: 30 }, dock: { maxZ: 70, top: 36 }
 };
+for (const k in HZ) { BSPR[k].maxZ = Math.ceil(BSPR[k].maxZ * HZ[k]); BSPR[k].top = Math.round(BSPR[k].top * HZ[k]); }
 const sprCache = {};
 function getSprite(type, team) {
   const key = type + team; if (sprCache[key]) return sprCache[key];
   const s = BDEF[type].size, L = s * T, m = 8, maxZ = BSPR[type].maxZ;
   const c = mkCanvas(2 * L + 2 * m, maxZ + L + 2 * m), g = c.getContext('2d');
-  const ox = L + m, oy = maxZ + m, P = (x, y, z = 0) => [ox + x - y, oy + (x + y) / 2 - z];
+  const hz = HZ[type] || 1, ox = L + m, oy = maxZ + m, P = (x, y, z = 0) => [ox + x - y, oy + (x + y) / 2 - z * hz];
   const tc = TEAM[team];
   const STONE_C = { top: '#b3ae9e', left: '#aaa696', right: '#7f7c6e', line: 'rgba(55,52,45,0.35)' };
   const groundShadow = (x0, y0, x1, y1, len) => poly(g, [P(x0, y0), P(x1 + len, y0), P(x1 + len, y1 + len * 0.3), P(x1, y1 + len * 0.3), P(x0, y1)], 'rgba(0,0,0,0.22)');
@@ -542,7 +621,7 @@ function getSprite(type, team) {
   switch (type) {
     case 'hall': {
       // a hexagonal fortress: six round towers at the corners joined by thick curtain walls, a keep in the middle
-      const R = 54, c = 64, tr = 13, wt = 12, wh = 34, th = 56;
+      const R = 54, c = 64, tr = 13, wt = 12, wh = 34, th = 56 * hz;
       const V = [15, 75, 135, 195, 255, 315].map(a => [c + R * Math.cos(a * Math.PI / 180), c + R * Math.sin(a * Math.PI / 180)]);
       poly(g, [P(0, 0), P(L, 0), P(L, L), P(0, L)], '#8f7a58');
       poly(g, V.map(([x, y]) => P(x + 10, y + 6)), 'rgba(0,0,0,0.22)');
@@ -742,7 +821,8 @@ const treeSpr = [], rockSpr = { [STONE]: [], [GOLD]: [] };
 function buildNature() {
   const rng = mulberry32(7);
   for (let v = 0; v < 6; v++) {
-    const c = mkCanvas(56, 76), g = c.getContext('2d'), ax = 24, ay = 68, k = 0.85 + rng() * 0.3;
+    const c = mkCanvas(Math.ceil(56 * TREE_K), Math.ceil(76 * TREE_K)), g = c.getContext('2d'), ax = 24, ay = 68, k = 0.85 + rng() * 0.3;
+    g.scale(TREE_K, TREE_K);
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(ax + 10, ay + 1, 14 * k, 5, 0, 0, 7); g.fill();
     if (v < 3) {
       g.fillStyle = '#5b3f26'; g.fillRect(ax - 2, ay - 12, 4, 12);
@@ -759,10 +839,11 @@ function buildNature() {
       for (const [dx, dy, r, col] of blobs) { g.fillStyle = shadeHex(col, (rng() - 0.5) * 0.15); g.beginPath(); g.arc(ax + dx * k, ay + dy * k, r * k, 0, 7); g.fill(); }
       g.fillStyle = 'rgba(0,0,0,0.12)'; g.beginPath(); g.arc(ax + 6 * k, ay - 26 * k, 11 * k, -0.6, 1.8); g.fill();
     }
-    treeSpr.push({ c, ax, ay });
+    treeSpr.push({ c, ax: ax * TREE_K, ay: ay * TREE_K });
   }
   for (const type of [STONE, GOLD]) for (let v = 0; v < 3; v++) {
-    const c = mkCanvas(60, 44), g = c.getContext('2d'), ax = 30, ay = 30;
+    const c = mkCanvas(Math.ceil(60 * ROCK_K), Math.ceil(44 * ROCK_K)), g = c.getContext('2d'), ax = 30, ay = 30;
+    g.scale(ROCK_K, ROCK_K);
     g.fillStyle = 'rgba(0,0,0,0.25)'; g.beginPath(); g.ellipse(ax + 6, ay + 2, 22, 8, 0, 0, 7); g.fill();
     const rocks = [[-10, 0, 10], [8, 2, 12], [0, -6, 9], [-2, 6, 7]];
     for (const [dx, dy, r0] of rocks) {
@@ -775,7 +856,7 @@ function buildNature() {
       if (type === GOLD) for (let k = 0; k < 4; k++) { g.fillStyle = k % 2 ? '#f0d36a' : '#c99d2c'; g.fillRect(x - r * 0.5 + rng() * r, y - r * 0.5 + rng() * r * 0.6, 3, 2); }
     }
     if (type === GOLD) { g.fillStyle = '#fff6cc'; g.fillRect(ax - 4, ay - 10, 1.5, 1.5); g.fillRect(ax + 9, ay - 4, 1.5, 1.5); }
-    rockSpr[type].push({ c, ax, ay });
+    rockSpr[type].push({ c, ax: ax * ROCK_K, ay: ay * ROCK_K });
   }
 }
 buildNature();
@@ -885,10 +966,10 @@ function nearestDrop(u) {
 // ---------- farms, garrisons ----------
 const FARM_RATE = 1.1;
 const GAR = {
-  tower: { cap: 4, z: 94, rng: 2.5, atk: 1.6, def: 0.35, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
-  wall: { cap: 1, z: 22, rng: 1.5, atk: 1.3, def: 0.5, slots: [[16, 16]] },
-  gate: { cap: 1, z: 30, rng: 1.5, atk: 1.35, def: 0.45, slots: [[16, 16]] },
-  hall: { cap: 6, z: 58, rng: 2.5, atk: 1.6, def: 0.3, slots: [15, 75, 135, 195, 255, 315].map(a => [Math.round(64 + 54 * Math.cos(a * Math.PI / 180)), Math.round(64 + 54 * Math.sin(a * Math.PI / 180))]) }
+  tower: { cap: 4, z: Math.round(94 * HZ.tower), rng: 2.5, atk: 1.6, def: 0.35, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
+  wall: { cap: 1, z: Math.round(22 * HZ.wall), rng: 1.5, atk: 1.3, def: 0.5, slots: [[16, 16]] },
+  gate: { cap: 1, z: Math.round(30 * HZ.gate), rng: 1.5, atk: 1.35, def: 0.45, slots: [[16, 16]] },
+  hall: { cap: 6, z: Math.round(58 * HZ.hall), rng: 2.5, atk: 1.6, def: 0.3, slots: [15, 75, 135, 195, 255, 315].map(a => [Math.round(64 + 54 * Math.cos(a * Math.PI / 180)), Math.round(64 + 54 * Math.sin(a * Math.PI / 180))]) }
 };
 const farmerOf = b => G.units.find(u => !u.dead && u.order && u.order.k === 'farm' && u.order.b === b);
 const garrisonOf = b => G.units.filter(u => !u.dead && u.gar === b);
@@ -915,7 +996,7 @@ function garUpdate(u, dt) {
     u.order = null; t = null; u.scan -= dt;
     if (u.scan <= 0) {
       u.scan = 0.4; let bd = rng;
-      for (const e of G.units) { if (e.team === u.team || e.dead) continue; const dd = Math.hypot(e.x - u.x, e.y - u.y); if (dd < bd) { bd = dd; t = e; } }
+      for (const e of G.units) { if (ally(e.team, u.team) || e.dead) continue; const dd = Math.hypot(e.x - u.x, e.y - u.y); if (dd < bd) { bd = dd; t = e; } }
       if (t) u.order = { k: 'attack', t, auto: true };
     }
   }
@@ -1017,7 +1098,7 @@ function updPalace(b, dt) {
     b.pcd = (b.pcd || 0) - dt;
     if (b.pcd <= 0) {
       let best = null, bd = 8.5 * T;
-      for (const e of G.units) if (e.team !== b.team && !e.dead && dmgMult(b, e) > 0) { const dd = distRect(e.x, e.y, b); if (dd < bd) { bd = dd; best = e; } }
+      for (const e of G.units) if (foe(e.team, b.team) && !e.dead && dmgMult(b, e) > 0) { const dd = distRect(e.x, e.y, b); if (dd < bd) { bd = dd; best = e; } }
       if (best) {
         b.pcd = Math.max(0.45, 1.8 - people * 0.18);
         const tw = GAR.hall.slots.map(([x, y]) => [b.tx * T + x, b.ty * T + y]).sort((p, q) => Math.hypot(p[0] - best.x, p[1] - best.y) - Math.hypot(q[0] - best.x, q[1] - best.y))[0];
@@ -1026,7 +1107,7 @@ function updPalace(b, dt) {
     }
   }
   b.alT = (b.alT || 0) - dt; if (b.alT > 0) return; b.alT = 0.5;
-  const threat = G.units.some(e => e.team !== b.team && !e.dead && (isMil(e) || UDEF[e.type].dmg > 0 && isNaval(e)) && distRect(e.x, e.y, b) < 14 * T);
+  const threat = G.units.some(e => foe(e.team, b.team) && !e.dead && (isMil(e) || UDEF[e.type].dmg > 0 && isNaval(e)) && distRect(e.x, e.y, b) < 14 * T);
   if (threat || (b.manualT || 0) > G.t) { b.quiet = 0; if (!b.alarm) raiseAlarm(b); else shelterNearby(b); }
   else if (b.alarm) { b.quiet += 0.5; if (b.quiet >= 8) allClear(b); }
 }
@@ -1053,33 +1134,70 @@ function playBell() {
 // ---------- ships ----------
 function orderBoard(u, ship) { setOrder(u, { k: 'board', ship, fails: 0 }); }
 function orderUnload(ship, tx, ty) { setOrder(ship, { k: 'unload', tx, ty, fails: 0 }); }
-const boardingFor = ship => G.units.filter(u => u.order && u.order.k === 'board' && u.order.ship === ship).length;
+// cargo is counted in deck space: a foot soldier takes one place, a horse two, a siege engine five
+const loadOf = u => UDEF[u.type].load || 1;
+const cargoLoad = ship => (ship.cargo || []).reduce((a, u) => a + loadOf(u), 0);
+const boarders = ship => G.units.filter(u => !u.dead && u.order && u.order.k === 'board' && u.order.ship === ship);
+const boardingFor = ship => boarders(ship).reduce((a, u) => a + loadOf(u), 0);
+const shipAt = (ship, rv) => Math.hypot(ship.x - (rv.wx * T + 16), ship.y - (rv.wy * T + 16)) < 1.6 * T;
+// one meeting point per ship: the shore spot the waiting passengers can walk to soonest. The ship sails there once
+// and waits; the passengers walk to that fixed spot. Nobody chases a moving target.
+function boardRendezvous(ship) {
+  const list = boarders(ship); if (!list.length) return null;
+  const cx = list.reduce((a, u) => a + u.x, 0) / list.length, cy = list.reduce((a, u) => a + u.y, 0) / list.length;
+  const src = list.reduce((a, u) => Math.hypot(u.x - cx, u.y - cy) < Math.hypot(a.x - cx, a.y - cy) ? u : a, list[0]);
+  // the water the ship can sail on
+  const wet = new Uint8Array(N), q = [], sx = tileOf(ship.x), sy = tileOf(ship.y);
+  if (!waterPass(sx, sy)) return null;
+  wet[sy * W + sx] = 1; q.push(sy * W + sx);
+  for (let h = 0; h < q.length; h++) { const c = q[h], x = c % W, y = (c / W) | 0; for (const [dx, dy] of DIRS.slice(0, 4)) { const nx = x + dx, ny = y + dy; if (waterPass(nx, ny) && !wet[ny * W + nx]) { wet[ny * W + nx] = 1; q.push(ny * W + nx); } } }
+  // walk outward over land from the passengers: the first shore tile on that water is the meeting point
+  curTeam = src.team;
+  const seenL = new Uint8Array(N), lq = []; let st = [tileOf(src.x), tileOf(src.y)];
+  if (!passable(st[0], st[1])) { st = nearFree(st[0], st[1], 4); if (!st) return null; }
+  seenL[st[1] * W + st[0]] = 1; lq.push(st[1] * W + st[0]);
+  let rv = null;
+  for (let h = 0; h < lq.length && h < 12000 && !rv; h++) {
+    const c = lq[h], x = c % W, y = (c / W) | 0;
+    for (const [dx, dy] of DIRS.slice(0, 4)) { const nx = x + dx, ny = y + dy; if (inb(nx, ny) && wet[ny * W + nx]) { rv = { wx: nx, wy: ny, lx: x, ly: y }; break; } }
+    if (!rv) for (const [dx, dy] of DIRS.slice(0, 4)) { const nx = x + dx, ny = y + dy; if (passable(nx, ny) && !seenL[ny * W + nx]) { seenL[ny * W + nx] = 1; lq.push(ny * W + nx); } }
+  }
+  if (!rv) return null;
+  if (!shipAt(ship, rv)) { orderMove(ship, rv.wx * T + 16, rv.wy * T + 16); ship.order.rv = true; }
+  ship.rv = rv; return rv;
+}
 function doBoard(u, o, dt) {
   const ship = o.ship;
-  if (ship.dead || (ship.cargo || []).length >= UDEF[ship.type].cap) { u.order = null; u.path = null; return; }
-  // an idle ship comes to the shore where its passengers are waiting
-  if (!ship.order && !o.called && Math.hypot(u.x - ship.x, u.y - ship.y) > 2.2 * T) {
-    o.called = true;
-    const spot = findLanding(tileOf(u.x), tileOf(u.y), tileOf(ship.x), tileOf(ship.y));
-    if (spot) orderMove(ship, spot.wx * T + 16, spot.wy * T + 16);
-  }
-  const dShip = Math.hypot(u.x - ship.x, u.y - ship.y), arrived = u.path && u.pi >= u.path.length;
-  // close enough, or as close as the shore allows next to a waiting ship: a gangplank does the rest
-  if (dShip <= 2.2 * T || (arrived && dShip <= 4.5 * T && !ship.order)) {
+  if (ship.dead || cargoLoad(ship) + loadOf(u) > UDEF[ship.type].cap) { u.order = null; u.path = null; return; }
+  // the ship was sent somewhere else by its owner: wait where we are until it is free again
+  if (ship.order && !ship.order.rv) { u.path = null; return; }
+  const rv = ship.rv || boardRendezvous(ship);
+  if (!rv) { u.order = null; notify(u.team, 'یگان‌ها به هیچ ساحلی که کشتی به آن برسد راه ندارند', true); return; }
+  const dShip = Math.hypot(u.x - ship.x, u.y - ship.y), docked = !ship.order && shipAt(ship, rv);
+  const atShore = Math.hypot(u.x - (rv.lx * T + 16), u.y - (rv.ly * T + 16)) <= 2.6 * T;
+  if (docked && (dShip <= UDEF[ship.type].r + 2.8 * T || atShore)) {
     // aboard: the soldier leaves the map and travels inside the ship
     ship.cargo = ship.cargo || []; ship.cargo.push(u);
     u.order = null; u.path = null; u.carry.amt = 0; u.aboard = true;
     G.sel.delete(u); hudDirty = true;
+    if (!boarders(ship).length) ship.rv = null;
     return;
   }
+  if (o.rv !== rv) { o.rv = rv; u.path = null; o.fails = 0; o.wait = 0; }
   u.rp -= dt;
-  if (!u.path || u.rp <= 0) {
-    u.rp = 1;
-    setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => Math.hypot(x * T + 16 - ship.x, y * T + 16 - ship.y) <= 2 * T, tileOf(ship.x), tileOf(ship.y), 9000));
-    if (!u.path.length && Math.hypot(u.x - ship.x, u.y - ship.y) > 2.2 * T && ship.order) o.fails = Math.max(0, o.fails - 1);
-    else if (!u.path.length && ++o.fails > 12) { u.order = null; notify(u.team, 'یگان‌ها به کشتی نمی‌رسند؛ کشتی را کنار ساحل ببر', true); }
+  if (!u.path || (u.rp <= 0 && !atShore && u.pi >= u.path.length)) {
+    u.rp = 2;
+    setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => Math.hypot(x - rv.lx, y - rv.ly) <= 1.5, rv.lx, rv.ly, 14000));
+    if (!u.path.length && !atShore && ++o.fails > 4) {
+      // this one can't reach the spot: let the next passenger pick a new meeting point
+      u.order = null; ship.rv = null; notify(u.team, 'یگان‌ها به ساحلِ کنار کشتی راه ندارند', true); return;
+    }
   }
-  follow(u, dt);
+  if (follow(u, dt) && atShore && !docked && !ship.order) {
+    // we are on the shore but the ship could not get here: give up after a while instead of looping
+    o.wait = (o.wait || 0) + dt;
+    if (o.wait > 8) { u.order = null; ship.rv = null; notify(u.team, 'کشتی به این ساحل نمی‌رسد؛ کشتی را کنار ساحل ببر', true); }
+  }
 }
 // a landing spot: a water tile next to dry, free land, as close as possible to where the player clicked
 function findLanding(tx, ty, fromX, fromY) {
@@ -1109,7 +1227,7 @@ function unloadShip(ship, lx, ly) {
   const spots = formationTiles(lx, ly, cargo.length);
   cargo.forEach((u, i) => { u.x = spots[i][0] * T + 16; u.y = spots[i][1] * T + 16; u.aboard = false; u.order = null; u.path = null; G.units.push(u); });
   const n = cargo.length; ship.cargo = [];
-  if (ship.team === 1 && G.mode !== 'vs') { const tg = G.blds.find(b => b.team === 0 && b.type === 'hall' && !b.dead) || G.blds.find(b => b.team === 0 && !b.dead); if (tg) cargo.forEach(u => orderAMove(u, bcx(tg), bcy(tg))); }
+  if (isBot(ship.team)) { const tg = aiTarget(ship.team, lx * T, ly * T); if (tg) cargo.forEach(u => orderAMove(u, bcx(tg), bcy(tg))); }
   notify(ship.team, fa(n) + ' یگان پیاده شدند');
   return n;
 }
@@ -1132,7 +1250,7 @@ function doUnload(u, o, dt) {
 }
 
 // ---------- orders ----------
-function setOrder(u, o) { u.order = o; u.path = null; u.rp = 0; }
+function setOrder(u, o) { u.order = o; u.path = null; u.rp = 0; if (u.rv) u.rv = null; }
 function orderMove(u, x, y) { setOrder(u, { k: 'move', gx: tileOf(x), gy: tileOf(y) }); }
 function orderAMove(u, x, y) { setOrder(u, { k: 'amove', gx: tileOf(x), gy: tileOf(y) }); }
 function orderGather(u, rx, ry) {
@@ -1185,10 +1303,10 @@ function steer(u, x, y, dt) {
 function scanEnemy(u, radius, withBuildings) {
   let best = null, bd = radius * T;
   const melee = UDEF[u.type].range < 1.5;
-  for (const e of G.units) { if (e.team === u.team || e.dead || (melee && e.gar) || !canHurt(u, e)) continue; const d = Math.hypot(e.x - u.x, e.y - u.y); if (d < bd) { bd = d; best = e; } }
+  for (const e of G.units) { if (ally(e.team, u.team) || e.dead || (melee && e.gar) || !canHurt(u, e)) continue; const d = Math.hypot(e.x - u.x, e.y - u.y); if (d < bd) { bd = d; best = e; } }
   if (best || !withBuildings) return best;
   bd = radius * T;
-  for (const b of G.blds) { if (b.team === u.team || b.dead || !canHurt(u, b)) continue; const d = distRect(u.x, u.y, b); if (d < bd) { bd = d; best = b; } }
+  for (const b of G.blds) { if (ally(b.team, u.team) || b.dead || !canHurt(u, b)) continue; const d = distRect(u.x, u.y, b); if (d < bd) { bd = d; best = b; } }
   return best;
 }
 
@@ -1323,9 +1441,9 @@ function damage(t, dmg, src) {
   // up on the battlements: the parapet takes most of the blow
   if (t.gar) dmg *= GAR[t.gar.type].def;
   t.hp -= dmg;
-  if (t.kind === 'u' && src && src.kind === 'u' && !src.dead && isMil(t) && (!t.order || t.order.k === 'move' && t.team === 1)) orderAttack(t, src, true);
+  if (t.kind === 'u' && src && src.kind === 'u' && !src.dead && isMil(t) && (!t.order || t.order.k === 'move' && isBot(t.team))) orderAttack(t, src, true);
   if (G.t - (G.alarmAt[t.team] ?? -99) > 12) { G.alarmAt[t.team] = G.t; notify(t.team, t.kind === 'b' ? BDEF[t.type].name + ' زیر حمله است' : 'یگان‌های ما زیر حمله‌اند', true); }
-  if (G.mode !== 'vs' && t.team === 1 && src && src.team !== 1) G.ai.alarm = src;
+  if (isBot(t.team) && src && foe(src.team, t.team)) G.players[t.team].ai.alarm = src;
   if (t.hp <= 0) kill(t);
 }
 function removeBuilding(e, rubble) {
@@ -1348,7 +1466,7 @@ function kill(e) {
   } else {
     G.stats.lost[e.team]++;
     if (e.cargo && e.cargo.length) { G.stats.lost[e.team] += e.cargo.length; notify(e.team, UDEF[e.type].name + ' با ' + fa(e.cargo.length) + ' سرنشین غرق شد', true); e.cargo = []; }
-    if (e.type === 'lord') notifyAll(e.team === ME ? 'لرد ما کشته شد' : 'لرد دشمن کشته شد', e.team === ME);
+    if (e.type === 'lord') { G.players[e.team].out = true; notifyAll('لرد ' + G.players[e.team].name + ' کشته شد', true); notify(e.team, 'لرد تو کشته شد؛ از این به بعد نبرد را تماشا می‌کنی', true); }
     if (!isNaval(e)) addFx({ k: 'corpse', x: e.x, y: e.y, team: e.team, type: e.type, t: 9, flip: Math.random() < 0.5 });
   }
   G.sel.delete(e);
@@ -1361,7 +1479,7 @@ function updBuilding(b, dt) {
     b.cd -= dt;
     if (b.cd <= 0) {
       let best = null, bd = d.range * T;
-      for (const e of G.units) if (e.team !== b.team && !e.dead) { const dd = distRect(e.x, e.y, b); if (dd < bd) { bd = dd; best = e; } }
+      for (const e of G.units) if (foe(e.team, b.team) && !e.dead) { const dd = distRect(e.x, e.y, b); if (dd < bd) { bd = dd; best = e; } }
       if (best) { b.cd = d.cd; G.proj.push({ x: bcx(b), y: bcy(b), t: best, dmg: d.dmg, src: b, team: b.team, z0: BSPR[b.type].top, d0: Math.max(1, Math.hypot(best.x - bcx(b), best.y - bcy(b))), h: BSPR[b.type].top }); }
     }
   }
@@ -1387,11 +1505,11 @@ function updBuilding(b, dt) {
 function updProj(p, dt) {
   const t = p.t; if (t.dead) { p.dead = true; return; }
   const tx = posX(t), ty = posY(t), dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy), sp = 360 * dt;
-  const f = Math.max(0, Math.min(1, 1 - d / p.d0)), aim = t.kind === 'u' ? 14 + (t.z || 0) : 20;
+  const f = Math.max(0, Math.min(1, 1 - d / p.d0)), aim = t.kind === 'u' ? 9 + (t.z || 0) : 20;
   p.h = p.z0 * (1 - f) + aim * f + Math.sin(f * Math.PI) * (p.stone ? Math.min(150, p.d0 * 0.45) : Math.min(60, p.d0 * 0.22));
   if (d <= sp + (t.kind === 'b' ? t.size * 10 : 4)) {
     damage(t, p.dmg, p.src); p.dead = true;
-    if (p.stone) { for (const e of G.units) if (e !== t && e.team !== p.team && !e.dead && Math.hypot(e.x - tx, e.y - ty) < 42) damage(e, p.dmg * 0.5, p.src); addFx({ k: 'dust', x: tx, y: ty, t: 0.8 }); }
+    if (p.stone) { for (const e of G.units) if (e !== t && foe(e.team, p.team) && !e.dead && Math.hypot(e.x - tx, e.y - ty) < 42) damage(e, p.dmg * 0.5, p.src); addFx({ k: 'dust', x: tx, y: ty, t: 0.8 }); }
   }
   else { p.x += dx / d * sp; p.y += dy / d * sp; }
 }
@@ -1437,21 +1555,34 @@ function findSpot(team, type, near) {
 }
 function canPay(team, cost) { const r = G.res[team]; for (const k in cost) if (r[k] < cost[k]) return false; return true; }
 function pay(team, cost) { const r = G.res[team]; for (const k in cost) r[k] -= cost[k]; }
-function aiBuild(type, hall, workers) {
-  const cost = BDEF[type].cost; if (!canPay(1, cost)) return false;
-  const spot = findSpot(1, type, { x: hall.tx + 1, y: hall.ty + 1 }); if (!spot) return false;
-  pay(1, cost);
-  const b = addBuilding(type, 1, spot.tx, spot.ty, false);
+function aiBuild(p, type, hall, workers) {
+  const cost = BDEF[type].cost; if (!canPay(p, cost)) return false;
+  const spot = findSpot(p, type, { x: hall.tx + 1, y: hall.ty + 1 }); if (!spot) return false;
+  pay(p, cost);
+  const b = addBuilding(type, p, spot.tx, spot.ty, false);
   workers.slice(0, 2).forEach(w => orderBuild(w, b));
   return true;
 }
-function aiTick() {
-  aiNavy();
-  const A = G.ai, R = G.res[1], df = DIFF[G.diff];
+// the enemy palace closest to a point (or any enemy building once the palaces are gone)
+function aiTarget(p, x, y) {
+  let best = null, bd = 1e12;
+  for (const pass of ['hall', null]) {
+    for (const b of G.blds) if (!b.dead && foe(b.team, p) && !G.players[b.team].out && (!pass || b.type === pass)) { const d = Math.hypot(bcx(b) - x, bcy(b) - y); if (d < bd) { bd = d; best = b; } }
+    if (best) return best;
+  }
+  for (const b of G.blds) if (!b.dead && foe(b.team, p)) { const d = Math.hypot(bcx(b) - x, bcy(b) - y); if (d < bd) { bd = d; best = b; } }
+  return best;
+}
+const homeOf = p => G.blds.find(b => b.team === p && b.type === 'hall' && !b.dead);
+// one step toward the map centre from a palace: where a bot puts its barracks, army and new recruits
+const inward = (hall, k) => ({ x: Math.round(hall.tx + 1.5 + Math.sign(W / 2 - hall.tx) * k), y: Math.round(hall.ty + 1.5 + Math.sign(H / 2 - hall.ty) * k) });
+function aiTick(p) {
+  const P = G.players[p], A = P.ai, R = G.res[p], df = DIFF[P.diff];
+  aiNavy(p);
   R.food += df.trickle * 1.2; R.gold += df.trickle * 0.6; R.wood += df.trickle * 0.8; R.stone += df.trickle * 0.4;
-  const hall = G.blds.find(b => b.team === 1 && b.type === 'hall' && !b.dead);
+  const hall = homeOf(p);
   if (!hall) return;
-  const mine = G.units.filter(u => u.team === 1);
+  const mine = G.units.filter(u => u.team === p);
   const workers = mine.filter(u => u.type === 'worker');
   const army = mine.filter(isMil);
   workers.forEach((w, i) => {
@@ -1460,23 +1591,23 @@ function aiTick() {
     const n = nearestRes(tileOf(w.x), tileOf(w.y), res, 24) || nearestRes(tileOf(w.x), tileOf(w.y), 'wood', 36);
     if (n) orderGather(w, n.x, n.y);
   });
-  for (const f of G.blds) if (f.team === 1 && f.type === 'farm' && f.built && !f.dead && !farmerOf(f)) {
+  for (const f of G.blds) if (f.team === p && f.type === 'farm' && f.built && !f.dead && !farmerOf(f)) {
     const w = workers.filter(w => !w.order || w.order.k === 'gather').sort((a, b) => distRect(a.x, a.y, f) - distRect(b.x, b.y, f))[0];
     if (w) orderFarm(w, f);
   }
-  if (workers.length + hall.queue.length < 11 && hall.queue.length < 2 && canPay(1, UDEF.worker.cost)) { pay(1, UDEF.worker.cost); hall.queue.push('worker'); }
-  const mineB = G.blds.filter(b => b.team === 1 && !b.dead);
+  if (workers.length + hall.queue.length < 11 && hall.queue.length < 2 && canPay(p, UDEF.worker.cost)) { pay(p, UDEF.worker.cost); hall.queue.push('worker'); }
+  const mineB = G.blds.filter(b => b.team === p && !b.dead);
   const building = mineB.some(b => !b.built);
   if (!building && workers.length) {
     const free = workers.filter(w => !w.order || w.order.k === 'gather');
-    if (G.pop[1] >= G.cap[1] - 2) aiBuild('house', hall, free);
-    else if (mineB.filter(b => b.type === 'farm').length < 3) aiBuild('farm', hall, free);
-    else if (G.t > 420 && mineB.filter(b => b.type === 'tower').length < 3) aiBuild('tower', hall, free);
+    if (G.pop[p] >= G.cap[p] - 2) aiBuild(p, 'house', hall, free);
+    else if (mineB.filter(b => b.type === 'farm').length < 3) aiBuild(p, 'farm', hall, free);
+    else if (G.t > 420 && mineB.filter(b => b.type === 'tower').length < 3) aiBuild(p, 'tower', hall, free);
   }
-  const armyCap = DIFF[G.diff].cap(G.wave) + (G.mode === 'coop' ? 4 : 0);
+  const armyCap = df.cap(A.wave);
   for (const b of mineB) if (b.type === 'barracks' && b.built && b.queue.length < 1 && army.length + b.queue.length < armyCap) {
     const t = ['spear', 'archer', 'spear', 'archer', 'knight'][A.rot % 5];
-    if (canPay(1, UDEF[t].cost)) { pay(1, UDEF[t].cost); b.queue.push(t); A.rot++; }
+    if (canPay(p, UDEF[t].cost)) { pay(p, UDEF[t].cost); b.queue.push(t); A.rot++; }
   }
   // defend the home base
   if (A.alarm && !A.alarm.dead) {
@@ -1487,48 +1618,52 @@ function aiTick() {
 }
 // is there a road on dry land (ignoring buildings) from one base to the other?
 function landRoute(a, b) {
-  const p = findPath(a.tx + 1, a.ty + a.size, (x, y) => Math.abs(x - (b.tx + 1)) <= 2 && Math.abs(y - (b.ty + 1)) <= 2, b.tx + 1, b.ty + 1, 30000, terrainPass);
+  const s = inward(a, 3.5), p = findPath(s.x, s.y, (x, y) => Math.abs(x - (b.tx + 1)) <= 2 && Math.abs(y - (b.ty + 1)) <= 2, b.tx + 1, b.ty + 1, 30000, terrainPass);
   if (!p.length) return false;
   const [x, y] = p[p.length - 1]; return Math.abs(x - (b.tx + 1)) <= 2 && Math.abs(y - (b.ty + 1)) <= 2;
 }
-function navalWave(hall, target, army) {
-  const dock = G.blds.find(b => b.team === 1 && b.type === 'dock' && !b.dead);
+function navalWave(p, hall, target, army) {
+  const dock = G.blds.find(b => b.team === p && b.type === 'dock' && !b.dead);
   let start = dock ? nearFree(dock.tx + 1, dock.ty + 1, 6, waterPass) : nearFree(hall.tx + 1, hall.ty + 1, 30, waterPass);
   if (!start || !army.length) return;
   const shore = findLanding(dock ? dock.tx + 1 : hall.tx + 1, dock ? dock.ty + 1 : hall.ty + 1, start[0], start[1]);
   if (shore) start = [shore.wx, shore.wy];
-  const ships = [];
-  for (let k = 0; k < Math.ceil(army.length / 8); k++) { const p = nearFree(start[0], start[1], 6, waterPass) || start; ships.push(addUnit('transport', 1, p[0] * T + 16, p[1] * T + 16)); }
-  army.forEach((u, i) => orderBoard(u, ships[Math.floor(i / 8)]));
-  G.ai.landing = { ships, t: G.t, target: { tx: target.tx + 1, ty: target.ty + 1 }, sailed: false };
+  // idle empty transports from earlier waves are used first; new ones are built only for what is left
+  const spare = G.units.filter(u => u.team === p && u.type === 'transport' && !u.dead && !u.order && !(u.cargo || []).length && !boarders(u).length);
+  const ships = []; let room = 0;
+  for (const u of army) {
+    if (loadOf(u) > room) { const q = nearFree(start[0], start[1], 6, waterPass) || start; ships.push(spare.pop() || addUnit('transport', p, q[0] * T + 16, q[1] * T + 16)); room = UDEF.transport.cap; }
+    orderBoard(u, ships[ships.length - 1]); room -= loadOf(u);
+  }
+  G.players[p].ai.landing = { ships, t: G.t, target: { tx: target.tx + 1, ty: target.ty + 1 }, sailed: false };
 }
-function aiNavy() {
-  const L = G.ai.landing; if (!L) return;
+function aiNavy(p) {
+  const L = G.players[p].ai.landing; if (!L) return;
   if (!L.sailed) {
-    const waiting = G.units.some(u => u.team === 1 && u.order && u.order.k === 'board');
+    const waiting = G.units.some(u => u.team === p && u.order && u.order.k === 'board');
     if (!waiting || G.t - L.t > 40) { L.sailed = true; L.ships.forEach(s => { if (!s.dead) orderUnload(s, L.target.tx, L.target.ty); }); }
     return;
   }
   for (const sh of L.ships) if (!sh.dead && !sh.order && (sh.cargo || []).length) orderUnload(sh, L.target.tx, L.target.ty);
 }
-function launchWave() {
-  const df = DIFF[G.diff], n = G.wave++;
-  const hall = G.blds.find(b => b.team === 1 && b.type === 'hall' && !b.dead);
+function launchWave(p) {
+  const P = G.players[p], A = P.ai, df = DIFF[P.diff], n = A.wave++;
+  const hall = homeOf(p);
+  A.waveT = df.interval;
   if (!hall) return;
-  const extra = df.bonus + Math.floor(n * df.scale) + (G.mode === 'coop' ? 2 + n : 0);
+  const extra = df.bonus + Math.floor(n * df.scale);
   const kinds = [];
   for (let k = 0; k < extra; k++) kinds.push(n >= 2 && k % 4 === 3 ? 'knight' : k % 2 ? 'archer' : 'spear');
-  // from a certain wave on, the camp brings siege engines for our stone walls and palace
+  // from a certain wave on, the camp brings siege engines for stone walls and palaces
   if (n >= df.siegeFrom) { for (let k = 0; k <= Math.floor((n - df.siegeFrom) / 2); k++) kinds.push('ram'); if (n > df.siegeFrom) kinds.push('catapult'); }
-  for (const t of kinds) { const p = nearFree(hall.tx + 1, hall.ty + 5, 8); if (p) addUnit(t, 1, p[0] * T + 16, p[1] * T + 16); }
-  const target = G.blds.find(b => b.team === 0 && b.type === 'hall' && !b.dead) || G.blds.find(b => b.team === 0 && !b.dead);
-  const army = G.units.filter(u => u.team === 1 && isMil(u) && !(u.order && u.order.k === 'board'));
+  const gate = inward(hall, 4);
+  for (const t of kinds) { const q = nearFree(gate.x, gate.y, 8); if (q) addUnit(t, p, q[0] * T + 16, q[1] * T + 16); }
+  const target = aiTarget(p, bcx(hall), bcy(hall));
+  const army = G.units.filter(u => u.team === p && isMil(u) && !(u.order && u.order.k === 'board'));
   if (target && landRoute(hall, target)) army.forEach(u => orderAMove(u, bcx(target), bcy(target)));
-  else if (target) navalWave(hall, target, army);
-  G.waveT = df.interval;
-  notifyAll('موج ' + fa(n + 1) + ' سپاه دشمن به سوی دهکده می‌آید', true);
+  else if (target) navalWave(p, hall, target, army);
+  if (target) notify(target.team, 'موج ' + fa(n + 1) + ' سپاه ' + G.players[p].name + ' به سوی دهکده می‌آید', true);
 }
-
 // ---------- fog ----------
 let natureDirty = true, nature = [];
 function computeFog() {
@@ -1538,52 +1673,61 @@ function computeFog() {
     for (let y = Math.max(0, ty - r); y <= Math.min(H - 1, ty + r); y++) for (let x = Math.max(0, tx - r); x <= Math.min(W - 1, tx + r); x++)
       if ((x - tx) ** 2 + (y - ty) ** 2 <= r2) { vis[y * W + x] = 1; if (!explored[y * W + x]) { explored[y * W + x] = 1; natureDirty = true; } }
   };
-  for (const u of G.units) if (u.team === ME) mark(u.x, u.y, UDEF[u.type].sight + (u.gar ? 3 : 0));
-  for (const b of G.blds) if (b.team === ME) mark(bcx(b), bcy(b), BDEF[b.type].sight);
+  for (const u of G.units) if (ally(u.team, ME)) mark(u.x, u.y, UDEF[u.type].sight + (u.gar ? 3 : 0));
+  for (const b of G.blds) if (ally(b.team, ME)) mark(bcx(b), bcy(b), BDEF[b.type].sight);
 }
-const seen = e => e.team === ME || (e.kind === 'u' ? vis[tileOf(e.y) * W + tileOf(e.x)] : explored[e.ty * W + e.tx]);
+const seen = e => ally(e.team, ME) || (e.kind === 'u' ? vis[tileOf(e.y) * W + tileOf(e.x)] : explored[e.ty * W + e.tx]);
 
 // ---------- game setup ----------
-function newGame(diff, opts = {}) {
-  const mode = opts.mode || 'solo';
-  const start = mode === 'coop' ? { wood: 320, stone: 140, gold: 120, food: 260 } : { wood: 200, stone: 80, gold: 60, food: 150 };
-  G = { t: 0, diff, mode, res: [{ ...start }, mode === 'vs' ? { ...start } : { wood: 200, stone: 150, gold: 150, food: 250 }],
-    units: [], blds: [], proj: [], marks: [], sel: new Set(), nextId: 1, placing: null, waveT: DIFF[diff].first, wave: 0,
-    over: false, paused: true, stats: { trained: [0, 0], lost: [0, 0] }, ai: { rot: 0, alarm: null }, aiT: 0, fogT: 0,
-    pop: [0, 0], cap: [0, 0], alarmAt: {}, groups: {}, formation: 'line', fx: [], fxOut: [], tileLog: [], loser: -1 };
+// seats: [{ kind: 'me' | 'human' | 'bot', ally, diff, name }]; seat i plays team i, color TEAM[i]
+const DEFAULT_SEATS = [{ kind: 'me', ally: 0, name: 'تو' }, { kind: 'bot', ally: 1, diff: 'normal' }];
+const seatName = t => G && G.players[t] ? (t === ME ? 'تو' : G.players[t].name) : '';
+function newGame(opts = {}) {
+  const mapId = MAPS[opts.mapId] ? opts.mapId : 'frontier', MD = MAPS[mapId];
+  const seats = (opts.seats || DEFAULT_SEATS).slice(0, MD.seats);
+  const players = seats.map((st, i) => ({
+    kind: st.kind, bot: st.kind === 'bot', ally: st.ally | 0, diff: DIFF[st.diff] ? st.diff : 'normal', spot: i,
+    name: st.kind === 'bot' ? 'بات ' + TEAM_NAME[i] + ' (' + DIFF[DIFF[st.diff] ? st.diff : 'normal'].name + ')' : st.name || 'بازیکن ' + TEAM_NAME[i],
+    out: false, ai: st.kind === 'bot' ? { rot: 0, alarm: null, wave: 0, waveT: DIFF[DIFF[st.diff] ? st.diff : 'normal'].first, landing: null } : null
+  }));
+  const n = players.length, zeros = () => players.map(() => 0);
+  G = { t: 0, mapId, practice: !!opts.practice, players,
+    res: players.map(p => p.bot ? { wood: 200, stone: 150, gold: 150, food: 250 } : { wood: 200, stone: 80, gold: 60, food: 150 }),
+    units: [], blds: [], proj: [], marks: [], sel: new Set(), nextId: 1, placing: null,
+    over: false, paused: true, stats: { trained: zeros(), lost: zeros() }, aiT: 0, fogT: 0,
+    pop: zeros(), cap: zeros(), alarmAt: {}, groups: {}, formation: 'line', fx: [], fxOut: [], tileLog: [], winner: -1 };
   const seed = opts.seed ?? ((Math.random() * 1e9) | 0);
   G.seed = seed;
-  G.mapType = opts.mapType || 'land';
-  genMap(seed, G.mapType);
-  addBuilding('hall', 0, P_HALL.x, P_HALL.y, true);
-  addBuilding('hall', 1, E_HALL.x, E_HALL.y, true);
-  if (mode !== 'vs' && G.mapType === 'river') {
-    // the enemy camp starts with a dock on its shore
-    let best = null, bd = 1e9;
-    for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) { const d = Math.hypot(x - E_HALL.x, y - E_HALL.y); if (d < bd && d > 5 && placeValid('dock', x, y, 1) && [[x - 1, y], [x + 2, y], [x, y - 1], [x, y + 2], [x + 1, y - 1], [x + 1, y + 2], [x - 1, y + 1], [x + 2, y + 1]].some(([a, b]) => inb(a, b) && river[b * W + a])) { bd = d; best = [x, y]; } }
-    if (best) addBuilding('dock', 1, best[0], best[1], true);
-  }
-  if (mode !== 'vs') {
-    addBuilding('barracks', 1, E_HALL.x - 5, E_HALL.y + 1, true);
-    addBuilding('tower', 1, E_HALL.x + 1, E_HALL.y + 6, true);
-  }
+  G.mapType = MD.kind;
+  genMap(seed, mapId);
+  for (let p = 0; p < n; p++) { const h = SPOTS[p]; addBuilding('hall', p, h.x, h.y, true); }
   genGround(seed); buildGroundMips(); natureDirty = true;
-  formationTiles(P_HALL.x + 2, P_HALL.y + 5, mode === 'coop' ? 8 : 5).forEach(p => addUnit('worker', 0, p[0] * T + 16, p[1] * T + 16));
-  if (mode === 'vs') formationTiles(E_HALL.x + 1, E_HALL.y - 2, 5).forEach(p => addUnit('worker', 1, p[0] * T + 16, p[1] * T + 16));
-  else {
-    for (let k = 0; k < 5; k++) { const p = nearFree(E_HALL.x + 1, E_HALL.y + 5); addUnit('worker', 1, p[0] * T + 16, p[1] * T + 16 + (k % 2) * 6); }
-    for (const t of DIFF[diff].start) { const p = nearFree(E_HALL.x - 2, E_HALL.y + 5); addUnit(t, 1, p[0] * T + 16, p[1] * T + 16); }
+  for (let p = 0; p < n; p++) {
+    const hall = G.blds.find(b => b.team === p && b.type === 'hall'), P = players[p];
+    const w = inward(hall, 3.5);
+    formationTiles(w.x, w.y, 5).forEach(q => addUnit('worker', p, q[0] * T + 16, q[1] * T + 16));
+    if (!P.bot) continue;
+    // a bot is an armed camp: barracks, a watchtower, a few soldiers, and a dock if water is the only way out
+    const bs = findSpot(p, 'barracks', inward(hall, 5)); if (bs) addBuilding('barracks', p, bs.tx, bs.ty, true);
+    const ts = findSpot(p, 'tower', inward(hall, 7)); if (ts) addBuilding('tower', p, ts.tx, ts.ty, true);
+    if (MD.kind === 'river') {
+      let best = null, bd = 1e9;
+      for (let y = 0; y < H - 1; y++) for (let x = 0; x < W - 1; x++) { const d = Math.hypot(x - hall.tx, y - hall.ty); if (d < bd && d > 5 && placeValid('dock', x, y, p) && [...Array(3).keys()].some(k => [[x - 1, y + k], [x + 3, y + k], [x + k, y - 1], [x + k, y + 3]].some(([a, b]) => inb(a, b) && river[b * W + a]))) { bd = d; best = [x, y]; } }
+      if (best) addBuilding('dock', p, best[0], best[1], true);
+    }
+    const g = inward(hall, 4);
+    for (const t of DIFF[P.diff].start) { const q = nearFree(g.x, g.y); if (q) addUnit(t, p, q[0] * T + 16, q[1] * T + 16); }
   }
   // each side's lord starts inside its palace
-  G.lords = [0, 1].map(team => {
+  G.lords = players.map((P, team) => {
     const pal = G.blds.find(b => b.team === team && b.type === 'hall');
     const l = addUnit('lord', team, bcx(pal), bcy(pal)); G.units.pop(); l.aboard = true; pal.lord = l; return l;
   });
   // the homeland is already known: reveal a wide circle around the town so nearby woods and quarries show up
-  const home = ME === 0 ? P_HALL : E_HALL;
+  const home = SPOTS[Math.min(ME, n - 1)];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (Math.hypot(x - home.x - 2, y - home.y - 2) < 21) explored[y * W + x] = 1;
   computeFog(); updateFogImage();
-  centerOn((home.x + 1.5) * T, (home.y + 1.5) * T);
+  cam.z = 1.3; $('zLevel').textContent = fa(130) + '٪'; centerOn((home.x + 1.5) * T, (home.y + 1.5) * T);
 }
 // ---------- camera & view (isometric: iso.x = x - y, iso.y = (x + y) / 2) ----------
 let vw = 0, vh = 0, dpr = 1;
@@ -1624,7 +1768,7 @@ function fire(x, y, seed) {
 }
 function drawBuilding(b) {
   const spr = getSprite(b.type, b.team), L = b.size * T, ix = isoX(b.tx * T, b.ty * T), iy = isoY(b.tx * T, b.ty * T);
-  const cx = ix, cy = iy + L / 2, sx = ix - spr.ox, sy = iy - spr.oy, dark = b.team === 1 && !vis[b.ty * W + b.tx];
+  const cx = ix, cy = iy + L / 2, sx = ix - spr.ox, sy = iy - spr.oy, dark = foe(b.team, ME) && !vis[b.ty * W + b.tx];
   if (G.sel.has(b)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); diamond(b.tx * T - 3, b.ty * T - 3, (b.tx + b.size) * T + 3, (b.ty + b.size) * T + 3); ctx.stroke(); ctx.setLineDash([]); }
   if (!b.built) {
     ctx.fillStyle = '#8a7350'; diamond(b.tx * T + 2, b.ty * T + 2, (b.tx + b.size) * T - 2, (b.ty + b.size) * T - 2); ctx.fill();
@@ -1687,61 +1831,63 @@ function drawBuilding(b) {
 }
 function ell(x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 7); }
 function drawShip(u) {
-  const war = u.type === 'warship', tc = TEAM[u.team], c = Math.cos(u.face), s = Math.sin(u.face);
+  const war = u.type === 'warship', tc = TEAM[u.team], c = Math.cos(u.face), s = Math.sin(u.face), K = SHIP_K;
   const bob = Math.sin(G.t * 2 + u.id) * 1.5;
-  const P = (lx, ly, z = 0) => { const wx = u.x + c * lx - s * ly, wy = u.y + s * lx + c * ly; return [isoX(wx, wy), isoY(wx, wy) - z + bob]; };
+  const P = (lx, ly, z = 0) => { lx *= K; ly *= K; z *= K; const wx = u.x + c * lx - s * ly, wy = u.y + s * lx + c * ly; return [isoX(wx, wy), isoY(wx, wy) - z + bob]; };
   const moving = G.t - (u.mvT || -9) < 0.15;
-  if (moving) { ctx.strokeStyle = 'rgba(230,240,240,0.45)'; ctx.lineWidth = 2; ctx.beginPath(); const a = P(-22, -6), b = P(-38, -14), d = P(-22, 6), e = P(-38, 14); ctx.moveTo(...a); ctx.lineTo(...b); ctx.moveTo(...d); ctx.lineTo(...e); ctx.stroke(); }
-  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(isoX(u.x, u.y), isoY(u.x, u.y), 30, 15); ctx.stroke(); }
+  if (moving) { ctx.strokeStyle = 'rgba(230,240,240,0.45)'; ctx.lineWidth = 2.5; ctx.beginPath(); const a = P(-22, -6), b = P(-38, -14), d = P(-22, 6), e = P(-38, 14); ctx.moveTo(...a); ctx.lineTo(...b); ctx.moveTo(...d); ctx.lineTo(...e); ctx.stroke(); }
+  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(isoX(u.x, u.y), isoY(u.x, u.y), 30 * K, 15 * K); ctx.stroke(); }
   const hull = [[24, 0], [12, 9], [-18, 9], [-22, 0], [-18, -9], [12, -9]];
   poly(ctx, hull.map(([x, y]) => P(x, y, 0)), 'rgba(0,0,0,0.25)');
-  poly(ctx, hull.map(([x, y]) => P(x, y, 7)), '#6b4a2a', '#3d2a17', 1);
+  poly(ctx, hull.map(([x, y]) => P(x, y, 7)), '#6b4a2a', '#3d2a17', 1.5);
   poly(ctx, [[18, 0], [9, 6], [-15, 6], [-18, 0], [-15, -6], [9, -6]].map(([x, y]) => P(x, y, 8)), '#a37c4d');
-  for (const lx of [-10, 0, 10]) { const a = P(lx, -6, 8), b = P(lx, 6, 8); seg(ctx, a, b, 'rgba(60,40,20,0.5)', 1); }
+  for (const lx of [-12, -8, -4, 0, 4, 8, 12]) { const a = P(lx, -6, 8), b = P(lx, 6, 8); seg(ctx, a, b, 'rgba(60,40,20,0.45)', 1); }
+  // passengers on deck, each at true size
+  const n = u.cargo ? cargoLoad(u) : u.cargoN || 0;
+  if (u.type === 'transport' && n) for (let i = 0; i < Math.min(10, n); i++) { const q = P(-12 + (i >> 1) * 5.5, (i & 1 ? 3 : -3), 8); ctx.fillStyle = tc; ctx.fillRect(q[0] - 3 * UNIT_S, q[1] - 11 * UNIT_S, 6 * UNIT_S, 8 * UNIT_S); ctx.fillStyle = '#e3b98f'; ctx.beginPath(); ctx.arc(q[0], q[1] - 14 * UNIT_S, 3 * UNIT_S, 0, 7); ctx.fill(); }
   const masts = war ? [6, -10] : [-2];
   for (const mx of masts) {
-    const base = P(mx, 0, 8), top = [base[0], base[1] - (war ? 34 : 40)];
-    seg(ctx, base, top, '#3a2c1e', 2);
-    const w = war ? 12 : 15;
-    ctx.fillStyle = '#e8e0c8'; ctx.beginPath(); ctx.moveTo(top[0] - w, top[1] + 5); ctx.quadraticCurveTo(top[0] + (c - s > 0 ? 5 : -5), top[1] + 15, top[0] - w, top[1] + 27); ctx.lineTo(top[0] + w, top[1] + 27); ctx.quadraticCurveTo(top[0] + (c - s > 0 ? 9 : -1), top[1] + 15, top[0] + w, top[1] + 5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = tc; ctx.fillRect(top[0] - w, top[1] + 12, w * 2, 5);
-    ctx.fillStyle = tc; ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.lineTo(top[0] + 10, top[1] + 3); ctx.lineTo(top[0], top[1] + 6); ctx.fill();
+    const base = P(mx, 0, 8), top = [base[0], base[1] - (war ? 34 : 40) * K];
+    seg(ctx, base, top, '#3a2c1e', 3);
+    const w = (war ? 12 : 15) * K, f = c - s > 0;
+    ctx.fillStyle = '#e8e0c8'; ctx.beginPath(); ctx.moveTo(top[0] - w, top[1] + 5 * K); ctx.quadraticCurveTo(top[0] + (f ? 5 : -5) * K, top[1] + 15 * K, top[0] - w, top[1] + 27 * K); ctx.lineTo(top[0] + w, top[1] + 27 * K); ctx.quadraticCurveTo(top[0] + (f ? 9 : -1) * K, top[1] + 15 * K, top[0] + w, top[1] + 5 * K); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = tc; ctx.fillRect(top[0] - w, top[1] + 12 * K, w * 2, 5 * K);
+    ctx.fillStyle = tc; ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.lineTo(top[0] + 10 * K, top[1] + 3 * K); ctx.lineTo(top[0], top[1] + 6 * K); ctx.fill();
   }
-  if (war) { const a = P(16, 0, 9); ctx.fillStyle = '#5b4126'; ctx.fillRect(a[0] - 3, a[1] - 6, 6, 6); }
-  const n = u.cargo ? u.cargo.length : u.cargoN || 0;
-  const top = isoY(u.x, u.y) - 52 + bob;
+  if (war) { const a = P(16, 0, 9); ctx.fillStyle = '#5b4126'; ctx.fillRect(a[0] - 3 * K, a[1] - 6 * K, 6 * K, 6 * K); }
+  const top = isoY(u.x, u.y) - 52 * K + bob;
   if (u.type === 'transport' && (n || G.sel.has(u))) {
-    ctx.fillStyle = 'rgba(20,22,15,0.85)'; ctx.fillRect(isoX(u.x, u.y) - 16, top - 22, 32, 15);
+    ctx.fillStyle = 'rgba(20,22,15,0.85)'; ctx.fillRect(isoX(u.x, u.y) - 20, top - 22, 40, 15);
     ctx.fillStyle = '#ece6d2'; ctx.font = '700 11px Vazirmatn, Tahoma, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.direction = 'ltr'; ctx.fillText(fa(n) + '/' + fa(UDEF.transport.cap), isoX(u.x, u.y), top - 14); ctx.direction = 'inherit';
   }
-  if (G.sel.has(u) || u.hp < u.maxhp) bar(isoX(u.x, u.y) - 16, top - 5, 32, u.hp / u.maxhp, hpCol(u.hp / u.maxhp));
+  if (G.sel.has(u) || u.hp < u.maxhp) bar(isoX(u.x, u.y) - 24, top - 5, 48, u.hp / u.maxhp, hpCol(u.hp / u.maxhp));
 }
 function drawSiege(u) {
-  const tc = TEAM[u.team], c = Math.cos(u.face), s = Math.sin(u.face), ram = u.type === 'ram';
-  const P = (lx, ly, z = 0) => { const wx = u.x + c * lx - s * ly, wy = u.y + s * lx + c * ly; return [isoX(wx, wy), isoY(wx, wy) - z]; };
+  const tc = TEAM[u.team], c = Math.cos(u.face), s = Math.sin(u.face), ram = u.type === 'ram', K = SIEGE_K;
+  const P = (lx, ly, z = 0) => { lx *= K; ly *= K; z *= K; const wx = u.x + c * lx - s * ly, wy = u.y + s * lx + c * ly; return [isoX(wx, wy), isoY(wx, wy) - z]; };
   const atk = G.t - (u.atkT || -9) < 0.4, moving = G.t - (u.mvT || -9) < 0.15;
-  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(isoX(u.x, u.y), isoY(u.x, u.y), 24, 12); ctx.stroke(); }
+  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(isoX(u.x, u.y), isoY(u.x, u.y), 24 * K, 12 * K); ctx.stroke(); }
   poly(ctx, [P(16, 11), P(-16, 11), P(-16, -11), P(16, -11)].map(([x, y]) => [x + 3, y + 2]), 'rgba(0,0,0,0.25)');
-  const spin = moving ? G.t * 6 : 0;
-  for (const [lx, ly] of [[10, 11], [-10, 11], [10, -11], [-10, -11]]) { const w = P(lx, ly, 5); ctx.fillStyle = '#3d2a17'; ell(w[0], w[1], 5, 5); ctx.fill(); ctx.strokeStyle = '#7a5534'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(w[0] + Math.cos(spin) * 4, w[1] + Math.sin(spin) * 4); ctx.lineTo(w[0] - Math.cos(spin) * 4, w[1] - Math.sin(spin) * 4); ctx.stroke(); }
+  const spin = moving ? G.t * 4 : 0;
+  for (const [lx, ly] of [[10, 11], [-10, 11], [10, -11], [-10, -11]]) { const w = P(lx, ly, 5); ctx.fillStyle = '#3d2a17'; ell(w[0], w[1], 5 * K, 5 * K); ctx.fill(); ctx.strokeStyle = '#7a5534'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(w[0] + Math.cos(spin) * 4 * K, w[1] + Math.sin(spin) * 4 * K); ctx.lineTo(w[0] - Math.cos(spin) * 4 * K, w[1] - Math.sin(spin) * 4 * K); ctx.stroke(); }
   if (ram) {
     const push = atk ? Math.sin((G.t - u.atkT) * 8) * 6 : 0;
-    seg(ctx, P(-14 + push, 0, 12), P(24 + push, 0, 12), '#6b4a2a', 6);
-    ctx.fillStyle = '#4c4e52'; const h = P(26 + push, 0, 12); ell(h[0], h[1], 5, 5); ctx.fill();
+    seg(ctx, P(-14 + push, 0, 12), P(24 + push, 0, 12), '#6b4a2a', 6 * K);
+    ctx.fillStyle = '#4c4e52'; const h = P(26 + push, 0, 12); ell(h[0], h[1], 5 * K, 5 * K); ctx.fill();
     // a shed roof with hides over the log
     poly(ctx, [P(-16, -12, 10), P(16, -12, 10), P(16, 0, 26), P(-16, 0, 26)], '#7a5534', '#3d2a17', 1);
     poly(ctx, [P(-16, 0, 26), P(16, 0, 26), P(16, 12, 10), P(-16, 12, 10)], '#9a7448', '#3d2a17', 1);
     poly(ctx, [P(-16, 12, 10), P(16, 12, 10), P(16, 12, 4), P(-16, 12, 4)], shadeHex(tc, -0.2));
   } else {
     poly(ctx, [P(14, -9, 8), P(14, 9, 8), P(-14, 9, 8), P(-14, -9, 8)], '#8a6a44', '#3d2a17', 1);
-    seg(ctx, P(4, -8, 8), P(4, -8, 26), '#5b3f26', 3); seg(ctx, P(4, 8, 8), P(4, 8, 26), '#5b3f26', 3); seg(ctx, P(4, -8, 26), P(4, 8, 26), '#5b3f26', 3);
+    seg(ctx, P(4, -8, 8), P(4, -8, 26), '#5b3f26', 3 * K); seg(ctx, P(4, 8, 8), P(4, 8, 26), '#5b3f26', 3 * K); seg(ctx, P(4, -8, 26), P(4, 8, 26), '#5b3f26', 3 * K);
     const a = atk ? Math.min(1, (G.t - u.atkT) * 4) : 0, tipX = -14 + a * 26, tipZ = 12 + a * 30;
-    seg(ctx, P(6, 0, 10), P(tipX, 0, tipZ), '#6b4a2a', 3.5);
-    ctx.fillStyle = '#5c5a55'; const cup = P(tipX, 0, tipZ + 2); ell(cup[0], cup[1], 4, 3); ctx.fill();
+    seg(ctx, P(6, 0, 10), P(tipX, 0, tipZ), '#6b4a2a', 3.5 * K);
+    ctx.fillStyle = '#5c5a55'; const cup = P(tipX, 0, tipZ + 2); ell(cup[0], cup[1], 4 * K, 3 * K); ctx.fill();
     poly(ctx, [P(-14, 9, 8), P(14, 9, 8), P(14, 9, 3), P(-14, 9, 3)], shadeHex(tc, -0.2));
   }
-  const top = isoY(u.x, u.y) - 40;
-  if (G.sel.has(u) || u.hp < u.maxhp) bar(isoX(u.x, u.y) - 14, top, 28, u.hp / u.maxhp, hpCol(u.hp / u.maxhp));
+  const top = isoY(u.x, u.y) - 40 * K;
+  if (G.sel.has(u) || u.hp < u.maxhp) bar(isoX(u.x, u.y) - 18, top, 36, u.hp / u.maxhp, hpCol(u.hp / u.maxhp));
 }
 function drawUnit(u) {
   if (isNaval(u)) return drawShip(u);
@@ -1751,10 +1897,10 @@ function drawUnit(u) {
   const moving = G.t - (u.mvT || -9) < 0.12, ph = moving ? Math.sin((u.walk || 0) * 0.32) : 0;
   const working = G.t - (u.wkT || -9) < 0.15, atk = G.t - (u.atkT || -9) < 0.25;
   const big = u.type === 'knight';
-  if (!u.z) { ctx.fillStyle = 'rgba(0,0,0,0.28)'; ell(sx + 3, sy + 1, big ? 15 : 9, big ? 6 : 4); ctx.fill(); }
-  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(sx, sy, big ? 18 : 12, big ? 9 : 6); ctx.stroke(); }
-  const lord = u.type === 'lord';
-  ctx.save(); ctx.translate(sx, sy); ctx.scale(flip * (lord ? 1.3 : 1), lord ? 1.3 : 1); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (!u.z) { ctx.fillStyle = 'rgba(0,0,0,0.28)'; ell(sx + 2, sy + 1, (big ? 19 : 9) * UNIT_S, (big ? 7 : 4) * UNIT_S); ctx.fill(); }
+  if (G.sel.has(u)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 1.5; ell(sx, sy, (big ? 23 : 12) * UNIT_S + 2, (big ? 11 : 6) * UNIT_S + 1); ctx.stroke(); }
+  const lord = u.type === 'lord', sc = (lord ? 1.15 : big ? HORSE_K : 1) * UNIT_S;
+  ctx.save(); ctx.translate(sx, sy); ctx.scale(flip * sc, sc); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (lord) { ctx.fillStyle = tc; ctx.beginPath(); ctx.moveTo(-3, -20); ctx.lineTo(-10 - ph * 2, -4); ctx.lineTo(-2, -6); ctx.closePath(); ctx.fill(); }
   let headY = -23;
   if (big) {
@@ -1809,11 +1955,11 @@ function drawUnit(u) {
     ctx.strokeStyle = '#e8e0c8'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(4 + Math.cos(-1.2) * 9, -15 + Math.sin(-1.2) * 9); ctx.lineTo(4 - pull, -15); ctx.lineTo(4 + Math.cos(1.2) * 9, -15 + Math.sin(1.2) * 9); ctx.stroke();
   }
   ctx.restore();
-  if (G.sel.has(u) || u.hp < u.maxhp || lord) bar(sx - 10, sy + headY * (lord ? 1.3 : 1) - 12, 20, u.hp / u.maxhp, lord ? '#d4a84b' : hpCol(u.hp / u.maxhp));
+  if (G.sel.has(u) || u.hp < u.maxhp || lord) bar(sx - 10, sy + headY * sc - 12, 20, u.hp / u.maxhp, lord ? '#d4a84b' : hpCol(u.hp / u.maxhp));
 }
 function drawCorpse(f) {
   const sx = isoX(f.x, f.y), sy = isoY(f.x, f.y);
-  ctx.save(); ctx.globalAlpha = Math.min(1, f.t / 3); ctx.translate(sx, sy); ctx.scale(f.flip ? -1 : 1, 1);
+  ctx.save(); ctx.globalAlpha = Math.min(1, f.t / 3); ctx.translate(sx, sy); ctx.scale((f.flip ? -1 : 1) * UNIT_S, UNIT_S);
   ctx.fillStyle = 'rgba(90,25,18,0.55)'; ell(2, 1, 9, 3.5); ctx.fill();
   ctx.fillStyle = f.type === 'worker' ? '#8a6a48' : TEAM[f.team]; ctx.beginPath(); ctx.roundRect(-8, -5, 13, 6, 2); ctx.fill();
   ctx.fillStyle = '#e3b98f'; ctx.beginPath(); ctx.arc(8, -2, 3.5, 0, 7); ctx.fill();
@@ -1967,9 +2113,9 @@ function drawMini() {
     d[o] = c[0] * k; d[o + 1] = c[1] * k; d[o + 2] = c[2] * k; d[o + 3] = 255;
   }
   const put = (x, y, rgb) => { if (!inb(x, y)) return; const o = (y * W + x) * 4; d[o] = rgb[0]; d[o + 1] = rgb[1]; d[o + 2] = rgb[2]; };
-  const TC = [[90, 160, 255], [240, 130, 70]];
+  const TC = [[90, 160, 255], [240, 130, 70], [120, 210, 100], [190, 130, 240]], TL = [[200, 225, 255], [255, 170, 120], [180, 240, 160], [225, 190, 255]];
   for (const b of G.blds) if (!b.dead && seen(b)) for (let y = b.ty; y < b.ty + b.size; y++) for (let x = b.tx; x < b.tx + b.size; x++) put(x, y, TC[b.team]);
-  for (const u of G.units) if (!u.dead && seen(u)) put(tileOf(u.x), tileOf(u.y), u.team ? [255, 170, 120] : [200, 225, 255]);
+  for (const u of G.units) if (!u.dead && seen(u)) put(tileOf(u.x), tileOf(u.y), TL[u.team] || TL[1]);
   mmCtx.putImageData(img, 0, 0);
   const k = mini.width / ((W + H) * T);
   mctx.setTransform(1, 0, 0, 1, 0, 0); mctx.fillStyle = '#0c0e09'; mctx.fillRect(0, 0, mini.width, mini.height);
@@ -1984,12 +2130,13 @@ function drawMini() {
 const ptr = { x: 0, y: 0, inside: false, box: null, down: null };
 const keys = new Set();
 const BH = { hall: 84, house: 50, farm: 12, store: 40, barracks: 64, tower: 104, wall: 30, dock: 40, workshop: 54, gate: 42 };
+for (const k in HZ) BH[k] = Math.round(BH[k] * HZ[k]);
 function entityAt(wx, wy) {
   const ix = isoX(wx, wy), iy = isoY(wx, wy);
   let best = null, bd = 1e9;
   for (const u of G.units) {
     if (u.dead || !seen(u)) continue;
-    const ux = isoX(u.x, u.y), uy = isoY(u.x, u.y) - (u.z || 0), ship = isNaval(u), big = u.type === 'knight', hw = ship ? 26 : big ? 16 : 9, top = ship ? 50 : big ? 42 : 30;
+    const ux = isoX(u.x, u.y), uy = isoY(u.x, u.y) - (u.z || 0), ship = isNaval(u), sg = UDEF[u.type].siege, big = u.type === 'knight', hw = ship ? 26 * SHIP_K : sg ? 20 * SIEGE_K : big ? 17 : 9, top = ship ? 50 * SHIP_K : sg ? 30 * SIEGE_K : big ? 36 : 24;
     if (Math.abs(ix - ux) <= hw && iy <= uy + 5 && iy >= uy - top) { const d = Math.abs(ix - ux) + Math.abs(iy - (uy - top / 2)) - (u.x + u.y) * 0.01; if (d < bd) { bd = d; best = u; } }
   }
   if (best) return best;
@@ -2047,7 +2194,7 @@ function command(wx, wy) {
     else if (rt && workers.length) busy = workers;
     else busy = [];
   } else busy = execCommand(ME, us, wx, wy, e, rt, G.formation) || [];
-  if (e && e.team !== ME) mark(posX(e), posY(e), '#d9534f');
+  if (e && foe(e.team, ME)) mark(posX(e), posY(e), '#d9534f');
   else if (busy.length) mark(e && e.kind === 'b' ? bcx(e) : rt ? rt.tx * T + 16 : wx, e && e.kind === 'b' ? bcy(e) : rt ? rt.ty * T + 16 : wy, '#d4a84b');
   else mark(wx, wy, '#7fb24a');
   // workers that just got a job are let go, like after a build order
@@ -2112,12 +2259,14 @@ function execCommand(team, us, wx, wy, e, rt, fm, dir) {
   const navy = us.filter(isNaval), landers = us.filter(u => !isNaval(u));
   // soldiers clicked onto our own transport: walk aboard
   if (e && e.kind === 'u' && e.type === 'transport' && e.team === team && landers.length) {
-    let free = UDEF.transport.cap - (e.cargo || []).length - boardingFor(e), left = 0;
-    landers.forEach(u => { if (free > 0) { if (u.gar) leaveGarrison(u); orderBoard(u, e); free--; } else left++; });
+    let free = UDEF.transport.cap - cargoLoad(e) - boardingFor(e), left = 0;
+    // a fresh group to pick up: the meeting point is worked out again around all of them
+    if (!e.order || e.order.rv) e.rv = null;
+    landers.forEach(u => { if (loadOf(u) <= free) { if (u.gar) leaveGarrison(u); orderBoard(u, e); free -= loadOf(u); } else left++; });
     if (left) notify(team, 'کشتی پر است؛ ' + fa(left) + ' یگان جا نشدند', true);
     return landers;
   }
-  if (navy.length && !(e && e.team !== team)) {
+  if (navy.length && !(e && foe(e.team, team))) {
     const land = inb(tx, ty) && !waterPass(tx, ty);
     const toMove = [];
     navy.forEach(sh => { if (land && sh.type === 'transport' && (sh.cargo || []).length) orderUnload(sh, tx, ty); else toMove.push(sh); });
@@ -2126,7 +2275,7 @@ function execCommand(team, us, wx, wy, e, rt, fm, dir) {
     us = landers;
     if (!us.length) return [];
   }
-  if (e && e.team !== team) {
+  if (e && foe(e.team, team)) {
     const can = us.filter(u => canHurt(u, e));
     if (!can.length && us.length) notify(team, e.kind === 'b' && STONE_B[e.type] ? 'ساختمان سنگی فقط با دژکوب یا منجنیق خراب می‌شود' : 'این یگان‌ها به آن هدف آسیبی نمی‌زنند', true);
     us = can;
@@ -2295,7 +2444,7 @@ function updateCursor() {
     else if (job === 'build') c = CURSORS.build;
     else if (job) c = 'pointer';
     else if (ent && ent.team === ME) c = 'pointer';
-    else if (mine.length && ent && ent.team !== ME) c = mine.some(u => canHurt(u, ent)) ? CURSORS.attack : 'not-allowed';
+    else if (mine.length && ent && foe(ent.team, ME)) c = mine.some(u => canHurt(u, ent)) ? CURSORS.attack : 'not-allowed';
     else if (mine.length && mine.some(u => u.type === 'worker') && resTileAt(w.x, w.y)) c = CURSORS.gather;
     else if (mine.length) c = CURSORS.move;
     else if (ent) c = 'pointer';
@@ -2369,7 +2518,7 @@ cv.addEventListener('pointerup', e => {
   }
 });
 cv.addEventListener('pointercancel', () => { ptr.box = null; ptr.down = null; if (G) G.drag = null; });
-const ZMIN = 0.2, ZMAX = 2.2;
+const ZMIN = 0.2, ZMAX = 3;
 cv.addEventListener('pointerleave', () => { camV.x = 0; camV.y = 0; });
 function zoomAt(sx, sy, f) {
   const before = toIso(sx, sy);
@@ -2548,7 +2697,7 @@ function selHTML() {
   const sel = [...G.sel].filter(e => !e.dead);
   if (!sel.length) return `<h3>چیزی انتخاب نشده</h3><span class="sub">کارگران را انتخاب کن تا بتوانی بسازی؛ روی کاخ کلیک کن تا کارگر آموزش دهی.</span>`;
   if (sel.length === 1) {
-    const e = sel[0], enemy = e.team !== ME;
+    const e = sel[0], enemy = foe(e.team, ME);
     const name = e.kind === 'u' ? UDEF[e.type].name : BDEF[e.type].name;
     let h = `<h3 style="color:${enemy ? 'var(--enemy)' : 'var(--text)'}">${name}${enemy ? ' (دشمن)' : ''}</h3>`;
     h += `<div class="bar"><i style="width:${Math.max(0, e.hp / e.maxhp * 100).toFixed(1)}%;background:${hpCol(e.hp / e.maxhp)}"></i></div>`;
@@ -2556,7 +2705,7 @@ function selHTML() {
     if (e.kind === 'u') {
       const st = e.gar ? 'روی ' + BDEF[e.gar.type].name + ' · ضربه ' + fa(Math.round((GAR[e.gar.type].atk - 1) * 100)) + '٪ قوی‌تر، آسیب ' + fa(Math.round((1 - GAR[e.gar.type].def) * 100)) + '٪ کمتر، برد ' + fa(GAR[e.gar.type].rng) + ' کاشی بیشتر' + (e.order ? ' · در حال تیراندازی' : '') : !e.order ? 'بیکار' : { move: 'در حال حرکت', amove: 'در حال پیشروی', attack: 'در حال نبرد', gather: e.order.phase === 'ret' ? 'در حال بردن بار به انبار' : 'در حال برداشت ' + RES_NAME[e.order.res], build: 'در حال ساخت', farm: e.order.phase === 'ret' ? 'در حال بردن گندم به انبار' : 'کشاورزی', garrison: 'در راه بالا رفتن', shelter: 'در راه پناه گرفتن در کاخ', enter: 'در راه کاخ', board: 'در راه سوار شدن به کشتی', unload: 'در راه ساحل برای پیاده کردن' }[e.order.k];
       if (e.type === 'lord') h += `<span class="sub">جنگجوی سرسخت؛ اگر کشته شود بازی را می‌بازی. روی کاخ خودی کلیک کن تا وارد شود.</span>`;
-      if (e.type === 'transport') h += `<span class="sub">سرنشین: ${fa((e.cargo || []).length || e.cargoN || 0)} از ${fa(UDEF.transport.cap)} · سربازها را انتخاب کن و روی کشتی کلیک راست کن؛ بعد کشتی را انتخاب کن و روی ساحل مقابل کلیک راست کن</span>`;
+      if (e.type === 'transport') h += `<span class="sub">جای پر: ${fa(e.cargo ? cargoLoad(e) : e.cargoN || 0)} از ${fa(UDEF.transport.cap)} (پیاده ۱، سوار ۲، ابزار محاصره ۵) · سربازها را انتخاب کن و روی کشتی کلیک راست کن؛ بعد کشتی را انتخاب کن و روی ساحل مقابل کلیک راست کن</span>`;
       h += `<span class="sub">${st}${e.carry.amt > 0 ? ' · بار: ' + fa(Math.floor(e.carry.amt)) + ' ' + RES_NAME[e.carry.res] : ''}</span>`;
     } else if (!e.built) h += `<span class="sub">در حال ساخت: ${fa(Math.floor(e.progress * 100))}٪</span>`;
     else if (e.type === 'farm' && !enemy) h += `<span class="sub">${farmerOf(e) ? 'یک کشاورز روی آن کار می‌کند' : 'بدون کشاورز: یک کارگر را انتخاب کن و روی مزرعه کلیک راست کن'}</span>`;
@@ -2618,8 +2767,10 @@ function hudTick(dt) {
   const r = G.res[ME];
   for (const k of ['wood', 'stone', 'gold', 'food']) $('r-' + k).textContent = fa(Math.floor(r[k]));
   $('r-pop').textContent = fa(G.pop[ME]) + ' / ' + fa(G.cap[ME]);
-  $('wave').hidden = G.mode === 'vs';
-  if (DIFF[G.diff].demo) $('wave').textContent = 'حالت آموزشی: دشمن حمله نمی‌کند'; else { const s = Math.max(0, Math.ceil(G.waveT)); $('wave').textContent = 'موج ' + fa(G.wave + 1) + ' دشمن: ' + fa(Math.floor(s / 60)) + ':' + fa(String(s % 60).padStart(2, '0')); }
+  // the next wave from any enemy bot
+  let nx = null; G.players.forEach((P, i) => { if (P.ai && !P.out && foe(i, ME) && !DIFF[P.diff].demo && (!nx || P.ai.waveT < nx.waveT)) nx = P.ai; });
+  $('wave').hidden = !G.practice && !nx;
+  if (G.practice) $('wave').textContent = 'حالت آموزشی: دشمن حمله نمی‌کند'; else if (nx) { const s = Math.max(0, Math.ceil(nx.waveT)); $('wave').textContent = 'موج ' + fa(nx.wave + 1) + ' دشمن: ' + fa(Math.floor(s / 60)) + ':' + fa(String(s % 60).padStart(2, '0')); }
   const idle = G.units.filter(u => u.team === ME && u.type === 'worker' && !u.order).length;
   $('idleBtn').textContent = 'کارگر بیکار (' + fa(idle) + ')';
   setHTML($('sel'), selHTML());
@@ -2706,20 +2857,14 @@ syncSound();
 window.addEventListener('pointerdown', () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { /* no audio */ } }, { once: true });
 $('cfYes').addEventListener('click', () => confirmBuild());
 $('cfNo').addEventListener('click', () => cancelBuild());
-document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => {
-  newGame(b.dataset.diff, { mapType: mapChoice() }); G.paused = false; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
-  if (DIFF[b.dataset.diff].demo) showTip(0); else $('tipBox').hidden = true;
-  toast('کارگران را انتخاب کن و روی درختان کلیک راست کن');
-}));
-const mapChoice = () => document.querySelector('input[name="mapType"]:checked')?.value === 'river' ? 'river' : 'land';
-$('againBtn').addEventListener('click', () => { $('confirm').hidden = true; $('tipBox').hidden = true; $('armyOv').hidden = true; $('endOv').hidden = true; leaveNet(); $('startOv').hidden = false; newGame(G.diff); });
+$('againBtn').addEventListener('click', () => { $('confirm').hidden = true; $('tipBox').hidden = true; $('armyOv').hidden = true; $('endOv').hidden = true; backToSetup(); });
 
-// ---------- two players on one Wi-Fi ----------
+// ---------- playing with friends (one Wi-Fi or the internet) ----------
 const UT = Object.keys(UDEF), BT = Object.keys(BDEF);
 function snapshot() {
   const now = G.t;
   return {
-    t: 's', time: now, paused: G.paused, ov: G.over ? G.loser : -1, waveT: G.waveT, wave: G.wave,
+    t: 's', time: now, paused: G.paused, ov: G.over ? 1 : 0, win: G.winner, ai: G.players.map(P => P.ai ? [Math.round(P.ai.waveT), P.ai.wave] : 0), out: G.players.map(P => P.out ? 1 : 0),
     res: G.res.map(r => ({ wood: r.wood | 0, stone: r.stone | 0, gold: r.gold | 0, food: r.food | 0 })), pop: G.pop, cap: G.cap, st: G.stats,
     tl: G.tileLog.splice(0), fx: G.fxOut.splice(0),
     u: G.units.map(u => {
@@ -2727,7 +2872,7 @@ function snapshot() {
       if (o) r.o = [o.k, o.phase || 0, o.res || 0, o.b ? o.b.id : 0];
       if (u.gar) { r.g = u.gar.id; r.s = u.slot; }
       if (u.carry.amt > 0) r.c = [u.carry.res, Math.round(u.carry.amt)];
-      if (u.cargo && u.cargo.length) r.n = u.cargo.length;
+      if (u.cargo && u.cargo.length) r.n = cargoLoad(u);
       if (now - (u.wkT || -9) < 0.15) r.w = 1;
       if (now - (u.atkT || -9) < 0.25) r.a = 1;
       return r;
@@ -2737,7 +2882,7 @@ function snapshot() {
   };
 }
 function applySnapshot(s) {
-  G.paused = s.paused; G.waveT = s.waveT; G.wave = s.wave; G.res = s.res; G.pop = s.pop; G.cap = s.cap; G.stats = s.st;
+  G.paused = s.paused; G.players.forEach((P, i) => { if (P.ai && s.ai[i]) { P.ai.waveT = s.ai[i][0]; P.ai.wave = s.ai[i][1]; } P.out = !!s.out[i]; }); G.res = s.res; G.pop = s.pop; G.cap = s.cap; G.stats = s.st;
   for (const i of s.tl) { tiles[i] = GRASS; amt[i] = 0; natureDirty = true; }
   for (const f of s.fx) G.fx.push(f);
   // buildings
@@ -2771,7 +2916,7 @@ function applySnapshot(s) {
   for (const u of um.values()) { u.dead = true; G.sel.delete(u); }
   G.units = units;
   G.proj = s.p.map(q => ({ x: q[0], y: q[1], h: q[2], stone: !!q[3] }));
-  if (s.ov >= 0 && !G.over) { G.over = true; G.loser = s.ov; endGame(s.ov !== ME); }
+  if (s.ov && !G.over) { G.winner = s.win; endGame(s.win === G.players[ME].ally); }
   hudDirty = true;
 }
 function guestTick(dt) {
@@ -2829,7 +2974,7 @@ async function openHost(code, onConn, onReady, onFail) {
     ch.onmessage = e => { if (e.data.hello) { const c = bcConn(ch, 'h'); onConn(c); } };
     onReady(code); return;
   }
-  try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای راه‌اندازی بازی دونفره لازم است'); return; }
+  try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای دعوت دوستان لازم است'); return; }
   const peer = new Peer(PEER_PREFIX + code); NET.peer = peer;
   peer.on('open', () => onReady(code));
   peer.on('connection', c => c.on('open', () => onConn(wrapPeerConn(c))));
@@ -2840,7 +2985,7 @@ async function openGuest(code, onConn, onFail) {
     const ch = new BroadcastChannel('if-' + code); NET.peer = { destroy: () => ch.close() };
     const c = bcConn(ch, 'g'); ch.postMessage({ hello: 1 }); onConn(c); return;
   }
-  try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای بازی دونفره لازم است'); return; }
+  try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای پیوستن به دوستان لازم است'); return; }
   const peer = new Peer(); NET.peer = peer;
   peer.on('open', () => {
     const c = peer.connect(PEER_PREFIX + code, { reliable: true });
@@ -2849,92 +2994,264 @@ async function openGuest(code, onConn, onFail) {
   });
   peer.on('error', e => onFail(e.type === 'peer-unavailable' ? 'بازی‌ای با این کد پیدا نشد' : e.type === 'network' || e.type === 'server-error' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type));
 }
-function leaveNet() {
-  if (NET.conn) try { NET.conn.close(); } catch (e) { /* closed */ }
-  if (NET.peer) try { NET.peer.destroy(); } catch (e) { /* closed */ }
-  NET.conn = null; NET.peer = null; NET.role = 'solo'; NET.mode = 'solo'; ME = 0;
-  $('lobbyOv').hidden = true;
+// ---------- setup screen and lobby ----------
+// LOBBY is the host's truth (solo counts as hosting for nobody); a guest holds the copy the host sends
+const LOBBY = { mapId: 'frontier', seed: (Math.random() * 1e9) | 0, seats: [{ kind: 'me', ally: 0 }, { kind: 'bot', ally: 1, diff: 'normal' }], you: 0 };
+let hoverMap = null, peerSeq = 0;
+const isGuestLobby = () => NET.role === 'guest';
+const prevCache = new Map();
+function mapPreview(mapId, seed) {
+  const key = mapId + ':' + seed; if (prevCache.has(key)) return prevCache.get(key);
+  // build the map in scratch arrays, keep the colors, put the live game's arrays back
+  const keep = [tiles, amt, shade, bgrid, vis, explored, river];
+  genMap(seed, mapId);
+  const buf = mkCanvas(W, H), g = buf.getContext('2d'), img = g.createImageData(W, H);
+  for (let i = 0; i < N; i++) { const c = MM_COL[tiles[i]], o = i * 4; img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255; }
+  g.putImageData(img, 0, 0);
+  [tiles, amt, shade, bgrid, vis, explored, river] = keep;
+  if (prevCache.size > 12) prevCache.clear();
+  prevCache.set(key, buf); return buf;
 }
-// host side
-function hostGame(mode) {
+function drawPreview(mapId) {
+  const c = $('mapPrev'), g = c.getContext('2d'), MD = MAPS[mapId], buf = mapPreview(mapId, LOBBY.seed);
+  const cw = c.width, ch = c.height, k = Math.min(cw / (W + H), ch / ((W + H) / 2)) * 0.96, ox = cw / 2, oy = (ch - (W + H) / 2 * k) / 2;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0c0e09'; g.fillRect(0, 0, cw, ch);
+  g.imageSmoothingEnabled = false;
+  // same isometric diamond as the in-game minimap
+  g.setTransform(k, k / 2, -k, k / 2, ox, oy); g.drawImage(buf, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0);
+  const seats = LOBBY.seats;
+  for (let i = 0; i < MD.seats; i++) {
+    const h = SPOTS[i], x = h.x + 2, y = h.y + 2, sx = ox + (x - y) * k, sy = oy + (x + y) / 2 * k, st = seats[i];
+    g.beginPath(); g.arc(sx, sy, 11, 0, 7);
+    if (st && st.kind !== 'open') { g.fillStyle = TEAM[i]; g.fill(); g.lineWidth = 2; g.strokeStyle = '#1d2017'; g.stroke(); g.fillStyle = '#fff'; g.font = '800 12px Vazirmatn, Tahoma, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(fa(i + 1), sx, sy + 1); }
+    else { g.fillStyle = 'rgba(29,32,23,.7)'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#ece6d2'; g.setLineDash([3, 3]); g.stroke(); g.setLineDash([]); }
+  }
+  $('prevName').textContent = MD.name;
+  $('prevSeats').textContent = 'تا ' + fa(MD.seats) + ' بازیکن';
+  $('prevDesc').textContent = MD.desc;
+}
+const realSeats = () => LOBBY.seats.filter(x => x.kind !== 'open');
+function seatLabel(st, i) {
+  if (st.kind === 'open') return 'جای خالی · منتظر دوستت…';
+  if (st.kind === 'bot') return 'بات';
+  if (i === LOBBY.you) return 'تو';
+  return st.kind === 'me' ? 'میزبان' : 'دوست';
+}
+function renderSetup() {
+  const guest = isGuestLobby(), MD = MAPS[LOBBY.mapId];
+  // map list
+  const list = $('mapList');
+  if (!list.children.length) for (const id in MAPS) {
+    const o = document.createElement('div'); o.className = 'mapopt'; o.setAttribute('role', 'option'); o.dataset.map = id; o.id = 'map-' + id;
+    o.innerHTML = `<b>${MAPS[id].name}</b><span class="n">${fa(MAPS[id].seats)} نفره</span><small>${MAPS[id].desc}</small>`;
+    list.appendChild(o);
+  }
+  for (const o of list.children) { o.setAttribute('aria-selected', String(o.dataset.map === LOBBY.mapId)); o.classList.toggle('hot', o.dataset.map === hoverMap && hoverMap !== LOBBY.mapId); }
+  list.setAttribute('aria-activedescendant', 'map-' + LOBBY.mapId); list.setAttribute('aria-disabled', String(guest));
+  drawPreview(hoverMap || LOBBY.mapId);
+  // seats
+  const ol = $('seatList'); ol.innerHTML = '';
+  LOBBY.seats.forEach((st, i) => {
+    const li = document.createElement('li'); li.className = 'seat' + (st.kind === 'open' ? ' open' : '');
+    const mineToEdit = !guest || i === LOBBY.you;
+    let h = `<i class="sw" style="background:${TEAM[i]}" title="${TEAM_NAME[i]}"></i><span class="who">${seatLabel(st, i)}${st.kind !== 'open' ? `<small>${TEAM_NAME[i]}</small>` : ''}</span>`;
+    if (st.kind === 'bot') h += `<select data-seat="${i}" data-f="diff" aria-label="سطح بات ${fa(i + 1)}" ${guest ? 'disabled' : ''}>${['easy', 'normal', 'hard'].map(d => `<option value="${d}" ${st.diff === d ? 'selected' : ''}>${DIFF[d].name}</option>`).join('')}</select>`;
+    if (st.kind !== 'open') h += `<select data-seat="${i}" data-f="ally" aria-label="تیم بازیکن ${fa(i + 1)}" ${mineToEdit ? '' : 'disabled'}>${[0, 1, 2, 3].map(t => `<option value="${t}" ${st.ally === t ? 'selected' : ''}>تیم ${fa(t + 1)}</option>`).join('')}</select>`;
+    if (!guest && st.kind !== 'me') h += `<button type="button" class="x" data-kick="${i}" aria-label="${st.kind === 'human' ? 'بیرون کردن' : 'حذف'} جای ${fa(i + 1)}" title="${st.kind === 'human' ? 'بیرون کردن' : 'حذف'}">✕</button>`;
+    li.innerHTML = h; ol.appendChild(li);
+  });
+  $('seatCount').textContent = '(' + fa(realSeats().length) + ' از ' + fa(MD.seats) + ')';
+  const full = LOBBY.seats.length >= MD.seats, canNet = !window.claude;
+  $('addBot').hidden = guest; $('addBot').disabled = full;
+  $('inviteBtn').hidden = guest || !canNet || NET.role === 'host'; $('inviteBtn').disabled = full && !LOBBY.seats.some(x => x.kind === 'open' || x.kind === 'bot');
+  $('rerollBtn').hidden = guest;
+  $('startBtn').hidden = guest; $('practiceBtn').hidden = guest || NET.peers.length > 0;
+  $('joinRow').hidden = guest || NET.role === 'host' || !canNet; $('leaveBtn').hidden = !guest;
+  $('invite').hidden = NET.role !== 'host';
+  const teams = new Set(realSeats().map(x => x.ally));
+  if (!guest) $('startBtn').disabled = teams.size < 2;
+  if (guest) setStatus('میزبان نقشه و بازیکن‌ها را می‌چیند و نبرد را شروع می‌کند. تیم خودت را می‌توانی عوض کنی.');
+  else if (teams.size < 2) setStatus('برای شروع دست‌کم دو تیم لازم است؛ بات اضافه کن یا تیم کسی را عوض کن.', true);
+  else if (NET.role === 'host' && LOBBY.seats.some(x => x.kind === 'open')) setStatus('دوستت باید همین صفحه را باز کند و کد را بزند، یا QR را با دوربین گوشی بخواند. جای خالی موقع شروع حذف می‌شود.');
+  else setStatus('');
+}
+function setStatus(t, bad) { $('lobbyStatus').textContent = t; $('lobbyStatus').classList.toggle('bad', !!bad); }
+// the host tells every friend what the lobby looks like, each with their own seat
+function lobbyChanged() { if (NET.role === 'host') NET.peers.forEach(p => safeSend(p.conn, { t: 'lobby', mapId: LOBBY.mapId, seed: LOBBY.seed, seats: LOBBY.seats.map(x => ({ kind: x.kind === 'human' && x.pid === p.id ? 'human' : x.kind, ally: x.ally, diff: x.diff })), you: LOBBY.seats.findIndex(x => x.pid === p.id) })); renderSetup(); }
+function freeTeam() { const used = new Set(realSeats().map(x => x.ally)); for (let t = 0; t < 4; t++) if (!used.has(t)) return t; return 1; }
+function pickMap(id) {
+  if (isGuestLobby() || !MAPS[id] || id === LOBBY.mapId) return;
+  const cap = MAPS[id].seats;
+  // too many seats for a smaller map: drop empty seats and bots from the end; friends are never dropped
+  while (LOBBY.seats.length > cap) { const k = LOBBY.seats.map(x => x.kind).lastIndexOf('open'); const b = LOBBY.seats.map(x => x.kind).lastIndexOf('bot'); const i = k >= 0 ? k : b; if (i < 0) break; LOBBY.seats.splice(i, 1); }
+  if (LOBBY.seats.length > cap) { setStatus('این نقشه برای ' + fa(cap) + ' بازیکن است و دوستانت بیشترند', true); return; }
+  LOBBY.mapId = id; lobbyChanged();
+}
+const mapListEl = $('mapList');
+mapListEl.addEventListener('pointerover', e => { const o = e.target.closest('.mapopt'); if (o && o.dataset.map !== hoverMap) { hoverMap = o.dataset.map; renderSetup(); } });
+mapListEl.addEventListener('pointerleave', () => { hoverMap = null; renderSetup(); });
+mapListEl.addEventListener('click', e => { const o = e.target.closest('.mapopt'); if (o) { hoverMap = null; pickMap(o.dataset.map); } });
+mapListEl.addEventListener('dblclick', e => { const o = e.target.closest('.mapopt'); if (o && !isGuestLobby() && !$('startBtn').disabled) startFromLobby(false); });
+mapListEl.addEventListener('keydown', e => {
+  const ids = Object.keys(MAPS), i = ids.indexOf(LOBBY.mapId);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); pickMap(ids[(i + 1) % ids.length]); }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); pickMap(ids[(i - 1 + ids.length) % ids.length]); }
+  else if (e.key === 'Enter' && !isGuestLobby() && !$('startBtn').disabled) startFromLobby(false);
+});
+$('seatList').addEventListener('change', e => {
+  const el = e.target.closest('select[data-seat]'); if (!el) return;
+  const i = +el.dataset.seat, v = el.dataset.f === 'ally' ? +el.value : el.value;
+  if (isGuestLobby()) { if (i === LOBBY.you && el.dataset.f === 'ally') netSend({ c: 'ally', v }); return; }
+  if (LOBBY.seats[i]) { LOBBY.seats[i][el.dataset.f] = v; lobbyChanged(); }
+});
+$('seatList').addEventListener('click', e => {
+  const b = e.target.closest('[data-kick]'); if (!b || isGuestLobby()) return;
+  const i = +b.dataset.kick, st = LOBBY.seats[i]; if (!st || st.kind === 'me') return;
+  if (st.kind === 'human') { const p = NET.peers.find(q => q.id === st.pid); if (p) { safeSend(p.conn, { t: 'kicked' }); dropPeer(p, true); return; } }
+  LOBBY.seats.splice(i, 1); lobbyChanged();
+});
+$('addBot').addEventListener('click', () => { if (LOBBY.seats.length >= MAPS[LOBBY.mapId].seats) return; LOBBY.seats.push({ kind: 'bot', ally: freeTeam(), diff: 'normal' }); lobbyChanged(); });
+$('rerollBtn').addEventListener('click', () => { LOBBY.seed = (Math.random() * 1e9) | 0; lobbyChanged(); });
+$('startBtn').addEventListener('click', () => startFromLobby(false));
+$('practiceBtn').addEventListener('click', () => startFromLobby(true));
+function enterGame(practice) {
+  G.paused = false; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
+  if (practice) showTip(0); else $('tipBox').hidden = true;
+}
+function startFromLobby(practice) {
+  if (isGuestLobby()) return;
+  let seats = realSeats().map(x => ({ ...x }));
+  if (practice) seats = [{ kind: 'me', ally: 0 }, { kind: 'bot', ally: 1, diff: 'demo' }];
+  if (new Set(seats.map(x => x.ally)).size < 2) return;
+  ME = seats.findIndex(x => x.kind === 'me');
+  const names = seats.map((x, i) => x.kind === 'bot' ? null : x.kind === 'me' ? 'میزبان ' + TEAM_NAME[i] : 'دوست ' + TEAM_NAME[i]);
+  const cfg = seats.map((x, i) => ({ kind: x.kind === 'me' ? 'human' : x.kind, ally: x.ally, diff: x.diff, name: names[i] }));
+  newGame({ mapId: LOBBY.mapId, seed: LOBBY.seed, seats: cfg, practice });
+  // each friend learns which seat they play
+  NET.peers.forEach(p => { p.seat = seats.findIndex(x => x.pid === p.id); safeSend(p.conn, { t: 'init', mapId: LOBBY.mapId, seed: LOBBY.seed, seats: cfg, me: p.seat }); });
+  enterGame(practice);
+  toast(practice ? 'کارگران را انتخاب کن و روی درختان کلیک کن' : seats.length > 2 ? 'نبرد شروع شد: تو ' + TEAM_NAME[ME] + ' هستی' : 'کارگران را انتخاب کن و روی درختان کلیک کن');
+}
+function backToSetup() {
+  if (NET.role === 'host') { LOBBY.seats.forEach(x => { if (x.kind === 'human' && !NET.peers.some(p => p.id === x.pid)) x.kind = 'open'; }); NET.peers.forEach(p => { p.seat = -1; safeSend(p.conn, { t: 'back' }); }); }
+  if (G) G.paused = true;
+  $('startOv').hidden = false; lobbyChanged();
+}
+// ---------- host side ----------
+function dropPeer(p, kicked) {
+  NET.peers = NET.peers.filter(q => q !== p);
+  try { p.conn.close(); } catch (e) { /* closed */ }
+  const i = LOBBY.seats.findIndex(x => x.pid === p.id);
+  if (i >= 0) { if (kicked) LOBBY.seats.splice(i, 1); else { LOBBY.seats[i] = { kind: 'open', ally: LOBBY.seats[i].ally }; } }
+  if (G && !G.over && $('startOv').hidden && p.seat >= 0) { G.paused = true; $('pauseBtn').textContent = 'ادامه'; toast('ارتباط دوست ' + TEAM_NAME[p.seat] + ' قطع شد؛ بازی متوقف شد', true); netSend({ t: 'toast', m: 'یکی از بازیکن‌ها رفت؛ بازی متوقف شد', w: true }); }
+  lobbyChanged();
+}
+function openLobby() {
+  if (window.claude || NET.role === 'host') return;
   leaveNet();
-  NET.role = 'host'; NET.mode = mode; NET.guestTeam = mode === 'vs' ? 1 : 0; ME = 0;
-  const code = makeCode();
-  showLobby('در حال آماده‌سازی…', null);
-  openHost(code, conn => {
-    if (NET.conn) { conn.send({ t: 'full' }); return; }
-    NET.conn = conn;
+  NET.role = 'host'; NET.code = makeCode();
+  // a seat for the friend: a free one, or the last bot's seat when the map is full
+  if (!LOBBY.seats.some(x => x.kind === 'open')) {
+    if (LOBBY.seats.length < MAPS[LOBBY.mapId].seats) LOBBY.seats.push({ kind: 'open', ally: freeTeam() });
+    else { const b = LOBBY.seats.map(x => x.kind).lastIndexOf('bot'); if (b >= 0) LOBBY.seats[b] = { kind: 'open', ally: LOBBY.seats[b].ally }; }
+  }
+  $('lbCode').textContent = '…'; $('lbLink').textContent = ''; $('lbQr').hidden = true;
+  renderSetup(); setStatus('در حال آماده‌سازی لابی…');
+  openHost(NET.code, conn => {
+    const p = { conn, id: ++peerSeq, seat: -1 };
+    // a friend arriving mid-battle, or into a full lobby, is turned away
+    if ($('startOv').hidden && G && !G.over) { safeSend(conn, { t: 'full', m: 'نبرد شروع شده است' }); return; }
+    let i = LOBBY.seats.findIndex(x => x.kind === 'open');
+    if (i < 0 && LOBBY.seats.length < MAPS[LOBBY.mapId].seats) { LOBBY.seats.push({ kind: 'open', ally: freeTeam() }); i = LOBBY.seats.length - 1; }
+    if (i < 0) { safeSend(conn, { t: 'full', m: 'لابی پر است' }); return; }
+    LOBBY.seats[i] = { kind: 'human', ally: LOBBY.seats[i].ally, pid: p.id };
+    NET.peers.push(p);
     conn.onData(m => {
       if (m.c === 'hello') return;
+      if (m.c === 'ally') { const st = LOBBY.seats.find(x => x.pid === p.id); if (st && $('startOv').hidden === false) { st.ally = Math.max(0, Math.min(3, m.v | 0)); lobbyChanged(); } return; }
+      if (p.seat < 0 || !G) return;
       if (m.c === 'pause') { if (!G.over) { G.paused = !G.paused; notifyAll(G.paused ? 'بازی متوقف شد' : 'بازی ادامه پیدا کرد'); $('pauseBtn').textContent = G.paused ? 'ادامه' : 'توقف'; } return; }
-      hostExec(NET.guestTeam, m);
+      hostExec(p.seat, m);
     });
-    conn.onClose(() => { if (NET.role !== 'host' || !NET.conn) return; NET.conn = null; if (G && !G.over) { G.paused = true; $('pauseBtn').textContent = 'ادامه'; } toast('ارتباط دوستت قطع شد؛ بازی متوقف شد', true); });
-    newGame('normal', { mode, mapType: mapChoice() });
-    conn.send({ t: 'init', seed: G.seed, mode, diff: G.diff, team: NET.guestTeam, mapType: G.mapType });
-    G.paused = false; $('lobbyOv').hidden = true; $('startOv').hidden = true; $('pauseBtn').textContent = 'توقف'; hudDirty = true;
-    toast(mode === 'vs' ? 'دوستت وارد شد: تو آبی هستی، او نارنجی' : 'دوستت وارد شد: دهکده مشترک است');
-  }, c => showLobby(null, c), err => { if (err === 'retry') { hostGame(mode); return; } showLobby(err, null, true); });
+    conn.onClose(() => { if (NET.peers.includes(p)) dropPeer(p, false); });
+    toast('دوستت وارد لابی شد'); lobbyChanged();
+  }, code => { showInvite(code); renderSetup(); }, err => { if (err === 'retry') { NET.role = 'solo'; openLobby(); return; } closeLobby(); setStatus(err, true); });
 }
-// guest side
+function showInvite(code) {
+  $('lbCode').textContent = code;
+  const link = location.origin + location.pathname + '?join=' + code + (useBC ? '&net=bc' : '');
+  $('lbLink').textContent = link; $('lbQr').hidden = true;
+  loadScript(['https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js']).then(() => {
+    const qr = window.qrcode(0, 'M'); qr.addData(link); qr.make();
+    $('lbQr').src = qr.createDataURL(4, 2); $('lbQr').hidden = false;
+  }).catch(() => { /* the code alone is enough */ });
+}
+function closeLobby() {
+  NET.peers.forEach(p => safeSend(p.conn, { t: 'kicked' }));
+  leaveNet();
+  LOBBY.seats = LOBBY.seats.filter(x => x.kind !== 'open' && x.kind !== 'human');
+  if (LOBBY.seats.length < 2) LOBBY.seats.push({ kind: 'bot', ally: 1, diff: 'normal' });
+  lobbyChanged();
+}
+function leaveNet() {
+  NET.peers.forEach(p => { try { p.conn.close(); } catch (e) { /* closed */ } });
+  if (NET.conn) try { NET.conn.close(); } catch (e) { /* closed */ }
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) { /* closed */ }
+  NET.peers = []; NET.conn = null; NET.peer = null; NET.role = 'solo'; NET.code = null; ME = 0; LOBBY.you = 0;
+}
+$('inviteBtn').addEventListener('click', openLobby);
+$('inviteStop').addEventListener('click', closeLobby);
+// ---------- guest side ----------
 function joinGame(code) {
   code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
-  if (code.length !== 5) { $('mpStatus').textContent = 'کد بازی ۵ حرف یا عدد است'; return; }
+  if (code.length !== 5) { setStatus('کد بازی ۵ حرف یا عدد است', true); return; }
   leaveNet();
   NET.role = 'guest';
-  showLobby('در حال پیوستن به بازی ' + code + '…', null);
+  setStatus('در حال پیوستن به لابی ' + code + '…');
   openGuest(code, conn => {
     NET.conn = conn;
     conn.send({ c: 'hello' });
     conn.onData(m => {
-      if (m.t === 'init') {
-        ME = m.team; NET.mode = m.mode;
-        newGame(m.diff, { mode: m.mode, seed: m.seed, mapType: m.mapType === 'river' ? 'river' : 'land' });
+      if (m.t === 'lobby') {
+        LOBBY.mapId = MAPS[m.mapId] ? m.mapId : 'frontier'; LOBBY.seed = m.seed | 0; LOBBY.you = m.you | 0;
+        LOBBY.seats = (m.seats || []).slice(0, 4).map(x => ({ kind: ['me', 'human', 'bot', 'open'].includes(x.kind) ? x.kind : 'open', ally: x.ally | 0, diff: DIFF[x.diff] ? x.diff : 'normal' }));
+        if ($('startOv').hidden && !(G && G.over)) return;
+        renderSetup();
+      } else if (m.t === 'init') {
+        ME = m.me | 0;
+        newGame({ mapId: m.mapId, seed: m.seed | 0, seats: m.seats });
         // the host owns every unit and building: start empty and mirror its snapshots
-        G.units = []; G.blds = []; bgrid.fill(null); G.paused = false;
-        $('lobbyOv').hidden = true; $('startOv').hidden = true; hudDirty = true;
-        toast(m.mode === 'vs' ? 'وارد شدی: تو نارنجی هستی، حریف آبی' : 'وارد شدی: دهکده مشترک است');
-      } else if (m.t === 's' && G && NET.role === 'guest') applySnapshot(m);
+        G.units = []; G.blds = []; bgrid.fill(null);
+        enterGame(false); $('endOv').hidden = true;
+        toast('نبرد شروع شد: تو ' + TEAM_NAME[ME] + ' هستی');
+      } else if (m.t === 'back') { $('endOv').hidden = true; $('startOv').hidden = false; renderSetup(); }
+      else if (m.t === 's' && G && NET.role === 'guest' && $('startOv').hidden) applySnapshot(m);
       else if (m.t === 'toast') toast(String(m.m).slice(0, 120), !!m.w);
-      else if (m.t === 'full') showLobby('این بازی پر است', null, true);
+      else if (m.t === 'full') { leaveNet(); renderSetup(); setStatus(String(m.m || 'لابی پر است').slice(0, 80), true); }
+      else if (m.t === 'kicked') { leaveNet(); backToSolo(); setStatus('میزبان لابی را بست', true); }
     });
-    conn.onClose(() => { if (NET.role !== 'guest') return; NET.conn = null; toast('ارتباط با میزبان قطع شد', true); if (G) G.paused = true; });
-  }, err => showLobby(err, null, true));
+    conn.onClose(() => { if (NET.role !== 'guest') return; leaveNet(); toast('ارتباط با میزبان قطع شد', true); backToSolo(); setStatus('ارتباط با میزبان قطع شد', true); });
+  }, err => { leaveNet(); renderSetup(); setStatus(err, true); });
 }
-function showLobby(status, code, failed) {
-  $('lobbyOv').hidden = false;
-  if (code) {
-    $('lbCode').textContent = code; $('lbCodeBox').hidden = false;
-    const link = location.origin + location.pathname + '?join=' + code + (useBC ? '&net=bc' : '');
-    $('lbLink').textContent = link;
-    $('lbStatus').textContent = 'منتظر دوستت… او باید همین صفحه را باز کند و کد را بزند، یا QR را با دوربین گوشی بخواند.';
-    $('lbQr').hidden = true;
-    loadScript(['https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js']).then(() => {
-      const qr = window.qrcode(0, 'M'); qr.addData(link); qr.make();
-      $('lbQr').src = qr.createDataURL(5, 2); $('lbQr').hidden = false;
-    }).catch(() => { /* the code alone is enough */ });
-  } else {
-    $('lbCodeBox').hidden = true;
-    if (status) $('lbStatus').textContent = status;
-  }
-  $('lbStatus').classList.toggle('bad', !!failed);
+function backToSolo() {
+  LOBBY.seats = [{ kind: 'me', ally: 0 }, { kind: 'bot', ally: 1, diff: 'normal' }]; LOBBY.you = 0;
+  if (MAPS[LOBBY.mapId].seats < 2) LOBBY.mapId = 'frontier';
+  $('endOv').hidden = true; $('startOv').hidden = false; if (G) G.paused = true; renderSetup();
 }
-document.querySelectorAll('[data-mp]').forEach(b => b.addEventListener('click', () => hostGame(b.dataset.mp)));
+$('leaveBtn').addEventListener('click', () => { leaveNet(); backToSolo(); });
 $('joinBtn').addEventListener('click', () => joinGame($('joinCode').value));
 $('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') joinGame($('joinCode').value); });
-$('lbCancel').addEventListener('click', () => { leaveNet(); newGame('normal'); });
 $('lbCopy').addEventListener('click', () => { const t = $('lbLink').textContent; navigator.clipboard?.writeText(t).then(() => toast('لینک کپی شد'), () => { const r = document.createRange(); r.selectNodeContents($('lbLink')); getSelection().removeAllRanges(); getSelection().addRange(r); }); });
-// inside claude.ai the page can't open direct connections, so two-player mode only shows on the standalone copy
-if (window.claude) $('mpBox').hidden = true;
 
 // ---------- main loop ----------
 function update(dt) {
   G.t += dt;
-  for (const t of [0, 1]) { G.pop[t] = 0; G.cap[t] = 0; }
+  const n = G.players.length;
+  for (let t = 0; t < n; t++) { G.pop[t] = 0; G.cap[t] = 0; }
   for (const u of G.units) { if (u.type !== 'lord') G.pop[u.team]++; if (u.cargo) G.pop[u.team] += u.cargo.length; }
   for (const b of G.blds) if (b.shelter) G.pop[b.team] += b.shelter.length;
   for (const b of G.blds) if (b.built && BDEF[b.type].pop) G.cap[b.team] = Math.min(100, G.cap[b.team] + BDEF[b.type].pop);
-  for (const t of [0, 1]) if (G.blds.some(b => b.team === t && b.type === 'hall' && b.built && !b.dead)) G.res[t].food += 0.15 * dt;
+  for (let t = 0; t < n; t++) if (G.blds.some(b => b.team === t && b.type === 'hall' && b.built && !b.dead)) G.res[t].food += 0.15 * dt;
   for (const u of G.units) if (!u.dead && !u.aboard) { updUnit(u, dt); if (!u.gar && !passFor(u)(tileOf(u.x), tileOf(u.y))) unstick(u); }
   for (const b of G.blds) if (!b.dead) updBuilding(b, dt);
   for (const p of G.proj) updProj(p, dt);
@@ -2945,21 +3262,22 @@ function update(dt) {
   G.units = G.units.filter(u => !u.dead && !u.aboard); G.blds = G.blds.filter(b => !b.dead);
   G.proj = G.proj.filter(p => !p.dead); G.marks = G.marks.filter(m => m.t > 0);
   G.fogT -= dt; if (G.fogT <= 0) { G.fogT = 0.2; computeFog(); updateFogImage(); }
-  if (G.mode !== 'vs') {
-    G.aiT -= dt; if (G.aiT <= 0) { G.aiT = 1; aiTick(); }
-    G.waveT -= dt; if (G.waveT <= 0) launchWave();
-  }
-  if (G.lords[0].dead || G.lords[1].dead) { G.loser = G.lords[0].dead ? 0 : 1; endGame(G.loser !== ME); }
+  G.aiT -= dt; const think = G.aiT <= 0; if (think) G.aiT = 1;
+  G.players.forEach((P, p) => { if (!P.bot || P.out) return; if (think) aiTick(p); P.ai.waveT -= dt; if (P.ai.waveT <= 0) launchWave(p); });
+  // the battle is over when only one team still has a living lord
+  const alive = new Set(G.players.filter(P => !P.out).map(P => P.ally));
+  if (alive.size <= 1) { G.winner = alive.size ? [...alive][0] : -1; endGame(G.winner === G.players[ME].ally); }
 }
 function endGame(win) {
   G.over = true;
   const m = Math.floor(G.t / 60), s = Math.floor(G.t % 60);
   $('endTitle').textContent = win ? 'پیروزی' : 'شکست';
   $('endTitle').style.color = win ? 'var(--brass)' : 'var(--enemy)';
-  const foe = 1 - ME, modeName = G.mode === 'vs' ? 'رودررو' : G.mode === 'coop' ? 'همکاری · ' + DIFF[G.diff].name : DIFF[G.diff].name;
-  const lead = G.mode === 'vs' ? (win ? 'لرد حریف کشته شد. ' : 'لرد تو کشته شد. ') : (win ? 'لرد اردوگاه دشمن کشته شد و مرز امن شد. ' : 'لرد ما کشته شد. ');
+  const foes = G.players.map((P, i) => i).filter(i => foe(i, ME)), friends = G.players.filter((P, i) => i !== ME && ally(i, ME));
+  const felled = foes.reduce((a, i) => a + (G.stats.lost[i] || 0), 0);
+  const lead = win ? (friends.length ? 'تیم تو پیروز شد؛ لرد همهٔ دشمنان کشته شد. ' : 'لرد همهٔ دشمنان کشته شد و مرز امن شد. ') : 'لرد تو و هم‌پیمانانت کشته شدند. ';
   $('endText').textContent = lead +
-    `زمان نبرد: ${fa(m)} دقیقه و ${fa(s)} ثانیه · یگان‌های آموزش‌دیده: ${fa(G.stats.trained[ME])} · دشمنان ازپاافتاده: ${fa(G.stats.lost[foe])} · یگان‌های ازدست‌رفته: ${fa(G.stats.lost[ME])} · حالت: ${modeName}`;
+    `زمان نبرد: ${fa(m)} دقیقه و ${fa(s)} ثانیه · یگان‌های آموزش‌دیده: ${fa(G.stats.trained[ME])} · دشمنان ازپاافتاده: ${fa(felled)} · یگان‌های ازدست‌رفته: ${fa(G.stats.lost[ME])} · نقشه: ${MAPS[G.mapId].name}`;
   $('endOv').hidden = false;
 }
 let last = performance.now();
@@ -2969,16 +3287,19 @@ function frame(now) {
     handlePan(dt);
     if (NET.role === 'guest') guestTick(dt);
     else if (!G.paused && !G.over) update(dt);
-    if (NET.role === 'host') { NET.sendT -= dt; if (NET.sendT <= 0) { NET.sendT = 0.1; netSend(snapshot()); } }
+    if (NET.role === 'host' && NET.peers.length && $('startOv').hidden) { NET.sendT -= dt; if (NET.sendT <= 0) { NET.sendT = 0.1; const snap = snapshot(); NET.peers.forEach(p => { if (p.seat >= 0) safeSend(p.conn, snap); }); } }
   }
   draw(); hudTick(dt); if (G && G.pending) positionConfirm();
   requestAnimationFrame(frame);
 }
 new ResizeObserver(resize).observe(view);
 resize();
-newGame('normal');
+newGame();
+renderSetup();
 hudDirty = true;
 requestAnimationFrame(frame);
+// ?debug exposes the game state to the console, for testing
+if (new URLSearchParams(location.search).has('debug')) window.IF = { get G() { return G; }, step(sec) { for (let k = 0; k < sec * 20 && !G.over; k++) update(0.05); }, addUnit, addBuilding, placeValid, execCommand, command, selectOnly, centerOn, findLanding, cam, get ME() { return ME; } };
 { const j = new URLSearchParams(location.search).get('join'); if (j && !window.claude) { $('joinCode').value = j; joinGame(j); } }
 })();
 </script>
