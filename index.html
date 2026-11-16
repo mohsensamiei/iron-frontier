@@ -306,13 +306,13 @@ const CARRY = 10;
 const fa = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 
 const UDEF = {
-  worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 50 }, time: 10, r: 5, body: '#e2c9a0' },
-  spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 50, gold: 20 }, time: 14, r: 5, body: '#9aa0a6' },
-  archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 40, wood: 30 }, time: 14, r: 5, body: '#6f8a4a' },
-  knight: { name: 'سوار', load: 2, hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 8, body: '#7a5a3a' },
+  worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 50 }, time: 10, r: 6, body: '#e2c9a0' },
+  spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 50, gold: 20 }, time: 14, r: 7, body: '#9aa0a6' },
+  archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 40, wood: 30 }, time: 14, r: 6, body: '#6f8a4a' },
+  knight: { name: 'سوار', load: 2, hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 10, body: '#7a5a3a' },
   ram: { name: 'دژکوب', load: 5, hp: 520, speed: 1.3, dmg: 70, range: 0.9, cd: 2.5, sight: 6, cost: { wood: 160, gold: 40 }, time: 30, r: 19, siege: true },
   catapult: { name: 'منجنیق', load: 5, hp: 260, speed: 1.2, dmg: 45, range: 9, cd: 4, sight: 10, cost: { wood: 180, stone: 60, gold: 60 }, time: 35, r: 19, siege: true, splash: true },
-  lord: { name: 'لرد', load: 2, hp: 900, speed: 2.4, dmg: 28, range: 0.9, cd: 0.9, sight: 9, cost: {}, time: 1, r: 7, hero: true },
+  lord: { name: 'لرد', load: 2, hp: 900, speed: 2.4, dmg: 28, range: 0.9, cd: 0.9, sight: 9, cost: {}, time: 1, r: 9, hero: true },
   transport: { name: 'کشتی ترابری', hp: 420, speed: 2.5, dmg: 0, range: 0, cd: 1, sight: 7, cost: { wood: 120 }, time: 20, r: 36, naval: true, cap: 10 },
   warship: { name: 'کشتی جنگی', hp: 380, speed: 2.7, dmg: 10, range: 6, cd: 1.5, sight: 9, cost: { wood: 150, gold: 40 }, time: 24, r: 36, naval: true }
 };
@@ -606,10 +606,11 @@ function banner(g, P, y, xa, xb, za, zb, tc) {
   const c = P((xa + xb) / 2, y, (za + zb) / 2 + 2); g.fillStyle = '#e8cf7a'; g.beginPath(); g.arc(c[0], c[1], 2, 0, 7); g.fill();
 }
 // ---------- one scale for everything ----------
-// 1 m is about 9.4 px, so a tile (32 px) is about 3.4 m. A man (1.7 m) stands ~16 px, a horse is ~2.7 m long,
+// 1 m is about 9.4 px, so a tile (32 px) is about 3.4 m. People are basketball players (2.2 m, ~21 px) so they read
+// well at 100% zoom; horses grow with them (~3.5 m long). The rest is true to scale:
 // a mangonel ~4.5 m and a ram ~6 m, a cog ~13 m; a house is ~7 m across and ~5 m high, a curtain wall ~5 m,
 // a watchtower ~13 m, a palace keep ~11 m; trees 8-12 m, quarry boulders 2-4 m, the river ~30 m wide.
-const UNIT_S = 0.62, HORSE_K = 1.25, SIEGE_K = 1.5, SHIP_K = 2.8, TREE_K = 1.5, ROCK_K = 1.15;
+const UNIT_S = 0.8, HORSE_K = 1.25, SIEGE_K = 1.5, SHIP_K = 2.8, TREE_K = 1.5, ROCK_K = 1.15;
 // how much taller than first drawn each building is (footprints stay, so maps and paths don't change)
 const HZ = { hall: 1.3, wall: 1.7, gate: 1.6, tower: 1.25 };
 const BSPR = {
@@ -1514,7 +1515,7 @@ function updBuilding(b, dt) {
 function updProj(p, dt) {
   const t = p.t; if (t.dead) { p.dead = true; return; }
   const tx = posX(t), ty = posY(t), dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy), sp = 360 * dt;
-  const f = Math.max(0, Math.min(1, 1 - d / p.d0)), aim = t.kind === 'u' ? 9 + (t.z || 0) : 20;
+  const f = Math.max(0, Math.min(1, 1 - d / p.d0)), aim = t.kind === 'u' ? 12 + (t.z || 0) : 20;
   p.h = p.z0 * (1 - f) + aim * f + Math.sin(f * Math.PI) * (p.stone ? Math.min(150, p.d0 * 0.45) : Math.min(60, p.d0 * 0.22));
   if (d <= sp + (t.kind === 'b' ? t.size * 10 : 4)) {
     damage(t, p.dmg, p.src); p.dead = true;
@@ -1736,7 +1737,7 @@ function newGame(opts = {}) {
   const home = SPOTS[Math.min(ME, n - 1)];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (Math.hypot(x - home.x - 2, y - home.y - 2) < 21) explored[y * W + x] = 1;
   computeFog(); updateFogImage();
-  cam.z = 1.3; $('zLevel').textContent = fa(130) + '٪'; centerOn((home.x + 1.5) * T, (home.y + 1.5) * T);
+  cam.z = 1; $('zLevel').textContent = fa(100) + '٪'; centerOn((home.x + 1.5) * T, (home.y + 1.5) * T);
 }
 // ---------- camera & view (isometric: iso.x = x - y, iso.y = (x + y) / 2) ----------
 let vw = 0, vh = 0, dpr = 1;
@@ -2145,7 +2146,7 @@ function entityAt(wx, wy) {
   let best = null, bd = 1e9;
   for (const u of G.units) {
     if (u.dead || !seen(u)) continue;
-    const ux = isoX(u.x, u.y), uy = isoY(u.x, u.y) - (u.z || 0), ship = isNaval(u), sg = UDEF[u.type].siege, big = u.type === 'knight', hw = ship ? 26 * SHIP_K : sg ? 20 * SIEGE_K : big ? 17 : 9, top = ship ? 50 * SHIP_K : sg ? 30 * SIEGE_K : big ? 36 : 24;
+    const ux = isoX(u.x, u.y), uy = isoY(u.x, u.y) - (u.z || 0), ship = isNaval(u), sg = UDEF[u.type].siege, big = u.type === 'knight', hw = ship ? 26 * SHIP_K : sg ? 20 * SIEGE_K : big ? 21 : 10, top = ship ? 50 * SHIP_K : sg ? 30 * SIEGE_K : big ? 46 : 30;
     if (Math.abs(ix - ux) <= hw && iy <= uy + 5 && iy >= uy - top) { const d = Math.abs(ix - ux) + Math.abs(iy - (uy - top / 2)) - (u.x + u.y) * 0.01; if (d < bd) { bd = d; best = u; } }
   }
   if (best) return best;
