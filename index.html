@@ -298,7 +298,7 @@ const GRASS = 0, WATER = 1, FOREST = 2, STONE = 3, GOLD = 4;
 const RES_OF = { [FOREST]: 'wood', [STONE]: 'stone', [GOLD]: 'gold' };
 const RES_NAME = { wood: 'چوب', stone: 'سنگ', gold: 'طلا', food: 'غذا' };
 const RES_COL = { wood: '#8a5a2e', stone: '#a5a396', gold: '#e2bf4f', food: '#d8bf5a' };
-const GATHER_RATE = { wood: 2, stone: 1.5, gold: 1.2 };
+const GATHER_RATE = { wood: 1.1, stone: 0.8, gold: 0.7 };
 // one color per seat in the lobby
 const TEAM = ['#3f86e0', '#e0703a', '#5fae4a', '#a463d6'];
 const TEAM_NAME = ['آبی', 'نارنجی', 'سبز', 'بنفش'];
@@ -306,34 +306,38 @@ const CARRY = 10;
 const fa = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 
 const UDEF = {
-  worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 50 }, time: 10, r: 6, body: '#e2c9a0' },
-  spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 50, gold: 20 }, time: 14, r: 7, body: '#9aa0a6' },
-  archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 40, wood: 30 }, time: 14, r: 6, body: '#6f8a4a' },
-  knight: { name: 'سوار', load: 2, hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 80, gold: 60 }, time: 20, r: 10, body: '#7a5a3a' },
-  ram: { name: 'دژکوب', load: 5, hp: 520, speed: 1.3, dmg: 70, range: 0.9, cd: 2.5, sight: 6, cost: { wood: 160, gold: 40 }, time: 30, r: 19, siege: true },
-  catapult: { name: 'منجنیق', load: 5, hp: 260, speed: 1.2, dmg: 45, range: 9, cd: 4, sight: 10, cost: { wood: 180, stone: 60, gold: 60 }, time: 35, r: 19, siege: true, splash: true },
+  worker: { name: 'کارگر', hp: 50, speed: 2.7, dmg: 3, range: 0.8, cd: 1.2, sight: 6, cost: { food: 60 }, time: 10, r: 6, body: '#e2c9a0' },
+  spear:  { name: 'نیزه‌دار', hp: 130, speed: 2.0, dmg: 11, range: 0.8, cd: 1.0, sight: 7, cost: { food: 70, gold: 35 }, time: 14, r: 7, body: '#9aa0a6' },
+  archer: { name: 'کماندار', hp: 75, speed: 2.1, dmg: 8, range: 5.5, cd: 1.4, sight: 8, cost: { food: 55, wood: 45 }, time: 14, r: 6, body: '#6f8a4a' },
+  knight: { name: 'سوار', load: 2, hp: 220, speed: 3.0, dmg: 16, range: 0.9, cd: 1.1, sight: 8, cost: { food: 120, gold: 90 }, time: 20, r: 10, body: '#7a5a3a' },
+  ram: { name: 'دژکوب', load: 5, hp: 520, speed: 1.3, dmg: 70, range: 0.9, cd: 2.5, sight: 6, cost: { wood: 240, gold: 80 }, time: 30, r: 19, siege: true },
+  catapult: { name: 'منجنیق', load: 5, hp: 260, speed: 1.2, dmg: 45, range: 9, cd: 4, sight: 10, cost: { wood: 260, stone: 120, gold: 110 }, time: 35, r: 19, siege: true, splash: true },
   lord: { name: 'لرد', load: 2, hp: 900, speed: 2.4, dmg: 28, range: 0.9, cd: 0.9, sight: 9, cost: {}, time: 1, r: 9, hero: true },
-  transport: { name: 'کشتی ترابری', hp: 420, speed: 2.5, dmg: 0, range: 0, cd: 1, sight: 7, cost: { wood: 120 }, time: 20, r: 36, naval: true, cap: 10 },
-  warship: { name: 'کشتی جنگی', hp: 380, speed: 2.7, dmg: 10, range: 6, cd: 1.5, sight: 9, cost: { wood: 150, gold: 40 }, time: 24, r: 36, naval: true }
+  transport: { name: 'کشتی ترابری', hp: 420, speed: 2.5, dmg: 0, range: 0, cd: 1, sight: 7, cost: { wood: 180 }, time: 20, r: 36, naval: true, cap: 10 },
+  warship: { name: 'کشتی جنگی', hp: 380, speed: 2.7, dmg: 10, range: 6, cd: 1.5, sight: 9, cost: { wood: 220, gold: 70 }, time: 24, r: 36, naval: true }
 };
 const BDEF = {
-  hall:     { name: 'کاخ', size: 4, hp: 3400, cost: { stone: 300, wood: 150, gold: 100 }, time: 90, pop: 10, drop: true, train: ['worker'], sight: 10, desc: 'خانهٔ لرد و پناهگاه کارگران' },
-  workshop: { name: 'کارگاه محاصره', size: 3, hp: 900, cost: { wood: 200, stone: 80 }, time: 30, train: ['ram', 'catapult'], sight: 6, desc: 'دژکوب و منجنیق می‌سازد' },
-  house:    { name: 'خانه', size: 2, hp: 400, cost: { wood: 50 }, time: 12, pop: 5, sight: 4, desc: '+۵ جمعیت' },
-  farm:     { name: 'مزرعه', size: 2, hp: 300, cost: { wood: 60 }, time: 14, sight: 4, desc: 'یک کارگر باید روی آن کار کند' },
-  store:    { name: 'انبار', size: 2, hp: 500, cost: { wood: 80 }, time: 16, drop: true, sight: 5, desc: 'تحویل منابع' },
-  barracks: { name: 'سربازخانه', size: 3, hp: 1100, cost: { wood: 120, stone: 40 }, time: 25, train: ['spear', 'archer', 'knight'], sight: 6, desc: 'آموزش سرباز' },
-  tower:    { name: 'برج دیده‌بانی', size: 2, hp: 800, cost: { stone: 80, wood: 20 }, time: 22, range: 7, dmg: 10, cd: 1.3, sight: 9, desc: 'تیراندازی خودکار' },
-  wall:     { name: 'دیوار سنگی', size: 1, hp: 600, cost: { stone: 10 }, time: 4, sight: 2, desc: 'سد راه' },
-  gate:     { name: 'دروازه', size: 1, hp: 900, cost: { stone: 20, wood: 10 }, time: 8, sight: 3, desc: 'نیروهای خودی رد می‌شوند، دشمن نه' },
-  dock:     { name: 'اسکله', size: 3, hp: 700, cost: { wood: 100 }, time: 18, train: ['transport', 'warship'], sight: 7, desc: 'ساخت کشتی؛ باید کنار آب باشد' }
+  hall:     { name: 'کاخ', size: 4, hp: 3400, cost: { stone: 450, wood: 250, gold: 200 }, time: 90, pop: 10, drop: true, train: ['worker'], sight: 10, desc: 'خانهٔ لرد و پناهگاه کارگران' },
+  workshop: { name: 'کارگاه محاصره', size: 3, hp: 900, cost: { wood: 300, stone: 150 }, time: 30, train: ['ram', 'catapult'], sight: 6, desc: 'دژکوب و منجنیق می‌سازد' },
+  house:    { name: 'خانه', size: 2, hp: 400, cost: { wood: 75 }, time: 12, pop: 5, sight: 4, desc: '+۵ جمعیت' },
+  farm:     { name: 'مزرعه', size: 2, hp: 300, cost: { wood: 90 }, time: 14, sight: 4, desc: 'یک کارگر باید روی آن کار کند' },
+  store:    { name: 'انبار', size: 2, hp: 500, cost: { wood: 110 }, time: 16, drop: true, sight: 5, desc: 'تحویل منابع' },
+  barracks: { name: 'سربازخانه', size: 3, hp: 1100, cost: { wood: 180, stone: 80 }, time: 25, train: ['spear', 'archer', 'knight'], sight: 6, desc: 'آموزش سرباز' },
+  tower:    { name: 'برج دیده‌بانی', size: 2, hp: 800, cost: { stone: 140, wood: 40 }, time: 22, range: 7, dmg: 10, cd: 1.3, sight: 9, desc: 'تیراندازی خودکار' },
+  wall:     { name: 'دیوار سنگی', size: 1, hp: 600, cost: { stone: 15 }, time: 4, sight: 2, desc: 'سد راه' },
+  gate:     { name: 'دروازه', size: 1, hp: 900, cost: { stone: 35, wood: 20 }, time: 8, sight: 3, desc: 'نیروهای خودی رد می‌شوند، دشمن نه' },
+  dock:     { name: 'اسکله', size: 3, hp: 700, cost: { wood: 150 }, time: 18, train: ['transport', 'warship'], sight: 7, desc: 'ساخت کشتی؛ باید کنار آب باشد' }
 };
 const BUILD_LIST = ['house', 'farm', 'store', 'barracks', 'workshop', 'tower', 'wall', 'gate', 'dock', 'hall'];
 const DIFF = {
-  easy:   { name: 'آسان', first: 480, interval: 260, trickle: 0.12, bonus: 0, scale: 0.5, cap: n => 3 + n * 2, siegeFrom: 3, start: ['spear'] },
-  normal: { name: 'معمولی', first: 330, interval: 200, trickle: 0.45, bonus: 1, scale: 1, cap: n => 5 + n * 3, siegeFrom: 2, start: ['spear', 'archer'] },
-  demo:   { name: 'آموزشی', first: 1e9, interval: 1e9, trickle: 0.3, bonus: 0, scale: 0, cap: n => 6, siegeFrom: 99, start: ['spear', 'spear', 'archer'], demo: true },
-  hard:   { name: 'سخت', first: 230, interval: 150, trickle: 0.9, bonus: 2, scale: 1.5, cap: n => 7 + n * 4, siegeFrom: 1, start: ['spear', 'spear', 'archer'] }
+// gain: share of what its workers bring in that a bot actually gets (the player always gets 1);
+// stock: its starting resources against the player's. Easy gets less, normal the same, hard more.
+// demo (practice) plays the normal economy but never attacks: it only builds up and defends its town.
+// free: only hard gets soldiers and siege engines for nothing with each wave; easy and normal pay for their siege engines
+  easy:   { name: 'آسان', first: 480, interval: 260, gain: 0.7, stock: 0.7, bonus: 0, scale: 0.5, cap: n => 3 + n * 2, siegeFrom: 3, start: ['spear'] },
+  normal: { name: 'معمولی', first: 330, interval: 200, gain: 1, stock: 1, bonus: 1, scale: 1, cap: n => 5 + n * 3, siegeFrom: 2, start: ['spear', 'archer'] },
+  demo:   { name: 'آموزشی', first: 1e9, interval: 1e9, gain: 1, stock: 1, bonus: 0, scale: 0, cap: () => Math.min(20, 5 + Math.floor(G.t / 200) * 3), siegeFrom: 99, start: ['spear', 'archer'], demo: true },
+  hard:   { name: 'سخت', first: 230, interval: 150, gain: 1.4, stock: 1.5, bonus: 2, scale: 1.5, free: true, cap: n => 7 + n * 4, siegeFrom: 1, start: ['spear', 'spear', 'archer'] }
 };
 
 // ---------- world state ----------
@@ -483,7 +487,7 @@ function genMap(seed, mapId = 'frontier') {
     for (let y = H / 2; y < H; y++) for (let x = 0; x < W / 2; x++) { const i = y * W + x; for (const j of images(i, 4)) { tiles[j] = tiles[i]; shade[j] = shade[i]; river[j] = river[i]; } }
   }
   carveRoutes(mapType, deposits.filter(d => mapType !== 'river' || (MD.sym === 2 ? Math.abs(d.x - d.y) > 6 : Math.abs(d.x - W / 2) > 7 && Math.abs(d.y - H / 2) > 7)), MD.sym);
-  for (let i = 0; i < N; i++) amt[i] = tiles[i] === FOREST ? 100 : tiles[i] === STONE ? 300 : tiles[i] === GOLD ? 300 : 0;
+  for (let i = 0; i < N; i++) amt[i] = tiles[i] === FOREST ? 120 : tiles[i] === STONE ? 900 : tiles[i] === GOLD ? 750 : 0;
 }
 // ---------- ground texture (flat, later drawn through the isometric transform) ----------
 const terrMips = [document.createElement('canvas'), document.createElement('canvas')];
@@ -957,12 +961,25 @@ function claimCount(xx, yy, self) {
   for (const u of G.units) if (u !== self && u.order && u.order.k === 'gather' && u.order.rx === xx && u.order.ry === yy) n++;
   return n;
 }
-function nearestRes(x, y, res, maxR, self) {
-  let best = null, bd = 1e9;
+// distance in tiles from a tile to the closest finished drop site (palace or storehouse) of a team
+function dropDist(team, x, y) {
+  let bd = Infinity;
+  for (const b of G.blds) if (b.team === team && b.built && BDEF[b.type].drop && !b.dead) {
+    const dx = Math.max(b.tx - x, 0, x - (b.tx + b.size - 1)), dy = Math.max(b.ty - y, 0, y - (b.ty + b.size - 1));
+    const d = Math.hypot(dx, dy); if (d < bd) bd = d;
+  }
+  return bd;
+}
+// pick a resource tile near (x, y): a short haul to the nearest drop site counts most, so workers eat
+// into a wood or quarry from the side that faces the storehouse instead of scattering around it;
+// tiles other workers already use cost extra, so they share out without wandering off
+function nearestRes(x, y, res, maxR, self, team = self ? self.team : -1) {
+  let best = null, bd = Infinity;
   for (let yy = Math.max(0, y - maxR); yy <= Math.min(H - 1, y + maxR); yy++) for (let xx = Math.max(0, x - maxR); xx <= Math.min(W - 1, x + maxR); xx++) {
     const t = tiles[yy * W + xx]; if (RES_OF[t] !== res) continue;
-    let d = (xx - x) ** 2 + (yy - y) ** 2; if (d >= bd || !hasOpenSide(xx, yy)) continue;
-    if (self) d += claimCount(xx, yy, self) * 6;
+    let d = Math.hypot(xx - x, yy - y) * 0.6; if (d >= bd || !hasOpenSide(xx, yy)) continue;
+    if (team >= 0) { const h = dropDist(team, xx, yy); d += h === Infinity ? 0 : h; }
+    if (self) d += claimCount(xx, yy, self) * 2.5;
     if (d < bd) { bd = d; best = { x: xx, y: yy }; }
   }
   return best;
@@ -974,7 +991,7 @@ function nearestDrop(u) {
 }
 
 // ---------- farms, garrisons ----------
-const FARM_RATE = 1.1;
+const FARM_RATE = 0.65;
 const GAR = {
   tower: { cap: 4, z: Math.round(94 * HZ.tower), rng: 2.5, atk: 1.6, def: 0.35, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
   wall: { cap: 1, z: Math.round(22 * HZ.wall), rng: 1.5, atk: 1.3, def: 0.5, slots: [[16, 16]] },
@@ -1018,7 +1035,7 @@ function garUpdate(u, dt) {
 function goDeposit(u, o, dt) {
   const drop = nearestDrop(u); if (!drop) return 'fail';
   if (o.drop !== drop) { o.drop = drop; u.path = null; }
-  if (adjBld(u, drop)) { if (u.carry.amt > 0) G.res[u.team][u.carry.res] += Math.floor(u.carry.amt); u.carry.amt = 0; u.path = null; return 'done'; }
+  if (adjBld(u, drop)) { if (u.carry.amt > 0) { const P = G.players[u.team]; G.res[u.team][u.carry.res] += Math.floor(u.carry.amt * (P && P.bot ? DIFF[P.diff].gain : 1)); } u.carry.amt = 0; u.path = null; return 'done'; }
   if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= drop.tx - 1 && x <= drop.tx + drop.size && y >= drop.ty - 1 && y <= drop.ty + drop.size, drop.tx + 1, drop.ty + 1));
   if (follow(u, dt) && !adjBld(u, drop)) { u.path = null; if (++o.fails > 12) return 'fail'; }
   return 'busy';
@@ -1589,29 +1606,33 @@ const inward = (hall, k) => ({ x: Math.round(hall.tx + 1.5 + Math.sign(W / 2 - h
 function aiTick(p) {
   const P = G.players[p], A = P.ai, R = G.res[p], df = DIFF[P.diff];
   aiNavy(p);
-  R.food += df.trickle * 1.2; R.gold += df.trickle * 0.6; R.wood += df.trickle * 0.8; R.stone += df.trickle * 0.4;
   const hall = homeOf(p);
   if (!hall) return;
   const mine = G.units.filter(u => u.team === p);
   const workers = mine.filter(u => u.type === 'worker');
   const army = mine.filter(isMil);
-  workers.forEach((w, i) => {
-    if (w.order) return;
-    const res = i % 3 === 0 ? 'gold' : 'wood';
-    const n = nearestRes(tileOf(w.x), tileOf(w.y), res, 24) || nearestRes(tileOf(w.x), tileOf(w.y), 'wood', 36);
-    if (n) orderGather(w, n.x, n.y);
-  });
+  // send idle workers to whatever is scarcest (stone is needed least), and every so often move one
+  // gatherer off a pile that keeps growing onto a resource that has run short
+  const WANT = { wood: 1, gold: 1, stone: 0.4 };
+  const short = () => Object.keys(WANT).sort((a, b) => R[a] / WANT[a] - R[b] / WANT[b]);
+  const sendTo = (w, order) => { for (const res of order) { const n = nearestRes(tileOf(w.x), tileOf(w.y), res, 30, w); if (n) { orderGather(w, n.x, n.y); return; } } };
+  workers.forEach(w => { if (!w.order) sendTo(w, short()); });
+  if ((A.shift = (A.shift || 0) - 1) <= 0) {
+    A.shift = 12;
+    const ord = short(), lo = ord[0], hi = ord[ord.length - 1];
+    if (R[hi] / WANT[hi] > 500 && R[lo] / WANT[lo] < 200) { const w = workers.find(w => w.order && w.order.k === 'gather' && w.order.res === hi && w.order.phase === 'go'); if (w) sendTo(w, [lo]); }
+  }
   for (const f of G.blds) if (f.team === p && f.type === 'farm' && f.built && !f.dead && !farmerOf(f)) {
     const w = workers.filter(w => !w.order || w.order.k === 'gather').sort((a, b) => distRect(a.x, a.y, f) - distRect(b.x, b.y, f))[0];
     if (w) orderFarm(w, f);
   }
-  if (workers.length + hall.queue.length < 11 && hall.queue.length < 2 && canPay(p, UDEF.worker.cost)) { pay(p, UDEF.worker.cost); hall.queue.push('worker'); }
+  if (workers.length + hall.queue.length < 18 && hall.queue.length < 2 && canPay(p, UDEF.worker.cost)) { pay(p, UDEF.worker.cost); hall.queue.push('worker'); }
   const mineB = G.blds.filter(b => b.team === p && !b.dead);
   const building = mineB.some(b => !b.built);
   if (!building && workers.length) {
     const free = workers.filter(w => !w.order || w.order.k === 'gather');
     if (G.pop[p] >= G.cap[p] - 2) aiBuild(p, 'house', hall, free);
-    else if (mineB.filter(b => b.type === 'farm').length < 3) aiBuild(p, 'farm', hall, free);
+    else if (mineB.filter(b => b.type === 'farm').length < Math.min(9, 2 + Math.floor(workers.length / 2))) aiBuild(p, 'farm', hall, free);
     else if (G.t > 420 && mineB.filter(b => b.type === 'tower').length < 3) aiBuild(p, 'tower', hall, free);
   }
   const armyCap = df.cap(A.wave);
@@ -1625,6 +1646,8 @@ function aiTick(p) {
     if (Math.hypot(ax - bcx(hall), ay - bcy(hall)) < 14 * T) army.forEach(u => { if (!u.order || u.order.k === 'move') orderAttack(u, A.alarm, false); });
     A.alarm = null;
   }
+  // a practice bot never goes on the attack: soldiers that chased someone off walk back home
+  if (df.demo) { const g = inward(hall, 5); army.forEach(u => { if (!u.order && !u.aboard && Math.hypot(u.x - bcx(hall), u.y - bcy(hall)) > 16 * T) orderMove(u, g.x * T + 16, g.y * T + 16); }); }
 }
 // is there a road on dry land (ignoring buildings) from one base to the other?
 function landRoute(a, b) {
@@ -1661,11 +1684,16 @@ function launchWave(p) {
   const hall = homeOf(p);
   A.waveT = df.interval;
   if (!hall) return;
-  const extra = df.bonus + Math.floor(n * df.scale);
+  const extra = df.free ? df.bonus + Math.floor(n * df.scale) : 0;
   const kinds = [];
   for (let k = 0; k < extra; k++) kinds.push(n >= 2 && k % 4 === 3 ? 'knight' : k % 2 ? 'archer' : 'spear');
-  // from a certain wave on, the camp brings siege engines for stone walls and palaces
-  if (n >= df.siegeFrom) { for (let k = 0; k <= Math.floor((n - df.siegeFrom) / 2); k++) kinds.push('ram'); if (n > df.siegeFrom) kinds.push('catapult'); }
+  // from a certain wave on, the camp brings siege engines for stone walls and palaces (paid for, below hard)
+  if (n >= df.siegeFrom) {
+    const siege = [];
+    for (let k = 0; k <= Math.floor((n - df.siegeFrom) / 2); k++) siege.push('ram');
+    if (n > df.siegeFrom) siege.push('catapult');
+    for (const t of siege) if (df.free) kinds.push(t); else if (canPay(p, UDEF[t].cost)) { pay(p, UDEF[t].cost); kinds.push(t); }
+  }
   const gate = inward(hall, 4);
   for (const t of kinds) { const q = nearFree(gate.x, gate.y, 8); if (q) addUnit(t, p, q[0] * T + 16, q[1] * T + 16); }
   const target = aiTarget(p, bcx(hall), bcy(hall));
@@ -1702,7 +1730,7 @@ function newGame(opts = {}) {
   }));
   const n = players.length, zeros = () => players.map(() => 0);
   G = { t: 0, mapId, practice: !!opts.practice, players,
-    res: players.map(p => p.bot ? { wood: 200, stone: 150, gold: 150, food: 250 } : { wood: 200, stone: 80, gold: 60, food: 150 }),
+    res: players.map(p => { const k = p.bot ? DIFF[p.diff].stock : 1; return { wood: Math.round(300 * k), stone: Math.round(120 * k), gold: Math.round(100 * k), food: Math.round(250 * k) }; }),
     units: [], blds: [], proj: [], marks: [], sel: new Set(), nextId: 1, placing: null,
     over: false, paused: true, stats: { trained: zeros(), lost: zeros() }, aiT: 0, fogT: 0,
     pop: zeros(), cap: zeros(), alarmAt: {}, groups: {}, formation: 'line', fx: [], fxOut: [], tileLog: [], winner: -1 };
@@ -2779,8 +2807,9 @@ function hudTick(dt) {
   $('r-pop').textContent = fa(G.pop[ME]) + ' / ' + fa(G.cap[ME]);
   // the next wave from any enemy bot
   let nx = null; G.players.forEach((P, i) => { if (P.ai && !P.out && foe(i, ME) && !DIFF[P.diff].demo && (!nx || P.ai.waveT < nx.waveT)) nx = P.ai; });
-  $('wave').hidden = !G.practice && !nx;
-  if (G.practice) $('wave').textContent = 'حالت آموزشی: دشمن حمله نمی‌کند'; else if (nx) { const s = Math.max(0, Math.ceil(nx.waveT)); $('wave').textContent = 'موج ' + fa(nx.wave + 1) + ' دشمن: ' + fa(Math.floor(s / 60)) + ':' + fa(String(s % 60).padStart(2, '0')); }
+  const calm = !nx && G.players.some((P, i) => P.ai && !P.out && foe(i, ME));
+  $('wave').hidden = !G.practice && !nx && !calm;
+  if (G.practice || calm) $('wave').textContent = 'حالت آموزشی: دشمن حمله نمی‌کند'; else if (nx) { const s = Math.max(0, Math.ceil(nx.waveT)); $('wave').textContent = 'موج ' + fa(nx.wave + 1) + ' دشمن: ' + fa(Math.floor(s / 60)) + ':' + fa(String(s % 60).padStart(2, '0')); }
   const idle = G.units.filter(u => u.team === ME && u.type === 'worker' && !u.order).length;
   $('idleBtn').textContent = 'کارگر بیکار (' + fa(idle) + ')';
   setHTML($('sel'), selHTML());
@@ -3065,7 +3094,7 @@ function renderSetup() {
     const li = document.createElement('li'); li.className = 'seat' + (st.kind === 'open' ? ' open' : '');
     const mineToEdit = !guest || i === LOBBY.you;
     let h = `<i class="sw" style="background:${TEAM[i]}" title="${TEAM_NAME[i]}"></i><span class="who">${seatLabel(st, i)}${st.kind !== 'open' ? `<small>${TEAM_NAME[i]}</small>` : ''}</span>`;
-    if (st.kind === 'bot') h += `<select data-seat="${i}" data-f="diff" aria-label="سطح بات ${fa(i + 1)}" ${guest ? 'disabled' : ''}>${['easy', 'normal', 'hard'].map(d => `<option value="${d}" ${st.diff === d ? 'selected' : ''}>${DIFF[d].name}</option>`).join('')}</select>`;
+    if (st.kind === 'bot') h += `<select data-seat="${i}" data-f="diff" aria-label="سطح بات ${fa(i + 1)}" ${guest ? 'disabled' : ''}>${['demo', 'easy', 'normal', 'hard'].map(d => `<option value="${d}" ${st.diff === d ? 'selected' : ''}>${DIFF[d].name}</option>`).join('')}</select>`;
     if (st.kind !== 'open') h += `<select data-seat="${i}" data-f="ally" aria-label="تیم بازیکن ${fa(i + 1)}" ${mineToEdit ? '' : 'disabled'}>${[0, 1, 2, 3].map(t => `<option value="${t}" ${st.ally === t ? 'selected' : ''}>تیم ${fa(t + 1)}</option>`).join('')}</select>`;
     if (!guest && st.kind !== 'me') h += `<button type="button" class="x" data-kick="${i}" aria-label="${st.kind === 'human' ? 'بیرون کردن' : 'حذف'} جای ${fa(i + 1)}" title="${st.kind === 'human' ? 'بیرون کردن' : 'حذف'}">✕</button>`;
     li.innerHTML = h; ol.appendChild(li);
@@ -3309,7 +3338,7 @@ renderSetup();
 hudDirty = true;
 requestAnimationFrame(frame);
 // ?debug exposes the game state to the console, for testing
-if (new URLSearchParams(location.search).has('debug')) window.IF = { get G() { return G; }, step(sec) { for (let k = 0; k < sec * 20 && !G.over; k++) update(0.05); }, addUnit, addBuilding, placeValid, execCommand, command, selectOnly, centerOn, findLanding, cam, get ME() { return ME; } };
+if (new URLSearchParams(location.search).has('debug')) window.IF = { get G() { return G; }, step(sec) { for (let k = 0; k < sec * 20 && !G.over; k++) update(0.05); }, addUnit, addBuilding, placeValid, execCommand, command, selectOnly, centerOn, findLanding, cam, orderGather, nearestRes, dropDist, get amt() { return amt; }, get ME() { return ME; } };
 { const j = new URLSearchParams(location.search).get('join'); if (j && !window.claude) { $('joinCode').value = j; joinGame(j); } }
 })();
 </script>
