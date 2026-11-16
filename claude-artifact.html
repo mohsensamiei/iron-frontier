@@ -102,6 +102,14 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .joinrow input{width:120px;font:inherit;font-size:16px;letter-spacing:.2em;text-transform:uppercase;background:var(--panel-3);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 10px}
 .joinrow input:focus{outline:2px solid var(--brass);outline-offset:1px}
 #startOv{position:fixed;z-index:20;background:rgba(14,16,10,.9)}
+.resume{display:flex;flex-direction:column;gap:8px}
+.resume-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#3b3a28;border:1px solid var(--brass);border-radius:4px;padding:10px 14px}
+.resume-row div{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+.resume-row b{font-size:15px}
+.resume-row span{font-size:12px;color:var(--muted);line-height:1.7}
+.resume-row .primary{padding:9px 16px;font-size:15px}
+.netwait{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;background:var(--panel);border:1px solid var(--brass);border-radius:4px;padding:8px 12px;font-size:13px;line-height:1.7}
+.netwait[hidden]{display:none}
 .dialog.setup{max-width:1080px;gap:18px}
 .setup-head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 24px}
 .setup-head p{flex:1;min-width:260px;font-size:14px}
@@ -211,6 +219,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
           <div class="armyrow"><button type="button" class="tbtn" id="splitTwo">تقسیم انتخاب فعلی به دو ارتش</button><button type="button" class="tbtn" id="armyClose">بستن</button></div>
         </div>
       </div>
+      <div class="netwait" id="netWait" role="status" hidden><span id="netWaitText"></span><button type="button" class="tbtn" id="netWaitBtn"></button></div>
       <div class="tipbox" id="tipBox" hidden><b id="tipStep"></b><span id="tipText"></span><div><button type="button" class="tbtn" id="tipNext">بعدی</button><button type="button" class="tbtn" id="tipClose">بستن راهنما</button></div></div>
       <div class="confirm" id="confirm" hidden role="group" aria-label="تایید">
         <button type="button" class="yes" id="cfYes" aria-label="تایید"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -222,6 +231,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
             <h1 id="setupTitle">مرز آهنین</h1>
             <p>نقشه را انتخاب کن، بات یا دوستت را به لابی بیاور و تیم‌ها را بچین. لرد هر طرف در کاخش زندگی می‌کند؛ هر تیمی که همهٔ لردهایش کشته شوند می‌بازد.</p>
           </div>
+          <div class="resume" id="resumeBox" hidden></div>
           <div class="setup-grid">
             <section class="maps-col" aria-labelledby="mapsLbl">
               <div class="label" id="mapsLbl">نقشه</div>
@@ -342,6 +352,17 @@ const isBot = t => !!(G && G.players && G.players[t] && G.players[t].bot);
 let ME = 0;
 // the host keeps one link per friend (peers: [{ conn, id, seat }]); a guest has a single link to the host
 const NET = { role: 'solo', peers: [], conn: null, peer: null, sendT: 0, code: null };
+// browser storage: local survives closing the browser, session survives a refresh of this one tab; either may be blocked
+const store = {
+  get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* storage blocked */ } }
+};
+const ssGet = k => { try { const v = sessionStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
+const ssSet = (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked */ } };
+const ssDel = k => { try { sessionStorage.removeItem(k); } catch (e) { /* storage blocked */ } };
+const b64 = a => { let s = ''; for (let i = 0; i < a.length; i += 4096) s += String.fromCharCode.apply(null, a.subarray(i, i + 4096)); return btoa(s); };
+const unb64 = s => { try { const d = atob(String(s || '')), a = new Uint8Array(d.length); for (let i = 0; i < d.length; i++) a[i] = d.charCodeAt(i); return a; } catch (e) { return new Uint8Array(0); } };
 const safeSend = (c, o) => { try { c.send(o); } catch (e) { /* link dropped */ } };
 function netSend(o) { if (NET.role === 'host') NET.peers.forEach(p => safeSend(p.conn, o)); else if (NET.conn) safeSend(NET.conn, o); }
 // a message for one player: shown here if it's ours, sent across if it belongs to a friend
@@ -2878,7 +2899,7 @@ function hostExec(team, m) {
 }
 $('panel').addEventListener('pointerdown', e => { const b = e.target.closest('button[data-act]'); if (!b || b.disabled) return; e.preventDefault(); doAct(b.dataset.act); });
 $('panel').addEventListener('click', e => { if (e.detail !== 0) return; const b = e.target.closest('button[data-act]'); if (b && !b.disabled) doAct(b.dataset.act); });
-function togglePause() { if (!G || G.over || !$('startOv').hidden) return; if (NET.role === 'guest') { netSend({ c: 'pause' }); return; } G.paused = !G.paused; if (NET.role === 'host') notifyAll(G.paused ? 'بازی متوقف شد' : 'بازی ادامه پیدا کرد'); $('pauseBtn').textContent = G.paused ? 'ادامه' : 'توقف'; if (G.paused) toast('بازی متوقف شد'); }
+function togglePause() { if (!G || G.over || !$('startOv').hidden) return; if (NET.role === 'guest') { netSend({ c: 'pause' }); return; } G.paused = !G.paused; NET.awayPause = false; netBanner(); if (NET.role === 'host') notifyAll(G.paused ? 'بازی متوقف شد' : 'بازی ادامه پیدا کرد'); $('pauseBtn').textContent = G.paused ? 'ادامه' : 'توقف'; if (G.paused) toast('بازی متوقف شد'); }
 $('pauseBtn').addEventListener('click', togglePause);
 const syncSound = () => { $('soundBtn').textContent = soundOn ? 'صدا: روشن' : 'صدا: خاموش'; $('soundBtn').setAttribute('aria-pressed', String(soundOn)); };
 $('soundBtn').addEventListener('click', () => { soundOn = !soundOn; try { localStorage.setItem('if-sound', soundOn ? 'on' : 'off'); } catch (e) { /* storage blocked */ } syncSound(); if (soundOn) playBell(); });
@@ -2992,16 +3013,26 @@ function wrapPeerConn(c) {
     close: () => c.close()
   };
 }
-function bcConn(ch, me) {
+// one channel per game; every tab has a name and each message says who it is from and for
+function bcHub(ch, me, onHello) {
+  const hub = new Map();
+  ch.onmessage = e => {
+    const m = e.data; if (m.hello) { if (onHello) onHello(m.from); return; }
+    if (m.to !== me) return; const h = hub.get(m.from); if (!h) return;
+    if (m.bye) { hub.delete(m.from); h.bye(); } else h.data(m.d);
+  };
+  return hub;
+}
+function bcConn(ch, me, other, hub) {
   const handlers = [], closers = [];
-  ch.onmessage = e => { const m = e.data; if (m.to !== me) return; if (m.bye) closers.forEach(f => f()); else handlers.forEach(f => f(m.d)); };
-  const other = me === 'h' ? 'g' : 'h';
-  return { send: o => ch.postMessage({ to: other, d: JSON.parse(JSON.stringify(o)) }), onData: fn => handlers.push(fn), onClose: fn => closers.push(fn), close: () => { ch.postMessage({ to: other, bye: 1 }); ch.close(); } };
+  hub.set(other, { data: d => handlers.forEach(f => f(d)), bye: () => closers.forEach(f => f()) });
+  const post = m => { try { ch.postMessage(m); } catch (e) { /* channel closed */ } };
+  return { send: o => post({ from: me, to: other, d: JSON.parse(JSON.stringify(o)) }), onData: fn => handlers.push(fn), onClose: fn => closers.push(fn), close: () => { post({ from: me, to: other, bye: 1 }); hub.delete(other); } };
 }
 async function openHost(code, onConn, onReady, onFail) {
   if (useBC) {
     const ch = new BroadcastChannel('if-' + code); NET.peer = { destroy: () => ch.close() };
-    ch.onmessage = e => { if (e.data.hello) { const c = bcConn(ch, 'h'); onConn(c); } };
+    const hub = bcHub(ch, 'h', from => onConn(bcConn(ch, 'h', from, hub)));
     onReady(code); return;
   }
   try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای دعوت دوستان لازم است'); return; }
@@ -3013,16 +3044,20 @@ async function openHost(code, onConn, onReady, onFail) {
 async function openGuest(code, onConn, onFail) {
   if (useBC) {
     const ch = new BroadcastChannel('if-' + code); NET.peer = { destroy: () => ch.close() };
-    const c = bcConn(ch, 'g'); ch.postMessage({ hello: 1 }); onConn(c); return;
+    const me = 'g' + makeCode(), hub = bcHub(ch, me), c = bcConn(ch, me, 'h', hub);
+    ch.postMessage({ hello: 1, from: me }); onConn(c); return;
   }
   try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای پیوستن به دوستان لازم است'); return; }
   const peer = new Peer(); NET.peer = peer;
+  // a link that opens after we gave up on it is closed, not used
+  let settled = false;
+  const fail = msg => { if (settled || NET.peer !== peer) return; settled = true; onFail(msg); };
   peer.on('open', () => {
     const c = peer.connect(PEER_PREFIX + code, { reliable: true });
-    const timer = setTimeout(() => onFail('بازی با این کد جواب نداد؛ کد را دوباره بررسی کن'), 12000);
-    c.on('open', () => { clearTimeout(timer); onConn(wrapPeerConn(c)); });
+    const timer = setTimeout(() => fail('بازی با این کد جواب نداد؛ کد را دوباره بررسی کن'), 12000);
+    c.on('open', () => { clearTimeout(timer); if (settled || NET.peer !== peer) { try { c.close(); } catch (e) { /* closed */ } return; } settled = true; onConn(wrapPeerConn(c)); });
   });
-  peer.on('error', e => onFail(e.type === 'peer-unavailable' ? 'بازی‌ای با این کد پیدا نشد' : e.type === 'network' || e.type === 'server-error' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type));
+  peer.on('error', e => fail(e.type === 'peer-unavailable' ? 'بازی‌ای با این کد پیدا نشد' : e.type === 'network' || e.type === 'server-error' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type));
 }
 // ---------- setup screen and lobby ----------
 // LOBBY is the host's truth (solo counts as hosting for nobody); a guest holds the copy the host sends
@@ -3104,6 +3139,7 @@ function renderSetup() {
   else if (teams.size < 2) setStatus('برای شروع دست‌کم دو تیم لازم است؛ بات اضافه کن یا تیم کسی را عوض کن.', true);
   else if (NET.role === 'host' && LOBBY.seats.some(x => x.kind === 'open')) setStatus('دوستت باید همین صفحه را باز کند و کد را بزند، یا QR را با دوربین گوشی بخواند. جای خالی موقع شروع حذف می‌شود.');
   else setStatus('');
+  refreshResume();
 }
 function setStatus(t, bad) { $('lobbyStatus').textContent = t; $('lobbyStatus').classList.toggle('bad', !!bad); }
 // the host tells every friend what the lobby looks like, each with their own seat
@@ -3157,24 +3193,83 @@ function startFromLobby(practice) {
   const names = seats.map((x, i) => x.kind === 'bot' ? null : x.kind === 'me' ? 'میزبان ' + TEAM_NAME[i] : 'دوست ' + TEAM_NAME[i]);
   const cfg = seats.map((x, i) => ({ kind: x.kind === 'me' ? 'human' : x.kind, ally: x.ally, diff: x.diff, name: names[i] }));
   newGame({ mapId: LOBBY.mapId, seed: LOBBY.seed, seats: cfg, practice });
-  // each friend learns which seat they play
-  NET.peers.forEach(p => { p.seat = seats.findIndex(x => x.pid === p.id); safeSend(p.conn, { t: 'init', mapId: LOBBY.mapId, seed: LOBBY.seed, seats: cfg, me: p.seat }); });
+  // each friend learns which seat they play; their token keeps that seat if their browser drops out
+  NET.game = { toks: {} };
+  NET.peers.forEach(p => { p.seat = seats.findIndex(x => x.pid === p.id); if (p.seat >= 0) NET.game.toks[p.tok] = p.seat; sendInit(p, false); });
+  NET.awayPause = false; dropSave(); saveT = 3;
   enterGame(practice);
   toast(practice ? 'کارگران را انتخاب کن و روی درختان کلیک کن' : seats.length > 2 ? 'نبرد شروع شد: تو ' + TEAM_NAME[ME] + ' هستی' : 'کارگران را انتخاب کن و روی درختان کلیک کن');
 }
 function backToSetup() {
+  NET.game = null; NET.awayPause = false; netBanner();
   if (NET.role === 'host') { LOBBY.seats.forEach(x => { if (x.kind === 'human' && !NET.peers.some(p => p.id === x.pid)) x.kind = 'open'; }); NET.peers.forEach(p => { p.seat = -1; safeSend(p.conn, { t: 'back' }); }); }
   if (G) G.paused = true;
   $('startOv').hidden = false; lobbyChanged();
 }
 // ---------- host side ----------
+const inBattle = () => !!(G && !G.over && $('startOv').hidden);
 function dropPeer(p, kicked) {
   NET.peers = NET.peers.filter(q => q !== p);
   try { p.conn.close(); } catch (e) { /* closed */ }
   const i = LOBBY.seats.findIndex(x => x.pid === p.id);
+  // in battle the seat stays theirs: the same browser can come back and play on
+  if (inBattle() && p.seat >= 0 && !kicked) {
+    if (!G.paused) { G.paused = true; NET.awayPause = true; $('pauseBtn').textContent = 'ادامه'; }
+    toast('ارتباط دوست ' + TEAM_NAME[p.seat] + ' قطع شد؛ بازی متوقف شد تا برگردد', true);
+    netSend({ t: 'toast', m: 'ارتباط ' + TEAM_NAME[p.seat] + ' قطع شد؛ بازی متوقف شد تا برگردد', w: true });
+    netBanner(); return;
+  }
   if (i >= 0) { if (kicked) LOBBY.seats.splice(i, 1); else { LOBBY.seats[i] = { kind: 'open', ally: LOBBY.seats[i].ally }; } }
-  if (G && !G.over && $('startOv').hidden && p.seat >= 0) { G.paused = true; $('pauseBtn').textContent = 'ادامه'; toast('ارتباط دوست ' + TEAM_NAME[p.seat] + ' قطع شد؛ بازی متوقف شد', true); netSend({ t: 'toast', m: 'یکی از بازیکن‌ها رفت؛ بازی متوقف شد', w: true }); }
   lobbyChanged();
+}
+// seats of the battle whose player is not connected right now
+function awaySeats() {
+  if (NET.role !== 'host' || !NET.game || !inBattle()) return [];
+  return Object.values(NET.game.toks).filter(seat => !NET.peers.some(p => p.seat === seat) && G.players[seat] && !G.players[seat].out);
+}
+// a friend's browser says hello with its token; the same token gets the same seat back
+function admit(p, tok) {
+  p.tok = tok || 'x' + p.id;
+  const old = NET.peers.find(q => q.tok === p.tok);
+  if (old) { NET.peers = NET.peers.filter(q => q !== old); try { old.conn.close(); } catch (e) { /* closed */ } }
+  if (inBattle()) {
+    const seat = NET.game ? NET.game.toks[p.tok] : undefined;
+    if (seat === undefined) { safeSend(p.conn, { t: 'full', m: 'نبرد شروع شده است' }); return; }
+    p.seat = seat; p.ready = true; p.rx = Date.now(); NET.peers.push(p);
+    const st = LOBBY.seats.find(x => x.tok === p.tok); if (st) { st.kind = 'human'; st.pid = p.id; }
+    sendInit(p, true);
+    notifyAll('دوست ' + TEAM_NAME[seat] + ' برگشت');
+    if (NET.awayPause && !awaySeats().length) { NET.awayPause = false; G.paused = false; $('pauseBtn').textContent = 'توقف'; notifyAll('همه برگشتند؛ بازی ادامه پیدا کرد'); }
+    netBanner(); return;
+  }
+  let i = LOBBY.seats.findIndex(x => x.kind === 'human' && x.tok === p.tok);
+  if (i < 0) i = LOBBY.seats.findIndex(x => x.kind === 'open');
+  if (i < 0 && LOBBY.seats.length < MAPS[LOBBY.mapId].seats) { LOBBY.seats.push({ kind: 'open', ally: freeTeam() }); i = LOBBY.seats.length - 1; }
+  if (i < 0) { safeSend(p.conn, { t: 'full', m: 'لابی پر است' }); return; }
+  const back = LOBBY.seats[i].kind === 'human';
+  LOBBY.seats[i] = { kind: 'human', ally: LOBBY.seats[i].ally, pid: p.id, tok: p.tok };
+  p.ready = true; p.rx = Date.now(); NET.peers.push(p);
+  toast(back ? 'دوستت دوباره وصل شد' : 'دوستت وارد لابی شد'); lobbyChanged();
+}
+// the cfg each browser builds the battle from; a friend who comes back also gets the map as it is now
+const battleCfg = () => G.players.map(P => ({ kind: P.kind, ally: P.ally, diff: P.diff, name: P.name }));
+function sendInit(p, back) {
+  const m = { t: 'init', mapId: G.mapId, seed: G.seed, seats: battleCfg(), me: p.seat, code: NET.code };
+  if (back) m.tiles = b64(tiles);
+  safeSend(p.conn, m);
+}
+function hostConn(conn) {
+  const p = { conn, id: ++peerSeq, seat: -1, ready: false, tok: null, rx: Date.now() };
+  conn.onData(m => {
+    p.rx = Date.now();
+    if (m.c === 'hello') { if (!p.ready) admit(p, String(m.tok || '').slice(0, 40)); return; }
+    if (!p.ready || !NET.peers.includes(p) || m.c === 'ping') return;
+    if (m.c === 'ally') { const st = LOBBY.seats.find(x => x.pid === p.id); if (st && $('startOv').hidden === false) { st.ally = Math.max(0, Math.min(3, m.v | 0)); lobbyChanged(); } return; }
+    if (p.seat < 0 || !G) return;
+    if (m.c === 'pause') { if (!G.over) { G.paused = !G.paused; NET.awayPause = false; notifyAll(G.paused ? 'بازی متوقف شد' : 'بازی ادامه پیدا کرد'); $('pauseBtn').textContent = G.paused ? 'ادامه' : 'توقف'; netBanner(); } return; }
+    hostExec(p.seat, m);
+  });
+  conn.onClose(() => { if (NET.peers.includes(p)) dropPeer(p, false); });
 }
 function openLobby() {
   if (window.claude || NET.role === 'host') return;
@@ -3187,25 +3282,19 @@ function openLobby() {
   }
   $('lbCode').textContent = '…'; $('lbLink').textContent = ''; $('lbQr').hidden = true;
   renderSetup(); setStatus('در حال آماده‌سازی لابی…');
-  openHost(NET.code, conn => {
-    const p = { conn, id: ++peerSeq, seat: -1 };
-    // a friend arriving mid-battle, or into a full lobby, is turned away
-    if ($('startOv').hidden && G && !G.over) { safeSend(conn, { t: 'full', m: 'نبرد شروع شده است' }); return; }
-    let i = LOBBY.seats.findIndex(x => x.kind === 'open');
-    if (i < 0 && LOBBY.seats.length < MAPS[LOBBY.mapId].seats) { LOBBY.seats.push({ kind: 'open', ally: freeTeam() }); i = LOBBY.seats.length - 1; }
-    if (i < 0) { safeSend(conn, { t: 'full', m: 'لابی پر است' }); return; }
-    LOBBY.seats[i] = { kind: 'human', ally: LOBBY.seats[i].ally, pid: p.id };
-    NET.peers.push(p);
-    conn.onData(m => {
-      if (m.c === 'hello') return;
-      if (m.c === 'ally') { const st = LOBBY.seats.find(x => x.pid === p.id); if (st && $('startOv').hidden === false) { st.ally = Math.max(0, Math.min(3, m.v | 0)); lobbyChanged(); } return; }
-      if (p.seat < 0 || !G) return;
-      if (m.c === 'pause') { if (!G.over) { G.paused = !G.paused; notifyAll(G.paused ? 'بازی متوقف شد' : 'بازی ادامه پیدا کرد'); $('pauseBtn').textContent = G.paused ? 'ادامه' : 'توقف'; } return; }
-      hostExec(p.seat, m);
-    });
-    conn.onClose(() => { if (NET.peers.includes(p)) dropPeer(p, false); });
-    toast('دوستت وارد لابی شد'); lobbyChanged();
-  }, code => { showInvite(code); renderSetup(); }, err => { if (err === 'retry') { NET.role = 'solo'; openLobby(); return; } closeLobby(); setStatus(err, true); });
+  openHost(NET.code, hostConn, code => { showInvite(code); renderSetup(); }, err => { if (err === 'retry') { NET.role = 'solo'; openLobby(); return; } closeLobby(); setStatus(err, true); });
+}
+// a restored battle opens the same code again, so friends' browsers find it; the matchmaker may hold the old name for a while
+function reopenHost(code, tries = 0) {
+  if (window.claude || !G || G.over) return;
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) { /* closed */ }
+  NET.peer = null; NET.role = 'host'; NET.code = code; NET.hostErr = '';
+  openHost(code, hostConn, () => { NET.hostErr = ''; netBanner(); }, err => {
+    if (NET.role !== 'host' || NET.code !== code) return;
+    if (err === 'retry' && tries < 40) { NET.hostErr = 'در حال باز کردن دوبارهٔ کد بازی…'; netBanner(); setTimeout(() => { if (NET.role === 'host' && NET.code === code) reopenHost(code, tries + 1); }, 3000); return; }
+    NET.hostErr = err === 'retry' ? 'کد بازی هنوز آزاد نشده است' : err; netBanner();
+  });
+  netBanner();
 }
 function showInvite(code) {
   $('lbCode').textContent = code;
@@ -3227,51 +3316,238 @@ function leaveNet() {
   NET.peers.forEach(p => { try { p.conn.close(); } catch (e) { /* closed */ } });
   if (NET.conn) try { NET.conn.close(); } catch (e) { /* closed */ }
   if (NET.peer) try { NET.peer.destroy(); } catch (e) { /* closed */ }
-  NET.peers = []; NET.conn = null; NET.peer = null; NET.role = 'solo'; NET.code = null; ME = 0; LOBBY.you = 0;
+  NET.peers = []; NET.conn = null; NET.peer = null; NET.role = 'solo'; NET.code = null; NET.game = null; NET.awayPause = false; NET.rejoin = null; NET.joined = null; NET.hostErr = ''; ME = 0; LOBBY.you = 0;
+  netBanner();
 }
 $('inviteBtn').addEventListener('click', openLobby);
 $('inviteStop').addEventListener('click', closeLobby);
 // ---------- guest side ----------
-function joinGame(code) {
+// a guest remembers the code and its token, so a refresh (or reopening the page) puts it back in the same seat
+function guestSession() { return ssGet('if-guest') || null; }
+function saveGuestSession(extra) {
+  if (NET.role !== 'guest' || !NET.joined) return;
+  const v = { code: NET.joined.code, tok: NET.joined.tok, at: Date.now(), ...extra };
+  if (G && inBattle()) { v.battle = 1; v.me = ME; v.explored = b64(explored); v.cam = { x: cam.x, y: cam.y, z: cam.z }; v.groups = G.groups; }
+  ssSet('if-guest', v); store.set('if-guest', v);
+}
+function clearGuestSession() { ssDel('if-guest'); store.del('if-guest'); refreshResume(); }
+const newTok = () => Array.from({ length: 16 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+function joinGame(code, opts = {}) {
   code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
   if (code.length !== 5) { setStatus('کد بازی ۵ حرف یا عدد است', true); return; }
+  const sess = guestSession();
+  const tok = opts.tok || (sess && sess.code === code ? sess.tok : newTok());
+  const keepMe = ME, rejoin = opts.rejoin ? NET.rejoin || { code, tok, n: 0 } : null;
   leaveNet();
-  NET.role = 'guest';
-  setStatus('در حال پیوستن به لابی ' + code + '…');
+  NET.role = 'guest'; NET.joined = { code, tok }; NET.rx = Date.now();
+  if (rejoin) { NET.rejoin = rejoin; rejoin.n++; ME = keepMe; netBanner(); }
+  else setStatus('در حال پیوستن به لابی ' + code + '…');
   openGuest(code, conn => {
-    NET.conn = conn;
-    conn.send({ c: 'hello' });
+    NET.conn = conn; NET.rx = Date.now();
+    conn.send({ c: 'hello', tok });
     conn.onData(m => {
+      if (NET.conn !== conn) return;
+      NET.rx = Date.now();
       if (m.t === 'lobby') {
         LOBBY.mapId = MAPS[m.mapId] ? m.mapId : 'frontier'; LOBBY.seed = m.seed | 0; LOBBY.you = m.you | 0;
         LOBBY.seats = (m.seats || []).slice(0, 4).map(x => ({ kind: ['me', 'human', 'bot', 'open'].includes(x.kind) ? x.kind : 'open', ally: x.ally | 0, diff: DIFF[x.diff] ? x.diff : 'normal' }));
+        saveGuestSession();
+        // the host is back in the lobby: the battle we were waiting to rejoin is gone
+        if (NET.rejoin) { NET.rejoin = null; netBanner(); $('endOv').hidden = true; $('startOv').hidden = false; if (G) G.paused = true; }
         if ($('startOv').hidden && !(G && G.over)) return;
         renderSetup();
       } else if (m.t === 'init') {
         ME = m.me | 0;
+        const old = guestSession();
         newGame({ mapId: m.mapId, seed: m.seed | 0, seats: m.seats });
         // the host owns every unit and building: start empty and mirror its snapshots
         G.units = []; G.blds = []; bgrid.fill(null);
-        enterGame(false); $('endOv').hidden = true;
-        toast('نبرد شروع شد: تو ' + TEAM_NAME[ME] + ' هستی');
-      } else if (m.t === 'back') { $('endOv').hidden = true; $('startOv').hidden = false; renderSetup(); }
-      else if (m.t === 's' && G && NET.role === 'guest' && $('startOv').hidden) applySnapshot(m);
+        if (m.tiles) {
+          // coming back mid-battle: the forests and mines already cut down
+          const t = unb64(m.tiles); for (let i = 0; i < N && i < t.length; i++) if (t[i] === GRASS && tiles[i] !== GRASS) { tiles[i] = GRASS; amt[i] = 0; } natureDirty = true;
+          if (old && old.battle && old.code === code && old.me === ME) {
+            if (old.explored) { const e = unb64(old.explored); for (let i = 0; i < N && i < e.length; i++) if (e[i]) explored[i] = 1; }
+            if (old.cam) { cam.x = +old.cam.x || 0; cam.y = +old.cam.y || 0; cam.z = Math.max(0.3, Math.min(3, +old.cam.z || 1)); $('zLevel').textContent = fa(Math.round(cam.z * 100)) + '٪'; clampCam(); }
+            if (old.groups && typeof old.groups === 'object') G.groups = old.groups;
+            computeFog(); updateFogImage();
+          }
+        }
+        const back = !!NET.rejoin; NET.rejoin = null; netBanner();
+        enterGame(false); $('endOv').hidden = true; saveGuestSession(); refreshResume();
+        toast(back || m.tiles ? 'دوباره به نبرد برگشتی: تو ' + TEAM_NAME[ME] + ' هستی' : 'نبرد شروع شد: تو ' + TEAM_NAME[ME] + ' هستی');
+      } else if (m.t === 'back') { $('endOv').hidden = true; $('startOv').hidden = false; saveGuestSession(); renderSetup(); }
+      else if (m.t === 's' && G && NET.role === 'guest' && $('startOv').hidden) { applySnapshot(m); if (G.over) clearGuestSession(); }
       else if (m.t === 'toast') toast(String(m.m).slice(0, 120), !!m.w);
-      else if (m.t === 'full') { leaveNet(); renderSetup(); setStatus(String(m.m || 'لابی پر است').slice(0, 80), true); }
-      else if (m.t === 'kicked') { leaveNet(); backToSolo(); setStatus('میزبان لابی را بست', true); }
+      else if (m.t === 'full') { const was = !!NET.rejoin; leaveNet(); clearGuestSession(); if (was) { backToSolo(); toast('میزبان این نبرد را دیگر ندارد', true); } renderSetup(); setStatus(String(m.m || 'لابی پر است').slice(0, 80), true); }
+      else if (m.t === 'kicked') { leaveNet(); clearGuestSession(); backToSolo(); setStatus('میزبان لابی را بست', true); }
     });
-    conn.onClose(() => { if (NET.role !== 'guest') return; leaveNet(); toast('ارتباط با میزبان قطع شد', true); backToSolo(); setStatus('ارتباط با میزبان قطع شد', true); });
-  }, err => { leaveNet(); renderSetup(); setStatus(err, true); });
+    conn.onClose(() => { if (NET.conn !== conn || NET.role !== 'guest') return; lostHost(); });
+  }, err => {
+    if (rejoin && NET.rejoin === rejoin) { const n = rejoin.n; setTimeout(() => { if (NET.rejoin === rejoin && rejoin.n === n) joinGame(code, { tok, rejoin: true }); }, 3000); return; }
+    leaveNet(); renderSetup(); setStatus(err, true);
+  });
 }
+// the link to the host broke: mid-battle we keep the screen and keep knocking; in the lobby we go back to playing alone
+function lostHost() {
+  if (NET.role !== 'guest') return;
+  if (inBattle() && NET.joined) { G.paused = true; const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); return; }
+  leaveNet(); toast('ارتباط با میزبان قطع شد', true); backToSolo(); setStatus('ارتباط با میزبان قطع شد', true);
+}
+function netBanner() {
+  const el = $('netWait'); if (!el) return;
+  let text = '', btn = '';
+  if (NET.role === 'guest' && NET.rejoin) { text = 'ارتباط با میزبان قطع شد؛ در حال وصل شدن دوباره' + (NET.rejoin.n > 1 ? ' (تلاش ' + fa(NET.rejoin.n) + ')' : '') + '…'; btn = 'ترک نبرد'; }
+  else if (NET.role === 'host' && inBattle()) {
+    const away = awaySeats();
+    if (NET.hostErr) text = NET.hostErr;
+    if (away.length) text = (text ? text + ' · ' : '') + 'منتظر برگشت ' + away.map(i => TEAM_NAME[i]).join('، ') + ' · کد بازی ' + NET.code;
+    if (away.length && G.paused) btn = 'ادامه بدون او';
+  }
+  el.hidden = !text; $('netWaitText').textContent = text; $('netWaitBtn').textContent = btn; $('netWaitBtn').hidden = !btn;
+}
+$('netWaitBtn').addEventListener('click', () => {
+  if (NET.role === 'guest') { leaveNet(); clearGuestSession(); backToSolo(); setStatus('نبرد را ترک کردی'); return; }
+  if (NET.role === 'host' && G && G.paused) { G.paused = false; NET.awayPause = false; $('pauseBtn').textContent = 'توقف'; notifyAll('بازی ادامه پیدا کرد'); netBanner(); }
+});
+// heartbeats: friends say they are still here, the host says it is (its snapshots stop while its tab is hidden)
+setInterval(() => {
+  const now = Date.now();
+  if (NET.role === 'guest' && NET.conn) {
+    safeSend(NET.conn, { c: 'ping' });
+    if (inBattle() && !NET.rejoin && now - (NET.rx || now) > 9000) lostHost();
+    else if (NET.rejoin && now - (NET.rx || now) > 15000) { const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); }
+  } else if (NET.role === 'host') {
+    NET.peers.forEach(p => { if (p.ready) safeSend(p.conn, { t: 'ka' }); });
+    if (inBattle()) NET.peers.filter(p => p.seat >= 0 && now - p.rx > 15000).forEach(p => dropPeer(p, false));
+  }
+  if (NET.role === 'guest' && inBattle()) saveGuestSession();
+}, 2000);
 function backToSolo() {
   LOBBY.seats = [{ kind: 'me', ally: 0 }, { kind: 'bot', ally: 1, diff: 'normal' }]; LOBBY.you = 0;
   if (MAPS[LOBBY.mapId].seats < 2) LOBBY.mapId = 'frontier';
   $('endOv').hidden = true; $('startOv').hidden = false; if (G) G.paused = true; renderSetup();
 }
-$('leaveBtn').addEventListener('click', () => { leaveNet(); backToSolo(); });
+$('leaveBtn').addEventListener('click', () => { leaveNet(); clearGuestSession(); backToSolo(); });
 $('joinBtn').addEventListener('click', () => joinGame($('joinCode').value));
 $('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') joinGame($('joinCode').value); });
 $('lbCopy').addEventListener('click', () => { const t = $('lbLink').textContent; navigator.clipboard?.writeText(t).then(() => toast('لینک کپی شد'), () => { const r = document.createRange(); r.selectNodeContents($('lbLink')); getSelection().removeAllRanges(); getSelection().addRange(r); }); });
+
+// ---------- saving the battle (host or solo) ----------
+// the whole state is one object graph: units point at buildings, ships at their cargo, orders at targets.
+// Every object is written once and later mentions become references, so the same graph comes back.
+function packGraph(root) {
+  const seen = new Map(); let n = 0;
+  const enc = v => {
+    if (typeof v === 'number') return Number.isFinite(v) ? v : { $n: String(v) };
+    if (typeof v === 'function') return undefined;
+    if (v === null || typeof v !== 'object') return v;
+    if (seen.has(v)) return { $r: seen.get(v) };
+    // short lists of plain values (a path step, a rally point) are written as they are
+    if (Array.isArray(v) && v.every(x => x === null || (typeof x !== 'object' && typeof x !== 'function' && (typeof x !== 'number' || Number.isFinite(x))))) return v.slice();
+    const id = n++; seen.set(v, id);
+    if (Array.isArray(v)) return { $a: id, v: v.map(enc) };
+    if (v instanceof Set) return { $s: id, v: [...v].map(enc) };
+    if (ArrayBuffer.isView(v)) return { $t: id, c: v.constructor.name, v: Array.from(v) };
+    const o = {}; for (const k of Object.keys(v)) { const e = enc(v[k]); if (e !== undefined) o[k] = e; }
+    return { $o: id, v: o };
+  };
+  return enc(root);
+}
+const TYPED = { Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array };
+function unpackGraph(data) {
+  const objs = [];
+  const dec = v => {
+    if (v === null || typeof v !== 'object') return v;
+    if (Array.isArray(v)) return v.map(dec);
+    if ('$n' in v) return Number(v.$n);
+    if ('$r' in v) return objs[v.$r];
+    if ('$a' in v) { const a = []; objs[v.$a] = a; for (const x of v.v) a.push(dec(x)); return a; }
+    if ('$s' in v) { const s = new Set(); objs[v.$s] = s; for (const x of v.v) s.add(dec(x)); return s; }
+    if ('$t' in v) { const C = TYPED[v.c], t = C ? C.from(v.v) : v.v.slice(); objs[v.$t] = t; return t; }
+    if ('$o' in v) { const o = {}; objs[v.$o] = o; for (const k in v.v) o[k] = dec(v.v[k]); return o; }
+    return v;
+  };
+  return dec(data);
+}
+// what the screen is doing right now is not saved: selection, a building being placed, effects
+const UI_KEYS = ['sel', 'placing', 'pending', 'drag', 'builders', 'fx', 'fxOut', 'tileLog', 'marks'];
+let saveT = 10, savedAt = -1, saveWarned = false;
+function saveGame() {
+  if (!G || NET.role === 'guest' || G.practice || G.over || !inBattle()) return;
+  if (savedAt === G.t) return;
+  const g = {}; for (const k in G) if (!UI_KEYS.includes(k)) g[k] = G[k];
+  const toks = NET.role === 'host' && NET.game ? NET.game.toks : {};
+  const sv = {
+    v: 1, at: Date.now(), me: ME, net: Object.keys(toks).length ? { code: NET.code, toks } : null,
+    cam: { x: cam.x, y: cam.y, z: cam.z }, tiles: b64(tiles), amt: Array.from(amt, v => Math.round(v * 10) / 10), explored: b64(explored), g: packGraph(g)
+  };
+  const meta = { at: sv.at, map: G.mapId, t: Math.round(G.t), me: ME, players: G.players.map(P => P.bot ? 'bot' : 'human'), friends: !!sv.net, code: sv.net ? sv.net.code : null };
+  let ok = false;
+  try { ok = store.set('if-save', JSON.stringify(sv)) && store.set('if-save-meta', meta); } catch (e) { ok = false; }
+  if (ok) savedAt = G.t;
+  else if (!saveWarned) { saveWarned = true; toast('مرورگر اجازهٔ ذخیرهٔ بازی را نمی‌دهد؛ اگر صفحه بسته شود نبرد از دست می‌رود', true); }
+}
+function dropSave() { store.del('if-save'); store.del('if-save-meta'); savedAt = -1; refreshResume(); }
+function restoreGame(sv) {
+  const g = unpackGraph(sv.g);
+  if (!g || !MAPS[g.mapId] || !Array.isArray(g.units) || !Array.isArray(g.blds) || !Array.isArray(g.players)) throw new Error('bad save');
+  ME = Math.max(0, Math.min(g.players.length - 1, sv.me | 0));
+  genMap(g.seed, g.mapId);
+  G = g; G.sel = new Set(); G.placing = null; G.pending = null; G.drag = null; G.builders = null; G.fx = []; G.fxOut = []; G.tileLog = []; G.marks = [];
+  genGround(g.seed); buildGroundMips();
+  const t = unb64(sv.tiles); if (t.length === N) tiles.set(t);
+  if (Array.isArray(sv.amt) && sv.amt.length === N) amt.set(sv.amt);
+  const e = unb64(sv.explored); if (e.length === N) explored.set(e);
+  bgrid.fill(null);
+  for (const b of G.blds) if (!b.dead) for (let y = b.ty; y < b.ty + b.size; y++) for (let x = b.tx; x < b.tx + b.size; x++) bgrid[y * W + x] = b;
+  if (sv.cam) { cam.z = Math.max(0.3, Math.min(3, +sv.cam.z || 1)); cam.x = +sv.cam.x || 0; cam.y = +sv.cam.y || 0; clampCam(); $('zLevel').textContent = fa(Math.round(cam.z * 100)) + '٪'; }
+  natureDirty = true; hudDirty = true; savedAt = G.t;
+  computeFog(); updateFogImage();
+  // the lobby as it was, so going back after the battle keeps the same players
+  const byTok = {}; if (sv.net) for (const k in sv.net.toks) byTok[sv.net.toks[k]] = k;
+  LOBBY.mapId = G.mapId; LOBBY.seed = G.seed; LOBBY.you = ME;
+  LOBBY.seats = G.players.map((P, i) => P.bot ? { kind: 'bot', ally: P.ally, diff: P.diff } : i === ME ? { kind: 'me', ally: P.ally } : { kind: 'human', ally: P.ally, tok: byTok[i], pid: -1 });
+}
+function resumeSaved() {
+  const sv = store.get('if-save');
+  if (!sv || sv.v !== 1) { dropSave(); setStatus('نبرد ذخیره‌شده پیدا نشد', true); return; }
+  leaveNet();
+  try { restoreGame(sv); } catch (e) { console.error(e); dropSave(); newGame(); renderSetup(); setStatus('نبرد ذخیره‌شده خراب بود و باز نشد', true); return; }
+  enterGame(false); saveT = 10; refreshResume();
+  const toks = sv.net ? sv.net.toks || {} : {};
+  if (Object.keys(toks).length && !window.claude) {
+    NET.game = { toks }; G.paused = true; NET.awayPause = true; $('pauseBtn').textContent = 'ادامه';
+    reopenHost(sv.net.code);
+    toast('نبرد از همان‌جا ادامه پیدا کرد؛ دوستانت با همان کد خودشان برمی‌گردند');
+  } else toast('نبرد از همان‌جا ادامه پیدا کرد');
+}
+const ago = ms => { const m = Math.round(ms / 60000); return m < 1 ? 'همین الان' : m < 60 ? fa(m) + ' دقیقه پیش' : m < 1440 ? fa(Math.round(m / 60)) + ' ساعت پیش' : fa(Math.round(m / 1440)) + ' روز پیش'; };
+const clock = t => fa(Math.floor(t / 60)) + ':' + fa(String(Math.floor(t % 60)).padStart(2, '0'));
+function refreshResume() {
+  const box = $('resumeBox'); if (!box) return;
+  const rows = [];
+  if (NET.role === 'solo') {
+    const m = store.get('if-save-meta');
+    if (m && MAPS[m.map]) rows.push(`<div class="resume-row"><div><b>نبرد نیمه‌تمام · ${MAPS[m.map].name}</b><span>زمان نبرد ${clock(m.t)} · ${fa(m.players.length)} بازیکن${m.friends ? ' · با دوستان، کد ' + m.code : ''} · ذخیره ${ago(Date.now() - m.at)}</span></div><button type="button" class="primary" data-resume="host">ادامهٔ نبرد</button><button type="button" class="tbtn" data-resume="drop">کنار گذاشتن</button></div>`);
+    const g = store.get('if-guest');
+    if (g && g.battle && g.code && !window.claude && Date.now() - g.at < 12 * 3600e3) rows.push(`<div class="resume-row"><div><b>نبرد با دوستت · کد ${g.code}</b><span>آخرین اتصال ${ago(Date.now() - g.at)} · اگر میزبان هنوز در این نبرد باشد، به جای خودت برمی‌گردی</span></div><button type="button" class="primary" data-resume="guest">برگشت به نبرد</button><button type="button" class="tbtn" data-resume="gdrop">کنار گذاشتن</button></div>`);
+  }
+  const html = rows.join('');
+  if (box.innerHTML !== html) box.innerHTML = html;
+  box.hidden = !rows.length;
+}
+$('resumeBox').addEventListener('click', e => {
+  const b = e.target.closest('[data-resume]'); if (!b) return;
+  const k = b.dataset.resume;
+  if (k === 'host') resumeSaved();
+  else if (k === 'drop') { if (b.dataset.sure) dropSave(); else { b.dataset.sure = 1; b.textContent = 'پاک شود؟ دوباره بزن'; } }
+  else if (k === 'guest') { const g = store.get('if-guest'); if (g) { $('joinCode').value = g.code; joinGame(g.code, { tok: g.tok }); } }
+  else if (k === 'gdrop') clearGuestSession();
+});
+// leaving the page (refresh, closing, the phone locking) saves right away
+const saveNow = () => { if (NET.role === 'guest') saveGuestSession(); else saveGame(); };
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
 
 // ---------- main loop ----------
 function update(dt) {
@@ -3300,6 +3576,7 @@ function update(dt) {
 }
 function endGame(win) {
   G.over = true;
+  if (NET.role !== 'guest') dropSave(); netBanner();
   const m = Math.floor(G.t / 60), s = Math.floor(G.t % 60);
   $('endTitle').textContent = win ? 'پیروزی' : 'شکست';
   $('endTitle').style.color = win ? 'var(--brass)' : 'var(--enemy)';
@@ -3318,6 +3595,7 @@ function frame(now) {
     if (NET.role === 'guest') guestTick(dt);
     else if (!G.paused && !G.over) update(dt);
     if (NET.role === 'host' && NET.peers.length && $('startOv').hidden) { NET.sendT -= dt; if (NET.sendT <= 0) { NET.sendT = 0.1; const snap = snapshot(); NET.peers.forEach(p => { if (p.seat >= 0) safeSend(p.conn, snap); }); } }
+    if (NET.role !== 'guest' && inBattle() && !G.practice) { saveT -= dt; if (saveT <= 0) { saveT = 10; saveGame(); } }
   }
   draw(); hudTick(dt); if (G && G.pending) positionConfirm();
   requestAnimationFrame(frame);
@@ -3329,7 +3607,13 @@ renderSetup();
 hudDirty = true;
 requestAnimationFrame(frame);
 // ?debug exposes the game state to the console, for testing
-if (new URLSearchParams(location.search).has('debug')) window.IF = { get G() { return G; }, step(sec) { for (let k = 0; k < sec * 20 && !G.over; k++) update(0.05); }, addUnit, addBuilding, placeValid, execCommand, command, selectOnly, centerOn, findLanding, cam, orderGather, nearestRes, dropDist, get amt() { return amt; }, get ME() { return ME; } };
-{ const j = new URLSearchParams(location.search).get('join'); if (j && !window.claude) { $('joinCode').value = j; joinGame(j); } }
+if (new URLSearchParams(location.search).has('debug')) window.IF = { get G() { return G; }, step(sec) { for (let k = 0; k < sec * 20 && !G.over; k++) update(0.05); }, addUnit, addBuilding, placeValid, execCommand, command, selectOnly, centerOn, findLanding, cam, orderGather, nearestRes, dropDist, get amt() { return amt; }, get ME() { return ME; }, get NET() { return NET; }, frames(n, ms = 50) { const raf = window.requestAnimationFrame; window.requestAnimationFrame = () => 0; try { for (let k = 0; k < n; k++) { last -= ms; frame(performance.now()); } } finally { window.requestAnimationFrame = raf; } } };
+// a refreshed tab goes straight back to its friend's battle; a link to join comes next
+{
+  const j = new URLSearchParams(location.search).get('join'), gs = ssGet('if-guest');
+  if (!window.claude && gs && gs.code && Date.now() - gs.at < 12 * 3600e3 && (!j || j.toUpperCase() === gs.code)) { $('joinCode').value = gs.code; joinGame(gs.code, { tok: gs.tok }); }
+  else if (j && !window.claude) { $('joinCode').value = j; joinGame(j); }
+}
+refreshResume();
 })();
 </script>
