@@ -198,7 +198,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
       <div class="card" id="sel"></div>
       <div class="label" id="cmdLabel">فرمان‌ها</div>
       <div class="cmds" id="cmds"></div>
-      <p class="hint">کلیک: انتخاب و فرمان (حرکت، حمله، برداشت، ساخت) · کلیک راست: رها کردن انتخاب · دوبار کلیک: همهٔ یگان‌های هم‌نوع روی صفحه · فلش‌ها یا لبهٔ صفحه: جابه‌جایی دوربین · چرخ موس، دکمه‌های + و − یا دو انگشت: زوم · دیوار: بکش تا یک ردیف ساخته شود · کماندار روی برج یا دیوار: کلیک راست روی آن · Q تا O: دکمه‌های فرمان · ۱ تا ۵: ارتش‌ها (Ctrl برای ذخیره) · Esc: لغو</p>
+      <p class="hint">کلیک: انتخاب و فرمان (حرکت، حمله، برداشت، ساخت) · کلیک راست: رها کردن انتخاب · دوبار کلیک: همهٔ یگان‌های هم‌نوع روی صفحه · فلش‌ها یا لبهٔ صفحه: جابه‌جایی دوربین · چرخ موس، دکمه‌های + و − یا دو انگشت: زوم · [ و ] یا دکمه‌های ⟲ ⟳: چرخاندن نقشه · دیوار: بکش تا یک ردیف صاف ساخته شود · دروازه روی دیوار خودش هم‌جهت می‌شود (F: چرخاندن دستی) · کماندار روی برج یا دیوار: کلیک راست روی آن · Q تا O: دکمه‌های فرمان · ۱ تا ۵: ارتش‌ها (Ctrl برای ذخیره) · Esc: لغو</p>
     </aside>
     <div class="view" id="view">
       <canvas id="game"></canvas>
@@ -207,6 +207,8 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
         <button type="button" data-zoom="in" aria-label="بزرگ‌نمایی">+</button>
         <span id="zLevel">۱۰۰٪</span>
         <button type="button" data-zoom="out" aria-label="کوچک‌نمایی">−</button>
+        <button type="button" data-rot="1" aria-label="چرخاندن نقشه" title="چرخاندن نقشه ( [ )">⟲</button>
+        <button type="button" data-rot="-1" aria-label="چرخاندن نقشه به سمت دیگر" title="چرخاندن نقشه ( ] )">⟳</button>
       </div>
       <div class="overlay" id="armyOv" hidden>
         <div class="dialog armydlg" role="dialog" aria-labelledby="armyTitle">
@@ -326,7 +328,7 @@ const BDEF = {
   barracks: { name: 'سربازخانه', size: 3, hp: 1100, cost: { wood: 180, stone: 80 }, time: 25, train: ['spear', 'archer', 'knight'], sight: 6, desc: 'آموزش سرباز' },
   tower:    { name: 'برج دیده‌بانی', size: 2, hp: 800, cost: { stone: 140, wood: 40 }, time: 22, range: 7, dmg: 10, cd: 1.3, sight: 9, desc: 'تیراندازی خودکار' },
   wall:     { name: 'دیوار سنگی', size: 1, hp: 600, cost: { stone: 15 }, time: 4, sight: 2, desc: 'سد راه' },
-  gate:     { name: 'دروازه', size: 1, hp: 900, cost: { stone: 35, wood: 20 }, time: 8, sight: 3, desc: 'نیروهای خودی رد می‌شوند، دشمن نه' },
+  gate:     { name: 'دروازه', size: 2, hp: 900, cost: { stone: 35, wood: 20 }, time: 8, sight: 3, desc: 'نیروهای خودی رد می‌شوند، دشمن نه' },
   dock:     { name: 'اسکله', size: 3, hp: 700, cost: { wood: 150 }, time: 18, train: ['transport', 'warship'], sight: 7, desc: 'ساخت کشتی؛ باید کنار آب باشد' }
 };
 const BUILD_LIST = ['house', 'farm', 'store', 'barracks', 'workshop', 'tower', 'wall', 'gate', 'dock', 'hall'];
@@ -571,15 +573,28 @@ function poly(g, pts, fill, stroke, lw) {
   if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw || 1; g.stroke(); }
 }
 function seg(g, a, b, col, lw) { g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.strokeStyle = col; g.lineWidth = lw || 1; g.stroke(); }
+// Sprite drawing helpers. Inside getSprite, P turns local coordinates with the view (P.box, P.nrm, P.d, P.raw);
+// boxes are turned first and then drawn with their two visible faces, so lighting always comes from the same side.
+const seesN = (P, nx, ny) => { if (!P.nrm) return nx > 0 || ny > 0; const [a, b] = P.nrm(nx, ny); return a > 0 || b > 0; };
+const depthIn = P => P.d || ((x, y) => x + y);
 function prism(g, P, x0, y0, x1, y1, z0, z1, top, left, right) {
+  if (P.box) { [x0, y0, x1, y1] = P.box(x0, y0, x1, y1); P = P.raw; }
   poly(g, [P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)], left);
   poly(g, [P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1), P(x1, y0, z1)], right);
   if (top) poly(g, [P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)], top);
   seg(g, P(x1, y1, z0), P(x1, y1, z1), 'rgba(255,255,255,0.12)', 1);
 }
-const lq = (g, P, y, xa, xb, za, zb, fill, stroke) => poly(g, [P(xa, y, za), P(xb, y, za), P(xb, y, zb), P(xa, y, zb)], fill, stroke);
-const rq = (g, P, x, ya, yb, za, zb, fill, stroke) => poly(g, [P(x, ya, za), P(x, yb, za), P(x, yb, zb), P(x, ya, zb)], fill, stroke);
+// decals on the +y face (lq) or the +x face (rq); skipped when that face is turned away
+const lq = (g, P, y, xa, xb, za, zb, fill, stroke) => { if (seesN(P, 0, 1)) poly(g, [P(xa, y, za), P(xb, y, za), P(xb, y, zb), P(xa, y, zb)], fill, stroke); };
+const rq = (g, P, x, ya, yb, za, zb, fill, stroke) => { if (seesN(P, 1, 0)) poly(g, [P(x, ya, za), P(x, yb, za), P(x, yb, zb), P(x, ya, zb)], fill, stroke); };
+// calls fn once for each visible side face of a box: Q(t, z) is a point on that face (t from 0 to 1 along it)
+function faces(g, P, x0, y0, x1, y1, fn) {
+  if (P.box) { [x0, y0, x1, y1] = P.box(x0, y0, x1, y1); P = P.raw; }
+  fn((t, z) => P(x0 + (x1 - x0) * t, y1, z), x1 - x0, 'L');
+  fn((t, z) => P(x1, y0 + (y1 - y0) * t, z), y1 - y0, 'R');
+}
 function courses(g, P, x0, y0, x1, y1, z0, z1, col) {
+  if (P.box) { [x0, y0, x1, y1] = P.box(x0, y0, x1, y1); P = P.raw; }
   for (let z = z0 + 6, k = 0; z < z1; z += 6, k++) {
     seg(g, P(x0, y1, z), P(x1, y1, z), col); seg(g, P(x1, y0, z), P(x1, y1, z), col);
     const off = k % 2 ? 0 : 5;
@@ -587,28 +602,58 @@ function courses(g, P, x0, y0, x1, y1, z0, z1, col) {
     for (let y = y0 + off + 5; y < y1; y += 10) seg(g, P(x1, y, z - 6), P(x1, y, z), col);
   }
 }
+const byDepth = (P, list) => { const d = depthIn(P); return list.sort((a, b) => d((a[0] + a[2]) / 2, (a[1] + a[3]) / 2) - d((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)); };
 function crenel(g, P, x0, y0, x1, y1, z, h, c) {
-  const s = 6, m = (a, b, cc, dd) => prism(g, P, a, b, cc, dd, z, z + h, c[0], c[1], c[2]);
-  for (let x = x0; x < x1 - 2; x += s * 2) m(x, y0, Math.min(x + s, x1), y0 + 4);
-  for (let y = y0 + s * 2; y < y1 - 2; y += s * 2) m(x0, y, x0 + 4, Math.min(y + s, y1));
-  for (let y = y0; y < y1 - 2; y += s * 2) m(x1 - 4, y, x1, Math.min(y + s, y1));
-  for (let x = x0; x < x1 - 2; x += s * 2) m(x, y1 - 4, Math.min(x + s, x1), y1);
+  const s = 6, bx = [];
+  for (let x = x0; x < x1 - 2; x += s * 2) bx.push([x, y0, Math.min(x + s, x1), y0 + 4]);
+  for (let y = y0 + s * 2; y < y1 - 2; y += s * 2) bx.push([x0, y, x0 + 4, Math.min(y + s, y1)]);
+  for (let y = y0; y < y1 - 2; y += s * 2) bx.push([x1 - 4, y, x1, Math.min(y + s, y1)]);
+  for (let x = x0; x < x1 - 2; x += s * 2) bx.push([x, y1 - 4, Math.min(x + s, x1), y1]);
+  byDepth(P, bx).forEach(b => prism(g, P, b[0], b[1], b[2], b[3], z, z + h, c[0], c[1], c[2]));
 }
+// a parapet along each strip [x0, y0, x1, y1] with merlons on a fixed 8 px beat, so neighbouring pieces line up
+function battle(g, P, strips, z, c) {
+  byDepth(P, strips.slice()).forEach(s => prism(g, P, s[0], s[1], s[2], s[3], z, z + 3, c[0], c[1], c[2]));
+  const ms = [];
+  for (const s of strips) {
+    const alongX = s[2] - s[0] >= s[3] - s[1], a0 = alongX ? s[0] : s[1], a1 = alongX ? s[2] : s[3];
+    for (let k = Math.floor(a0 / 8) * 8 + 2; k < a1; k += 8) {
+      const m0 = Math.max(a0, k), m1 = Math.min(a1, k + 4); if (m1 - m0 < 1.5) continue;
+      ms.push(alongX ? [m0, s[1], m1, s[3]] : [s[0], m0, s[2], m1]);
+    }
+  }
+  byDepth(P, ms).forEach(s => prism(g, P, s[0], s[1], s[2], s[3], z + 3, z + 8, c[0], c[1], c[2]));
+}
+// a pitched roof with its ridge along x: far slope, the visible gable end, then the near slope
 function gable(g, P, x0, y0, x1, y1, zt, rh, o, back, front, end, lines) {
-  const ym = (y0 + y1) / 2;
-  poly(g, [P(x0 - o, y0 - o, zt), P(x1 + o, y0 - o, zt), P(x1 + o, ym, zt + rh), P(x0 - o, ym, zt + rh)], back);
-  poly(g, [P(x1, y0, zt), P(x1, y1, zt), P(x1, ym, zt + rh)], end);
-  poly(g, [P(x0 - o, ym, zt + rh), P(x1 + o, ym, zt + rh), P(x1 + o, y1 + o, zt), P(x0 - o, y1 + o, zt)], front);
-  for (let k = 1; k < 6; k++) { const f = k / 6, yy = ym + (y1 + o - ym) * f, zz = zt + rh - rh * f; seg(g, P(x0 - o, yy, zz), P(x1 + o, yy, zz), lines, 1); }
-  for (let x = x0 - o + 6; x < x1 + o; x += 7) seg(g, P(x, ym, zt + rh), P(x, y1 + o, zt), lines, 0.5);
-  seg(g, P(x1 + o, ym, zt + rh), P(x1 + o, y1 + o, zt), 'rgba(0,0,0,0.25)', 1.5);
+  const ym = (y0 + y1) / 2, d = depthIn(P), xm = (x0 + x1) / 2;
+  const slope = (yy, col) => {
+    poly(g, [P(x0 - o, ym, zt + rh), P(x1 + o, ym, zt + rh), P(x1 + o, yy, zt), P(x0 - o, yy, zt)], col);
+    for (let k = 1; k < 6; k++) { const f = k / 6, y = ym + (yy - ym) * f, zz = zt + rh - rh * f; seg(g, P(x0 - o, y, zz), P(x1 + o, y, zz), lines, 1); }
+    for (let x = x0 - o + 6; x < x1 + o; x += 7) seg(g, P(x, ym, zt + rh), P(x, yy, zt), lines, 0.5);
+  };
+  const sl = [[y0 - o, d(xm, y0)], [y1 + o, d(xm, y1)]].sort((a, b) => a[1] - b[1]);
+  slope(sl[0][0], back);
+  for (const [x, n] of [[x1, 1], [x0, -1]]) if (seesN(P, n, 0)) {
+    poly(g, [P(x, y0, zt), P(x, y1, zt), P(x, ym, zt + rh)], end);
+    seg(g, P(x + n * o, ym, zt + rh), P(x + n * o, sl[1][0], zt), 'rgba(0,0,0,0.25)', 1.5);
+  }
+  slope(sl[1][0], front);
   seg(g, P(x0 - o, ym, zt + rh), P(x1 + o, ym, zt + rh), 'rgba(255,240,220,0.35)', 1.5);
 }
+// a pyramid roof: each face is lit by the way it faces on screen
 function hip(g, P, x0, y0, x1, y1, zt, rh, o, cBack, cLeft, cRight, lines) {
-  const A = P((x0 + x1) / 2, (y0 + y1) / 2, zt + rh), a = P(x0 - o, y0 - o, zt), b = P(x1 + o, y0 - o, zt), c = P(x1 + o, y1 + o, zt), d = P(x0 - o, y1 + o, zt);
-  poly(g, [a, b, A], cBack); poly(g, [a, d, A], cBack); poly(g, [d, c, A], cLeft); poly(g, [b, c, A], cRight);
-  if (lines) for (let k = 1; k < 5; k++) { const f = k / 5; seg(g, [d[0] + (A[0] - d[0]) * f, d[1] + (A[1] - d[1]) * f], [c[0] + (A[0] - c[0]) * f, c[1] + (A[1] - c[1]) * f], lines, 1); seg(g, [b[0] + (A[0] - b[0]) * f, b[1] + (A[1] - b[1]) * f], [c[0] + (A[0] - c[0]) * f, c[1] + (A[1] - c[1]) * f], lines, 1); }
-  seg(g, c, A, 'rgba(255,240,220,0.3)', 1.5);
+  const A = P((x0 + x1) / 2, (y0 + y1) / 2, zt + rh), d = depthIn(P);
+  const C = [[x0 - o, y0 - o], [x1 + o, y0 - o], [x1 + o, y1 + o], [x0 - o, y1 + o]], N = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+  const fs = N.map((n, k) => { const a = C[k], b = C[(k + 1) % 4], r = P.nrm ? P.nrm(n[0], n[1]) : n; return { a, b, col: r[1] > 0 ? cLeft : r[0] > 0 ? cRight : cBack, d: d((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) }; });
+  fs.sort((p, q) => p.d - q.d);
+  for (const f of fs) {
+    const a = P(f.a[0], f.a[1], zt), b = P(f.b[0], f.b[1], zt);
+    poly(g, [a, b, A], f.col);
+    if (lines && f.col !== cBack) for (let k = 1; k < 5; k++) { const t = k / 5; seg(g, [a[0] + (A[0] - a[0]) * t, a[1] + (A[1] - a[1]) * t], [b[0] + (A[0] - b[0]) * t, b[1] + (A[1] - b[1]) * t], lines, 1); }
+  }
+  const front = C.reduce((m, c) => d(c[0], c[1]) > d(m[0], m[1]) ? c : m);
+  seg(g, P(front[0], front[1], zt), A, 'rgba(255,240,220,0.3)', 1.5);
 }
 function flag(g, P, x, y, z, h, tc) {
   const b = P(x, y, z), t = P(x, y, z + h);
@@ -616,6 +661,7 @@ function flag(g, P, x, y, z, h, tc) {
   poly(g, [[t[0] + 1, t[1]], [t[0] + 17, t[1] + 3], [t[0] + 13, t[1] + 7], [t[0] + 17, t[1] + 11], [t[0] + 1, t[1] + 9]], tc, shadeHex(tc, -0.35));
 }
 function banner(g, P, y, xa, xb, za, zb, tc) {
+  if (!seesN(P, 0, 1)) return;
   lq(g, P, y, xa, xb, za + 4, zb, tc);
   poly(g, [P(xa, y, za + 4), P((xa + xb) / 2, y, za), P(xb, y, za + 4)], tc);
   lq(g, P, y, xa, xb, zb - 3, zb, shadeHex(tc, -0.4));
@@ -635,14 +681,31 @@ const BSPR = {
 };
 for (const k in HZ) { BSPR[k].maxZ = Math.ceil(BSPR[k].maxZ * HZ[k]); BSPR[k].top = Math.round(BSPR[k].top * HZ[k]); }
 const sprCache = {};
-function getSprite(type, team) {
-  const key = type + team; if (sprCache[key]) return sprCache[key];
-  const s = BDEF[type].size, L = s * T, m = 8, maxZ = BSPR[type].maxZ;
+// o: the gate's direction; mask: which sides of a wall join a neighbour (1 west, 2 east, 4 north, 8 south)
+function getSprite(type, team, o = 0, mask = 0) {
+  const rot = (ROT + o) & 3, key = type + team + '|' + rot + '|' + mask; if (sprCache[key]) return sprCache[key];
+  const s = BDEF[type].size, Lx = type === 'gate' ? 2 * T : s * T, Ly = type === 'gate' ? T : s * T, L = Math.max(Lx, Ly), m = 8, maxZ = BSPR[type].maxZ;
   const c = mkCanvas(2 * L + 2 * m, maxZ + L + 2 * m), g = c.getContext('2d');
-  const hz = HZ[type] || 1, ox = L + m, oy = maxZ + m, P = (x, y, z = 0) => [ox + x - y, oy + (x + y) / 2 - z * hz];
+  // the sprite is anchored at the centre of its footprint
+  const hz = HZ[type] || 1, ox = L + m, oy = maxZ + m + L / 2;
+  const turn = (x, y) => rot === 0 ? [x, y] : rot === 1 ? [-y, x] : rot === 2 ? [-x, -y] : [y, -x];
+  const raw = (x, y, z = 0) => [ox + x - y, oy + (x + y) / 2 - z * hz];
+  const P = (x, y, z = 0) => { const r = turn(x - Lx / 2, y - Ly / 2); return raw(r[0], r[1], z); };
+  P.raw = raw; P.nrm = turn;
+  P.box = (x0, y0, x1, y1) => { const a = turn(x0 - Lx / 2, y0 - Ly / 2), b = turn(x1 - Lx / 2, y1 - Ly / 2); return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])]; };
+  P.d = (x, y) => { const r = turn(x - Lx / 2, y - Ly / 2); return r[0] + r[1]; };
+  const sees = (nx, ny) => seesN(P, nx, ny);
+  const run = parts => parts.sort((p1, p2) => p1.d - p2.d).forEach(pt => pt.f());
   const tc = TEAM[team];
   const STONE_C = { top: '#b3ae9e', left: '#aaa696', right: '#7f7c6e', line: 'rgba(55,52,45,0.35)' };
   const groundShadow = (x0, y0, x1, y1, len) => poly(g, [P(x0, y0), P(x1 + len, y0), P(x1 + len, y1 + len * 0.3), P(x1, y1 + len * 0.3), P(x0, y1)], 'rgba(0,0,0,0.22)');
+  const planks = (x0, y0, x1, y1, z0, z1, step) => faces(g, P, x0, y0, x1, y1, (Q, len, side) => { for (let k = step; k < len; k += step) seg(g, Q(k / len, z0), Q(k / len, z1), side === 'L' ? 'rgba(50,30,15,0.45)' : 'rgba(40,25,10,0.5)'); });
+  // a lean-to roof falling toward +y, with both triangular ends
+  const leanTo = (x0, y0, x1, y1, zHi, zLo, col, endCol) => {
+    poly(g, [P(x0, y0, zHi), P(x1, y0, zHi), P(x1, y1, zLo), P(x0, y1, zLo)], col);
+    for (const [x, n] of [[x1, 1], [x0, -1]]) if (sees(n, 0)) poly(g, [P(x, y0, zHi), P(x, y1, zLo), P(x, y1, zLo - 2), P(x, y0, zHi - 2)], endCol);
+    return col;
+  };
   let smoke = null;
   switch (type) {
     case 'hall': {
@@ -658,7 +721,7 @@ function getSprite(type, team) {
         const a = [A[0] + ux * tr * 0.7, A[1] + uy * tr * 0.7], b = [B[0] - ux * tr * 0.7, B[1] - uy * tr * 0.7];
         const off = (p, s2) => [p[0] + nx * wt / 2 * s2, p[1] + ny * wt / 2 * s2];
         for (const sgn of [1, -1]) {
-          const fx = nx * sgn, fy = ny * sgn; if (fx + fy <= 0) continue;
+          const [fx, fy] = P.nrm(nx * sgn, ny * sgn); if (fx + fy <= 0) continue;
           const t = Math.max(0, Math.min(1, (fy - fx + 1.414) / 2.828)), col = mix('#7f7c6e', '#b8b4a4', t);
           const p0 = off(a, sgn), p1 = off(b, sgn);
           poly(g, [P(p0[0], p0[1], 0), P(p1[0], p1[1], 0), P(p1[0], p1[1], wh), P(p0[0], p0[1], wh)], col);
@@ -704,46 +767,56 @@ function getSprite(type, team) {
       };
       // painter's order: everything sorted by how far forward it sits (x + y)
       const parts = [];
-      V.forEach((v, k) => parts.push({ d: v[0] + v[1], f: () => tower(v, k) }));
-      for (let k = 0; k < 6; k++) { const A = V[k], B = V[(k + 1) % 6]; parts.push({ d: (A[0] + B[0] + A[1] + B[1]) / 2 - 1, f: () => wallSeg(A, B, k === 0) }); }
-      parts.push({ d: 128, f: keep });
+      V.forEach((v, k) => parts.push({ d: P.d(v[0], v[1]), f: () => tower(v, k) }));
+      for (let k = 0; k < 6; k++) { const A = V[k], B = V[(k + 1) % 6]; parts.push({ d: P.d((A[0] + B[0]) / 2, (A[1] + B[1]) / 2) - 1, f: () => wallSeg(A, B, k === 0) }); }
+      parts.push({ d: P.d(64, 64), f: keep });
       parts.sort((p1, p2) => p1.d - p2.d).forEach(pt => pt.f());
       break;
     }
     case 'workshop': {
       poly(g, [P(2, 2), P(L - 2, 2), P(L - 2, L - 2), P(2, L - 2)], '#8c7552');
       groundShadow(8, 10, 80, 64, 20);
-      prism(g, P, 8, 10, 80, 64, 0, 30, null, '#a37c4d', '#7d5d38');
-      for (let x = 14; x < 80; x += 6) seg(g, P(x, 64, 0), P(x, 64, 30), 'rgba(50,30,15,0.45)');
-      for (let y = 16; y < 64; y += 6) seg(g, P(80, y, 0), P(80, y, 30), 'rgba(40,25,10,0.5)');
-      lq(g, P, 64, 30, 58, 0, 24, '#3a2818', '#2a1d13'); seg(g, P(44, 64, 0), P(44, 64, 24), '#6b4a2a', 2);
-      gable(g, P, 8, 10, 80, 64, 30, 20, 4, '#5b4126', '#7a5a34', '#9a7448', 'rgba(30,18,8,0.45)');
-      // a half-built catapult and a log in the yard
-      seg(g, P(20, 80, 2), P(48, 80, 2), '#6b4a2a', 5); seg(g, P(20, 88, 2), P(48, 88, 2), '#6b4a2a', 5);
-      seg(g, P(34, 84, 4), P(52, 84, 30), '#5b3f26', 4);
-      for (const [x, y] of [[22, 78], [46, 78], [22, 90], [46, 90]]) { const c = P(x, y, 4); g.fillStyle = '#4a3220'; g.beginPath(); g.ellipse(c[0], c[1], 4, 4, 0, 0, 7); g.fill(); }
-      seg(g, P(60, 78, 3), P(88, 78, 3), '#7a5534', 7);
-      flag(g, P, 10, 12, 50, 22, tc);
+      run([
+        { d: P.d(44, 37), f: () => {
+          prism(g, P, 8, 10, 80, 64, 0, 30, null, '#a37c4d', '#7d5d38');
+          planks(8, 10, 80, 64, 0, 30, 6);
+          lq(g, P, 64, 30, 58, 0, 24, '#3a2818', '#2a1d13'); if (sees(0, 1)) seg(g, P(44, 64, 0), P(44, 64, 24), '#6b4a2a', 2);
+          gable(g, P, 8, 10, 80, 64, 30, 20, 4, '#5b4126', '#7a5a34', '#9a7448', 'rgba(30,18,8,0.45)');
+          flag(g, P, 10, 12, 50, 22, tc);
+        } },
+        // a half-built catapult and a log in the yard
+        { d: P.d(34, 84), f: () => {
+          seg(g, P(20, 80, 2), P(48, 80, 2), '#6b4a2a', 5); seg(g, P(20, 88, 2), P(48, 88, 2), '#6b4a2a', 5);
+          seg(g, P(34, 84, 4), P(52, 84, 30), '#5b3f26', 4);
+          for (const [x, y] of [[22, 78], [46, 78], [22, 90], [46, 90]]) { const c = P(x, y, 4); g.fillStyle = '#4a3220'; g.beginPath(); g.ellipse(c[0], c[1], 4, 4, 0, 0, 7); g.fill(); }
+        } },
+        { d: P.d(74, 78), f: () => seg(g, P(60, 78, 3), P(88, 78, 3), '#7a5534', 7) }
+      ]);
       break;
     }
     case 'gate': {
-      groundShadow(0, 0, 32, 32, 12);
-      prism(g, P, 0, 0, 32, 32, 0, 30, '#ada999', '#b0ac9c', '#837f70'); courses(g, P, 0, 0, 32, 32, 0, 30, 'rgba(55,52,45,0.35)');
-      crenel(g, P, 0, 0, 32, 32, 30, 6, ['#c3bfb0', '#aeaa9b', '#86836f']);
-      poly(g, [P(8, 32, 0), P(24, 32, 0), P(24, 32, 18), P(20, 32, 23), P(12, 32, 23), P(8, 32, 18)], '#5a3d22');
-      seg(g, P(16, 32, 0), P(16, 32, 23), '#2a1d13', 1.2);
-      for (const z of [6, 14]) seg(g, P(8, 32, z), P(24, 32, z), '#2e2a24', 1.4);
-      poly(g, [P(32, 8, 0), P(32, 24, 0), P(32, 24, 18), P(32, 20, 23), P(32, 12, 23), P(32, 8, 18)], '#4a3220');
-      lq(g, P, 32, 2, 6, 10, 26, tc, shadeHex(tc, -0.4)); lq(g, P, 32, 26, 30, 10, 26, tc, shadeHex(tc, -0.4));
+      // a gatehouse two tiles long, a little thicker and taller than the curtain wall it sits in
+      groundShadow(0, 3, 64, 29, 12);
+      prism(g, P, 0, 3, 64, 29, 0, 30, '#ada999', '#b0ac9c', '#837f70'); courses(g, P, 0, 3, 64, 29, 0, 30, 'rgba(55,52,45,0.35)');
+      for (const [y, n] of [[29, 1], [3, -1]]) if (sees(0, n)) {
+        poly(g, [P(20, y, 0), P(44, y, 0), P(44, y, 19), P(39, y, 26.5), P(25, y, 26.5), P(20, y, 19)], '#c9c5b6');
+        poly(g, [P(22, y, 0), P(42, y, 0), P(42, y, 18), P(38, y, 24), P(26, y, 24), P(22, y, 18)], '#5a3d22');
+        seg(g, P(32, y, 0), P(32, y, 24), '#2a1d13', 1.2);
+        for (const z of [6, 14]) seg(g, P(22, y, z), P(42, y, z), '#2e2a24', 1.4);
+        for (const x of [7, 52]) poly(g, [P(x, y, 27), P(x + 5, y, 27), P(x + 5, y, 12), P(x + 2.5, y, 9), P(x, y, 12)], tc, shadeHex(tc, -0.4));
+      }
+      battle(g, P, [[0, 3, 64, 7], [0, 25, 64, 29]], 30, ['#c3bfb0', '#aeaa9b', '#86836f']);
       break;
     }
     case 'house': {
       poly(g, [P(4, 4), P(60, 4), P(60, 60), P(4, 60)], 'rgba(120,100,70,0.45)');
       groundShadow(10, 12, 54, 52, 16);
       prism(g, P, 10, 12, 54, 52, 0, 24, null, '#e3d6b3', '#bcab86');
-      for (const x of [10, 32, 54]) seg(g, P(x, 52, 0), P(x, 52, 24), '#5a4430', 2);
-      for (const y of [12, 32, 52]) seg(g, P(54, y, 0), P(54, y, 24), '#4a3828', 2);
-      for (const z of [0, 12, 24]) { seg(g, P(10, 52, z), P(54, 52, z), '#5a4430', 1.5); seg(g, P(54, 12, z), P(54, 52, z), '#4a3828', 1.5); }
+      faces(g, P, 10, 12, 54, 52, (Q, len, side) => {
+        const col = side === 'L' ? '#5a4430' : '#4a3828';
+        for (const t of [0, 0.5, 1]) seg(g, Q(t, 0), Q(t, 24), col, 2);
+        for (const z of [0, 12, 24]) seg(g, Q(0, z), Q(1, z), col, 1.5);
+      });
       lq(g, P, 52, 36, 44, 0, 14, '#5a3d26', '#2a1d13');
       lq(g, P, 52, 16, 23, 14, 20, '#2c2219', '#f0e4c4'); rq(g, P, 54, 26, 33, 14, 20, '#241c15', '#c7b893');
       banner(g, P, 52, 26, 30, 3, 20, tc);
@@ -772,40 +845,55 @@ function getSprite(type, team) {
     case 'store': {
       prism(g, P, 3, 3, 61, 61, 0, 3, '#8a6a45', '#7a5c3a', '#5f4730');
       groundShadow(8, 8, 40, 40, 14);
-      prism(g, P, 8, 8, 40, 40, 3, 26, null, '#a37c4d', '#7d5d38');
-      for (let x = 12; x < 40; x += 5) seg(g, P(x, 40, 3), P(x, 40, 26), 'rgba(50,30,15,0.45)');
-      for (let y = 12; y < 40; y += 5) seg(g, P(40, y, 3), P(40, y, 26), 'rgba(40,25,10,0.5)');
-      lq(g, P, 40, 18, 30, 3, 20, '#3a2818', '#2a1d13');
-      poly(g, [P(5, 5, 36), P(43, 5, 36), P(43, 43, 24), P(5, 43, 24)], '#6e4f2f');
-      for (let x = 9; x < 43; x += 5) seg(g, P(x, 5, 36), P(x, 43, 24), 'rgba(30,18,8,0.5)');
-      poly(g, [P(43, 5, 36), P(43, 43, 24), P(43, 43, 22), P(43, 5, 34)], '#4e3720');
-      const crate = (x, y, z, s2) => { prism(g, P, x, y, x + s2, y + s2, z, z + s2, '#c79c63', '#b08657', '#8a6a44'); seg(g, P(x, y + s2, z), P(x + s2, y + s2, z + s2), '#6e5232'); seg(g, P(x + s2, y, z), P(x + s2, y + s2, z + s2), '#5e4428'); };
-      crate(44, 12, 3, 10); crate(46, 26, 3, 9); crate(44, 12, 13, 9);
-      for (const [x, y] of [[14, 48], [24, 52]]) {
+      const crate = (x, y, z, s2) => ({ d: P.d(x + s2 / 2, y + s2 / 2) + z * 0.01, f: () => {
+        prism(g, P, x, y, x + s2, y + s2, z, z + s2, '#c79c63', '#b08657', '#8a6a44');
+        faces(g, P, x, y, x + s2, y + s2, (Q, len, side) => seg(g, Q(0, z), Q(1, z + s2), side === 'L' ? '#6e5232' : '#5e4428'));
+      } });
+      const barrel = (x, y) => ({ d: P.d(x, y), f: () => {
         const b0 = P(x, y, 3), b1 = P(x, y, 15);
         g.fillStyle = '#7d5530'; g.fillRect(b0[0] - 5, b1[1], 10, b0[1] - b1[1]);
         g.fillStyle = '#9a6b3c'; g.beginPath(); g.ellipse(b1[0], b1[1], 5, 2.5, 0, 0, 7); g.fill();
         g.strokeStyle = '#3d3a35'; g.lineWidth = 1; g.beginPath(); g.moveTo(b0[0] - 5, b0[1] - 4); g.lineTo(b0[0] + 5, b0[1] - 4); g.moveTo(b0[0] - 5, b1[1] + 4); g.lineTo(b0[0] + 5, b1[1] + 4); g.stroke();
-      }
-      for (let k = 0; k < 3; k++) { const a = P(42, 46 + k * 4, 3 + (k === 1 ? 4 : 0)), b = P(58, 46 + k * 4, 3 + (k === 1 ? 4 : 0)); seg(g, a, b, '#6b4a2a', 5); g.fillStyle = '#c49a6c'; g.beginPath(); g.ellipse(b[0], b[1], 2.2, 2.6, 0, 0, 7); g.fill(); }
-      flag(g, P, 8, 8, 36, 24, tc);
+      } });
+      run([
+        { d: P.d(24, 24), f: () => {
+          prism(g, P, 8, 8, 40, 40, 3, 26, null, '#a37c4d', '#7d5d38');
+          planks(8, 8, 40, 40, 3, 26, 5);
+          lq(g, P, 40, 18, 30, 3, 20, '#3a2818', '#2a1d13');
+          leanTo(5, 5, 43, 43, 36, 24, '#6e4f2f', '#4e3720');
+          for (let x = 9; x < 43; x += 5) seg(g, P(x, 5, 36), P(x, 43, 24), 'rgba(30,18,8,0.5)');
+          flag(g, P, 8, 8, 36, 24, tc);
+        } },
+        crate(44, 12, 3, 10), crate(46, 26, 3, 9), crate(44, 12, 13, 9), barrel(14, 48), barrel(24, 52),
+        { d: P.d(50, 50), f: () => { for (let k = 0; k < 3; k++) { const a = P(42, 46 + k * 4, 3 + (k === 1 ? 4 : 0)), b = P(58, 46 + k * 4, 3 + (k === 1 ? 4 : 0)); seg(g, a, b, '#6b4a2a', 5); g.fillStyle = '#c49a6c'; g.beginPath(); g.ellipse(b[0], b[1], 2.2, 2.6, 0, 0, 7); g.fill(); } } }
+      ]);
       break;
     }
     case 'barracks': {
       poly(g, [P(2, 2), P(94, 2), P(94, 94), P(2, 94)], '#9a8b64');
       groundShadow(8, 10, 88, 58, 22);
-      prism(g, P, 8, 10, 88, 58, 0, 36, null, STONE_C.left, STONE_C.right); courses(g, P, 8, 10, 88, 58, 0, 36, STONE_C.line);
-      lq(g, P, 58, 40, 54, 0, 20, '#4e3826', '#2a1d13'); seg(g, P(47, 58, 0), P(47, 58, 20), '#2a1d13');
-      for (const x of [16, 62, 76]) lq(g, P, 58, x, x + 3, 16, 27, '#2a2620');
-      for (const y of [20, 34, 46]) rq(g, P, 88, y, y + 3, 16, 27, '#211e19');
-      banner(g, P, 58, 26, 33, 8, 34, tc); banner(g, P, 58, 62, 69, 8, 34, tc);
-      gable(g, P, 8, 10, 88, 58, 36, 22, 4, '#3f4247', '#5f646b', '#9d998a', 'rgba(20,20,25,0.4)');
-      for (let k = 0; k < 4; k++) { const a = P(18 + k * 5, 78, 0), b = P(18 + k * 5, 78, 26); seg(g, a, b, '#6b4a2a', 1.5); seg(g, [b[0] - 1, b[1] - 2], [b[0] + 1, b[1] + 3], '#d0d4d8', 2); }
-      seg(g, P(14, 78, 14), P(38, 78, 14), '#5b3f26', 2.5);
-      const dm = P(66, 80, 0); seg(g, dm, [dm[0], dm[1] - 24], '#6b4a2a', 2.5); seg(g, [dm[0] - 8, dm[1] - 17], [dm[0] + 8, dm[1] - 17], '#6b4a2a', 2);
-      g.fillStyle = '#c9a35a'; g.beginPath(); g.ellipse(dm[0], dm[1] - 13, 5, 7, 0, 0, 7); g.fill(); g.beginPath(); g.arc(dm[0], dm[1] - 25, 4, 0, 7); g.fill();
-      const tg = P(84, 74, 0); seg(g, tg, [tg[0], tg[1] - 10], '#6b4a2a', 2);
-      for (const [r, col] of [[9, '#e8dcc0'], [6, '#c0392b'], [3, '#e8dcc0']]) { g.fillStyle = col; g.beginPath(); g.ellipse(tg[0], tg[1] - 18, r * 0.7, r, 0, 0, 7); g.fill(); }
+      run([
+        { d: P.d(48, 34), f: () => {
+          prism(g, P, 8, 10, 88, 58, 0, 36, null, STONE_C.left, STONE_C.right); courses(g, P, 8, 10, 88, 58, 0, 36, STONE_C.line);
+          lq(g, P, 58, 40, 54, 0, 20, '#4e3826', '#2a1d13'); if (sees(0, 1)) seg(g, P(47, 58, 0), P(47, 58, 20), '#2a1d13');
+          for (const x of [16, 62, 76]) lq(g, P, 58, x, x + 3, 16, 27, '#2a2620');
+          for (const y of [20, 34, 46]) rq(g, P, 88, y, y + 3, 16, 27, '#211e19');
+          banner(g, P, 58, 26, 33, 8, 34, tc); banner(g, P, 58, 62, 69, 8, 34, tc);
+          gable(g, P, 8, 10, 88, 58, 36, 22, 4, '#3f4247', '#5f646b', '#9d998a', 'rgba(20,20,25,0.4)');
+        } },
+        { d: P.d(26, 78), f: () => {
+          for (let k = 0; k < 4; k++) { const a = P(18 + k * 5, 78, 0), b = P(18 + k * 5, 78, 26); seg(g, a, b, '#6b4a2a', 1.5); seg(g, [b[0] - 1, b[1] - 2], [b[0] + 1, b[1] + 3], '#d0d4d8', 2); }
+          seg(g, P(14, 78, 14), P(38, 78, 14), '#5b3f26', 2.5);
+        } },
+        { d: P.d(66, 80), f: () => {
+          const dm = P(66, 80, 0); seg(g, dm, [dm[0], dm[1] - 24], '#6b4a2a', 2.5); seg(g, [dm[0] - 8, dm[1] - 17], [dm[0] + 8, dm[1] - 17], '#6b4a2a', 2);
+          g.fillStyle = '#c9a35a'; g.beginPath(); g.ellipse(dm[0], dm[1] - 13, 5, 7, 0, 0, 7); g.fill(); g.beginPath(); g.arc(dm[0], dm[1] - 25, 4, 0, 7); g.fill();
+        } },
+        { d: P.d(84, 74), f: () => {
+          const tg = P(84, 74, 0); seg(g, tg, [tg[0], tg[1] - 10], '#6b4a2a', 2);
+          for (const [r, col] of [[9, '#e8dcc0'], [6, '#c0392b'], [3, '#e8dcc0']]) { g.fillStyle = col; g.beginPath(); g.ellipse(tg[0], tg[1] - 18, r * 0.7, r, 0, 0, 7); g.fill(); }
+        } }
+      ]);
       break;
     }
     case 'tower': {
@@ -816,7 +904,7 @@ function getSprite(type, team) {
       rq(g, P, 50, 30, 33, 46, 58, '#211e19');
       lq(g, P, 50, 26, 38, 0, 16, '#4e3826', '#2a1d13');
       prism(g, P, 10, 10, 54, 54, 88, 94, '#a19d8e', '#a9a596', '#7f7c6c');
-      for (let k = 0; k < 4; k++) { seg(g, P(14 + k * 10, 50, 88), P(12 + k * 10, 54, 84), '#6e6a5e', 2); }
+      faces(g, P, 14, 14, 50, 50, Q => { for (let k = 0; k < 4; k++) { const a = Q((k + 0.5) / 4, 88), b = Q((k + 0.4) / 4, 84); seg(g, [a[0], a[1]], [b[0], b[1] + 2], '#6e6a5e', 2); } });
       crenel(g, P, 10, 10, 54, 54, 94, 7, ['#bdb9aa', '#aaa697', '#827f6f']);
       flag(g, P, 32, 32, 94, 34, tc);
       break;
@@ -825,18 +913,40 @@ function getSprite(type, team) {
       poly(g, [P(0, 0), P(L, 0), P(L, L), P(0, L)], '#7a5c3a');
       for (let k = 4; k < L; k += 6) seg(g, P(k, 0, 0), P(k, L, 0), 'rgba(40,25,10,0.45)', 1);
       for (const [x, y] of [[2, 2], [L - 2, 2], [2, L - 2], [L - 2, L - 2], [L / 2, L - 2], [L - 2, L / 2]]) { const a = P(x, y, -6), b = P(x, y, 6); seg(g, a, b, '#4a3220', 3); }
-      prism(g, P, 6, 6, 26, 26, 0, 18, null, '#a37c4d', '#7d5d38');
-      poly(g, [P(4, 4, 26), P(28, 4, 26), P(28, 28, 18), P(4, 28, 18)], '#6e4f2f');
-      const m = P(46, 18, 0), mt = P(46, 18, 44); seg(g, m, mt, '#4a3220', 3); seg(g, mt, P(30, 40, 38), '#4a3220', 2); seg(g, P(30, 40, 38), P(30, 40, 16), '#c9c0a8', 1);
-      prism(g, P, 40, 40, 50, 50, 0, 9, '#c79c63', '#b08657', '#8a6a44');
-      flag(g, P, 8, 8, 26, 24, tc);
+      run([
+        { d: P.d(16, 16), f: () => {
+          prism(g, P, 6, 6, 26, 26, 0, 18, null, '#a37c4d', '#7d5d38');
+          leanTo(4, 4, 28, 28, 26, 18, '#6e4f2f', '#4e3720');
+          flag(g, P, 8, 8, 26, 24, tc);
+        } },
+        { d: P.d(46, 18), f: () => { const m = P(46, 18, 0), mt = P(46, 18, 44); seg(g, m, mt, '#4a3220', 3); seg(g, mt, P(30, 40, 38), '#4a3220', 2); seg(g, P(30, 40, 38), P(30, 40, 16), '#c9c0a8', 1); } },
+        { d: P.d(45, 45), f: () => prism(g, P, 40, 40, 50, 50, 0, 9, '#c79c63', '#b08657', '#8a6a44') }
+      ]);
       break;
     }
     case 'wall': {
-      groundShadow(0, 0, 32, 32, 12);
-      prism(g, P, 0, 0, 32, 32, 0, 22, '#a8a495', STONE_C.left, STONE_C.right); courses(g, P, 0, 0, 32, 32, 0, 22, STONE_C.line);
-      prism(g, P, 0, 0, 32, 4, 22, 28, '#bdb9aa', '#aaa697', '#827f6f'); prism(g, P, 0, 28, 32, 32, 22, 28, '#bdb9aa', '#aaa697', '#827f6f');
-      lq(g, P, 32, 12, 20, 8, 15, tc, shadeHex(tc, -0.4));
+      // a curtain wall 22 px thick; it reaches out to each joined neighbour, and the parapet runs along its
+      // outer and inner edges only (never across the walk), turning the corner wherever the wall turns
+      const B = [0, 5, 27, 32], cells = [[1, 1]];
+      if (mask & 1) cells.push([0, 1]); if (mask & 2) cells.push([2, 1]); if (mask & 4) cells.push([1, 0]); if (mask & 8) cells.push([1, 2]);
+      const box = ([i, j]) => [B[i], B[j], B[i + 1], B[j + 1]], inS = (i, j) => cells.some(q => q[0] === i && q[1] === j);
+      for (const q of cells) { const b = box(q); groundShadow(b[0], b[1], b[2], b[3], 8); }
+      byDepth(P, cells.map(box)).forEach(b => { prism(g, P, b[0], b[1], b[2], b[3], 0, 22, '#a8a495', STONE_C.left, STONE_C.right); courses(g, P, b[0], b[1], b[2], b[3], 0, 22, STONE_C.line); });
+      const strips = [];
+      for (const q of cells) for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        const ni = q[0] + dx, nj = q[1] + dy;
+        if (ni < 0 || ni > 2 || nj < 0 || nj > 2 || inS(ni, nj)) continue;
+        const [x0, y0, x1, y1] = box(q);
+        strips.push(dx < 0 ? [x0, y0, x0 + 4, y1] : dx > 0 ? [x1 - 4, y0, x1, y1] : dy < 0 ? [x0, y0, x1, y0 + 4] : [x0, y1 - 4, x1, y1]);
+      }
+      // the owner's colour on the open faces of a wall's end or a lone pillar
+      const joins = (mask & 1) + (mask >> 1 & 1) + (mask >> 2 & 1) + (mask >> 3 & 1);
+      if (joins < 2) for (const [dx, dy, bit] of [[0, 1, 8], [1, 0, 2], [0, -1, 4], [-1, 0, 1]]) if (!(mask & bit) && sees(dx, dy)) {
+        const f = dy ? (dy > 0 ? 27 : 5) : (dx > 0 ? 27 : 5);
+        const q = dy ? [P(12, f, 15), P(20, f, 15), P(20, f, 8), P(12, f, 8)] : [P(f, 12, 15), P(f, 20, 15), P(f, 20, 8), P(f, 12, 8)];
+        poly(g, q, tc, shadeHex(tc, -0.4));
+      }
+      battle(g, P, strips, 22, ['#bdb9aa', '#aaa697', '#827f6f']);
       break;
     }
   }
@@ -925,10 +1035,10 @@ function addUnit(type, team, x, y) {
   const u = { id: G.nextId++, kind: 'u', type, team, x, y, hp: d.hp, maxhp: d.hp, order: null, path: null, pi: 0, cd: 0, face: team ? Math.PI : 0, carry: { res: null, amt: 0 }, gt: 0, scan: Math.random() * 0.5, rp: 0 };
   G.units.push(u); return u;
 }
-function addBuilding(type, team, tx, ty, built) {
-  const d = BDEF[type];
-  const b = { id: G.nextId++, kind: 'b', type, team, tx, ty, size: d.size, hp: built ? d.hp : Math.max(1, d.hp * 0.1), maxhp: d.hp, built, progress: built ? 1 : 0, queue: [], qt: 0, rally: null, cd: 0 };
-  for (let y = ty; y < ty + d.size; y++) for (let x = tx; x < tx + d.size; x++) {
+function addBuilding(type, team, tx, ty, built, o = 0) {
+  const d = BDEF[type], [fw, fh] = dimsOf(type, o);
+  const b = { id: G.nextId++, kind: 'b', type, team, tx, ty, size: d.size, w: fw, h: fh, o: type === 'gate' && o ? 1 : 0, hp: built ? d.hp : Math.max(1, d.hp * 0.1), maxhp: d.hp, built, progress: built ? 1 : 0, queue: [], qt: 0, rally: null, cd: 0 };
+  for (let y = ty; y < ty + fh; y++) for (let x = tx; x < tx + fw; x++) {
     const i = y * W + x;
     if (tiles[i] !== GRASS) { tiles[i] = GRASS; amt[i] = 0; logTile(i); }
     bgrid[i] = b;
@@ -938,11 +1048,14 @@ function addBuilding(type, team, tx, ty, built) {
   for (const u of G.units) { if (bgrid[tileOf(u.y) * W + tileOf(u.x)] === b) unstick(u); }
   return b;
 }
-const bcx = b => (b.tx + b.size / 2) * T, bcy = b => (b.ty + b.size / 2) * T;
+// footprint in tiles: every building is square except the gate, which is 2 x 1 along its wall (o = 1: along y)
+const dimsOf = (type, o) => type === 'gate' ? (o ? [1, 2] : [2, 1]) : [BDEF[type].size, BDEF[type].size];
+const fpW = b => b.w || b.size, fpH = b => b.h || b.size;
+const bcx = b => (b.tx + fpW(b) / 2) * T, bcy = b => (b.ty + fpH(b) / 2) * T;
 const posX = e => e.kind === 'u' ? e.x : bcx(e), posY = e => e.kind === 'u' ? e.y : bcy(e);
-function distRect(x, y, b) { const dx = Math.max(b.tx * T - x, 0, x - (b.tx + b.size) * T), dy = Math.max(b.ty * T - y, 0, y - (b.ty + b.size) * T); return Math.hypot(dx, dy); }
+function distRect(x, y, b) { const dx = Math.max(b.tx * T - x, 0, x - (b.tx + fpW(b)) * T), dy = Math.max(b.ty * T - y, 0, y - (b.ty + fpH(b)) * T); return Math.hypot(dx, dy); }
 function distTo(x, y, t) { return t.kind === 'u' ? Math.hypot(x - t.x, y - t.y) - UDEF[t.type].r : distRect(x, y, t); }
-function adjBld(u, b) { const x = tileOf(u.x), y = tileOf(u.y); return x >= b.tx - 1 && x <= b.tx + b.size && y >= b.ty - 1 && y <= b.ty + b.size; }
+function adjBld(u, b) { const x = tileOf(u.x), y = tileOf(u.y); return x >= b.tx - 1 && x <= b.tx + fpW(b) && y >= b.ty - 1 && y <= b.ty + fpH(b); }
 function adjTile(u, rx, ry) { return Math.abs(tileOf(u.x) - rx) <= 1 && Math.abs(tileOf(u.y) - ry) <= 1; }
 function nearFree(tx, ty, maxR = 8, pass = passable) {
   for (let r = 0; r <= maxR; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
@@ -977,7 +1090,7 @@ function claimCount(xx, yy, self) {
 function dropDist(team, x, y) {
   let bd = Infinity;
   for (const b of G.blds) if (b.team === team && b.built && BDEF[b.type].drop && !b.dead) {
-    const dx = Math.max(b.tx - x, 0, x - (b.tx + b.size - 1)), dy = Math.max(b.ty - y, 0, y - (b.ty + b.size - 1));
+    const dx = Math.max(b.tx - x, 0, x - (b.tx + fpW(b) - 1)), dy = Math.max(b.ty - y, 0, y - (b.ty + fpH(b) - 1));
     const d = Math.hypot(dx, dy); if (d < bd) bd = d;
   }
   return bd;
@@ -1007,7 +1120,7 @@ const FARM_RATE = 0.65;
 const GAR = {
   tower: { cap: 4, z: Math.round(94 * HZ.tower), rng: 2.5, atk: 1.6, def: 0.35, slots: [[22, 22], [42, 22], [22, 42], [42, 42]] },
   wall: { cap: 1, z: Math.round(22 * HZ.wall), rng: 1.5, atk: 1.3, def: 0.5, slots: [[16, 16]] },
-  gate: { cap: 1, z: Math.round(30 * HZ.gate), rng: 1.5, atk: 1.35, def: 0.45, slots: [[16, 16]] },
+  gate: { cap: 2, z: Math.round(30 * HZ.gate), rng: 1.5, atk: 1.35, def: 0.45, slots: [[16, 16], [48, 16]] },
   hall: { cap: 6, z: Math.round(58 * HZ.hall), rng: 2.5, atk: 1.6, def: 0.3, slots: [15, 75, 135, 195, 255, 315].map(a => [Math.round(64 + 54 * Math.cos(a * Math.PI / 180)), Math.round(64 + 54 * Math.sin(a * Math.PI / 180))]) }
 };
 const farmerOf = b => G.units.find(u => !u.dead && u.order && u.order.k === 'farm' && u.order.b === b);
@@ -1020,11 +1133,11 @@ function nearestUnfinished(u, maxTiles) {
 function enterGarrison(u, b) {
   const used = garrisonOf(b).map(x => x.slot), g = GAR[b.type]; let k = 0; while (used.includes(k)) k++;
   if (k >= g.cap) { u.order = null; return false; }
-  u.gar = b; u.slot = k; u.x = b.tx * T + g.slots[k][0]; u.y = b.ty * T + g.slots[k][1]; u.z = g.z; u.order = null; u.path = null;
+  const sl = g.slots[k]; u.gar = b; u.slot = k; u.x = b.tx * T + sl[b.o ? 1 : 0]; u.y = b.ty * T + sl[b.o ? 0 : 1]; u.z = g.z; u.order = null; u.path = null;
 }
 function leaveGarrison(u) {
   const b = u.gar; u.gar = null; u.z = 0; u.path = null;
-  const p = nearFree(b.tx + (b.size >> 1), b.ty + b.size, 6) || nearFree(b.tx, b.ty, 8);
+  const p = nearFree(b.tx + (b.size >> 1), b.ty + fpH(b), 6) || nearFree(b.tx, b.ty, 8);
   if (p) { u.x = p[0] * T + 16; u.y = p[1] * T + 16; }
 }
 function garUpdate(u, dt) {
@@ -1048,7 +1161,7 @@ function goDeposit(u, o, dt) {
   const drop = nearestDrop(u); if (!drop) return 'fail';
   if (o.drop !== drop) { o.drop = drop; u.path = null; }
   if (adjBld(u, drop)) { if (u.carry.amt > 0) { const P = G.players[u.team]; G.res[u.team][u.carry.res] += Math.floor(u.carry.amt * (P && P.bot ? DIFF[P.diff].gain : 1)); } u.carry.amt = 0; u.path = null; return 'done'; }
-  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= drop.tx - 1 && x <= drop.tx + drop.size && y >= drop.ty - 1 && y <= drop.ty + drop.size, drop.tx + 1, drop.ty + 1));
+  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= drop.tx - 1 && x <= drop.tx + fpW(drop) && y >= drop.ty - 1 && y <= drop.ty + fpH(drop), drop.tx + 1, drop.ty + 1));
   if (follow(u, dt) && !adjBld(u, drop)) { u.path = null; if (++o.fails > 12) return 'fail'; }
   return 'busy';
 }
@@ -1074,12 +1187,12 @@ function doGarrison(u, o, dt) {
   if (b.dead || !b.built) { u.order = null; return; }
   if (garrisonOf(b).length >= GAR[b.type].cap) { u.order = null; notify(u.team, 'روی این ' + BDEF[b.type].name + ' جای خالی نیست', true); return; }
   if (adjBld(u, b)) { enterGarrison(u, b); return; }
-  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + b.size && y >= b.ty - 1 && y <= b.ty + b.size, b.tx, b.ty));
+  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + fpW(b) && y >= b.ty - 1 && y <= b.ty + fpH(b), b.tx, b.ty));
   if (follow(u, dt) && !adjBld(u, b)) { u.path = null; if (++o.fails > 12) u.order = null; }
 }
 
 // ---------- palace: lord, alarm bell, shelter ----------
-const gateTile = b => [b.tx + (b.size >> 1), b.ty + b.size];
+const gateTile = b => [b.tx + (b.size >> 1), b.ty + fpH(b)];
 function ejectNear(b, units) {
   const [gx, gy] = gateTile(b), spots = formationTiles(gx, gy, units.length);
   units.forEach((u, i) => { u.x = spots[i][0] * T + 16; u.y = spots[i][1] * T + 16; u.aboard = false; u.path = null; G.units.push(u); });
@@ -1116,7 +1229,7 @@ function doShelter(u, o, dt) {
     b.shelter = b.shelter || []; b.shelter.push({ u, prev: o.prev });
     u.order = null; u.path = null; u.aboard = true; G.sel.delete(u); hudDirty = true; return;
   }
-  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + b.size && y >= b.ty - 1 && y <= b.ty + b.size, b.tx + 1, b.ty + b.size));
+  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + fpW(b) && y >= b.ty - 1 && y <= b.ty + fpH(b), b.tx + 1, b.ty + fpH(b)));
   if (follow(u, dt) && !adjBld(u, b)) { u.path = null; if (++o.fails > 10) u.order = o.prev || null; }
 }
 function doEnter(u, o, dt) {
@@ -1127,7 +1240,7 @@ function doEnter(u, o, dt) {
     b.lord = u; u.order = null; u.path = null; u.aboard = true; G.sel.delete(u); hudDirty = true;
     notify(u.team, 'لرد وارد کاخ شد'); return;
   }
-  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + b.size && y >= b.ty - 1 && y <= b.ty + b.size, b.tx + 1, b.ty + b.size));
+  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + fpW(b) && y >= b.ty - 1 && y <= b.ty + fpH(b), b.tx + 1, b.ty + fpH(b)));
   if (follow(u, dt) && !adjBld(u, b)) { u.path = null; if (++o.fails > 10) u.order = null; }
 }
 function updPalace(b, dt) {
@@ -1463,7 +1576,7 @@ function doBuild(u, o, dt) {
     if (b.progress >= 1) completeBuilding(b);
     return;
   }
-  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + b.size && y >= b.ty - 1 && y <= b.ty + b.size, b.tx, b.ty));
+  if (!u.path) setPath(u, findPath(tileOf(u.x), tileOf(u.y), (x, y) => x >= b.tx - 1 && x <= b.tx + fpW(b) && y >= b.ty - 1 && y <= b.ty + fpH(b), b.tx, b.ty));
   if (follow(u, dt) && !adjBld(u, b)) { u.path = null; if (++o.fails > 12) u.order = o.prev || null; }
 }
 function completeBuilding(b) {
@@ -1490,11 +1603,11 @@ function removeBuilding(e, rubble) {
   if (e.type === 'hall') {
     const out = (e.shelter || []).splice(0).map(o => o.u);
     if (e.lord) { out.push(e.lord); notify(e.team, 'کاخ فروریخت؛ لرد بیرون است و باید از او محافظت کنی', true); e.lord = null; }
-    for (let y = e.ty; y < e.ty + e.size; y++) for (let x = e.tx; x < e.tx + e.size; x++) if (bgrid[y * W + x] === e) bgrid[y * W + x] = null;
+    for (let y = e.ty; y < e.ty + fpH(e); y++) for (let x = e.tx; x < e.tx + fpW(e); x++) if (bgrid[y * W + x] === e) bgrid[y * W + x] = null;
     if (out.length) ejectNear(e, out);
   }
-  for (let y = e.ty; y < e.ty + e.size; y++) for (let x = e.tx; x < e.tx + e.size; x++) if (bgrid[y * W + x] === e) bgrid[y * W + x] = null;
-  if (rubble) addFx({ k: 'rubble', id: e.id, tx: e.tx, ty: e.ty, size: e.size, t: 30 });
+  for (let y = e.ty; y < e.ty + fpH(e); y++) for (let x = e.tx; x < e.tx + fpW(e); x++) if (bgrid[y * W + x] === e) bgrid[y * W + x] = null;
+  if (rubble) addFx({ k: 'rubble', id: e.id, tx: e.tx, ty: e.ty, size: e.size, w: fpW(e), h: fpH(e), t: 30 });
   G.sel.delete(e);
 }
 function kill(e) {
@@ -1527,7 +1640,7 @@ function updBuilding(b, dt) {
     if (G.pop[b.team] >= G.cap[b.team]) { b.blocked = true; return; }
     b.blocked = false; b.qt += dt;
     if (b.qt >= UDEF[type].time) {
-      const p = UDEF[type].naval ? nearFree(b.tx + 1, b.ty + 1, 6, waterPass) : nearFree(b.tx + 1, b.ty + b.size, 6) || nearFree(b.tx, b.ty, 8);
+      const p = UDEF[type].naval ? nearFree(b.tx + 1, b.ty + 1, 6, waterPass) : nearFree(b.tx + 1, b.ty + fpH(b), 6) || nearFree(b.tx, b.ty, 8);
       if (!p) return;
       b.qt = 0; b.queue.shift();
       const u = addUnit(type, b.team, p[0] * T + 16, p[1] * T + 16);
@@ -1782,8 +1895,27 @@ function newGame(opts = {}) {
 // ---------- camera & view (isometric: iso.x = x - y, iso.y = (x + y) / 2) ----------
 let vw = 0, vh = 0, dpr = 1;
 const cam = { x: 0, y: 0, z: 1 };
-const isoX = (x, y) => x - y, isoY = (x, y) => (x + y) / 2;
-const isoToWorld = (ix, iy) => ({ x: iy + ix / 2, y: iy - ix / 2 });
+// the view can be turned in quarter turns (ROT); vX/vY give a world point in the turned map, the rest projects that
+let ROT = 0;
+const MS = W * T;
+const vX = (x, y) => ROT === 0 ? x : ROT === 1 ? MS - y : ROT === 2 ? MS - x : y;
+const vY = (x, y) => ROT === 0 ? y : ROT === 1 ? x : ROT === 2 ? MS - y : MS - x;
+const isoX = (x, y) => vX(x, y) - vY(x, y), isoY = (x, y) => (vX(x, y) + vY(x, y)) / 2;
+const depthOf = (x, y) => vX(x, y) + vY(x, y);
+const isoToWorld = (ix, iy) => {
+  const vx = iy + ix / 2, vy = iy - ix / 2;
+  return ROT === 0 ? { x: vx, y: vy } : ROT === 1 ? { x: vy, y: MS - vx } : ROT === 2 ? { x: MS - vx, y: MS - vy } : { x: MS - vy, y: vx };
+};
+// canvas matrix taking world coordinates to the turned map (applied after the isometric one)
+const rotM = (ms = MS) => [[1, 0, 0, 1, 0, 0], [0, 1, -1, 0, ms, 0], [-1, 0, 0, -1, ms, ms], [0, -1, 1, 0, 0, ms]][ROT];
+// a heading in the turned view
+const viewFace = a => a + ROT * Math.PI / 2;
+function rotateView(d) {
+  if (!G) return;
+  const c = toWorld(vw / 2, vh / 2);
+  ROT = (ROT + d + 4) & 3; natureDirty = true;
+  centerOn(c.x, c.y); positionConfirm();
+}
 function resize() {
   const r = view.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
   vw = r.width; vh = r.height; cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr); clampCam();
@@ -1816,41 +1948,58 @@ function fire(x, y, seed) {
     ctx.beginPath(); ctx.moveTo(xx - 4, y); ctx.quadraticCurveTo(xx - 3, y - h * 0.6, xx, y - h); ctx.quadraticCurveTo(xx + 3, y - h * 0.6, xx + 4, y); ctx.fill();
   }
 }
+// which sides of a wall tile join a neighbour of the same side: walls, towers, and a gate set along the same line
+// (1 west, 2 east, 4 north, 8 south); extra holds tiles of walls still being laid out
+function wallMask(tx, ty, team, extra) {
+  let m = 0;
+  for (const [dx, dy, bit] of [[-1, 0, 1], [1, 0, 2], [0, -1, 4], [0, 1, 8]]) {
+    const x = tx + dx, y = ty + dy; if (!inb(x, y)) continue;
+    const n = bgrid[y * W + x];
+    if ((n && !n.dead && n.team === team && (n.type === 'wall' || n.type === 'tower' || (n.type === 'gate' && (n.o ? dx === 0 : dy === 0)))) || (extra && extra.has(y * W + x))) m |= bit;
+  }
+  return m;
+}
+const spriteOf = b => getSprite(b.type, b.team, b.o || 0, b.type === 'wall' ? wallMask(b.tx, b.ty, b.team) : 0);
+// a footprint's corners in the turned view: [left x, back y, right x, front y] in view coordinates
+function viewRect(tx, ty, w, h, inset = 0) {
+  const x0 = tx * T, y0 = ty * T, x1 = (tx + w) * T, y1 = (ty + h) * T;
+  const a = [vX(x0, y0), vY(x0, y0)], c = [vX(x1, y1), vY(x1, y1)];
+  return [Math.min(a[0], c[0]) + inset, Math.min(a[1], c[1]) + inset, Math.max(a[0], c[0]) - inset, Math.max(a[1], c[1]) - inset];
+}
+const isoV = (vx, vy) => [vx - vy, (vx + vy) / 2];
 function drawBuilding(b) {
-  const spr = getSprite(b.type, b.team), L = b.size * T, ix = isoX(b.tx * T, b.ty * T), iy = isoY(b.tx * T, b.ty * T);
-  const cx = ix, cy = iy + L / 2, sx = ix - spr.ox, sy = iy - spr.oy, dark = foe(b.team, ME) && !vis[b.ty * W + b.tx];
-  if (G.sel.has(b)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); diamond(b.tx * T - 3, b.ty * T - 3, (b.tx + b.size) * T + 3, (b.ty + b.size) * T + 3); ctx.stroke(); ctx.setLineDash([]); }
+  const spr = spriteOf(b), L = Math.max(fpW(b), fpH(b)) * T, cx = isoX(bcx(b), bcy(b)), cy = isoY(bcx(b), bcy(b));
+  const sx = cx - spr.ox, sy = cy - spr.oy, dark = foe(b.team, ME) && !vis[b.ty * W + b.tx];
+  if (G.sel.has(b)) { ctx.strokeStyle = '#ece6d2'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); diamond(b.tx * T - 3, b.ty * T - 3, (b.tx + fpW(b)) * T + 3, (b.ty + fpH(b)) * T + 3); ctx.stroke(); ctx.setLineDash([]); }
   if (!b.built) {
-    ctx.fillStyle = '#8a7350'; diamond(b.tx * T + 2, b.ty * T + 2, (b.tx + b.size) * T - 2, (b.ty + b.size) * T - 2); ctx.fill();
+    ctx.fillStyle = '#8a7350'; diamond(b.tx * T + 2, b.ty * T + 2, (b.tx + fpW(b)) * T - 2, (b.ty + fpH(b)) * T - 2); ctx.fill();
     ctx.save();
     const cut = sy + spr.c.height * (1 - b.progress);
     ctx.beginPath(); ctx.rect(sx, cut, spr.c.width, spr.c.height); ctx.clip();
     ctx.drawImage(spr.c, sx, sy); ctx.restore();
-    const ph = Math.min(spr.top + 10, 18 + b.progress * spr.top);
+    const ph = Math.min(spr.top + 10, 18 + b.progress * spr.top), [X0, Y0, X1, Y1] = viewRect(b.tx, b.ty, fpW(b), fpH(b), 3);
     ctx.strokeStyle = '#7a5a34'; ctx.lineWidth = 2;
-    for (const [x, y] of [[0, 0], [1, 0], [1, 1], [0, 1]]) {
-      const wx = (b.tx + x * b.size) * T + (x ? -3 : 3), wy = (b.ty + y * b.size) * T + (y ? -3 : 3), px = isoX(wx, wy), py = isoY(wx, wy);
+    for (const [vx, vy] of [[X0, Y0], [X1, Y0], [X1, Y1], [X0, Y1]]) {
+      const [px, py] = isoV(vx, vy);
       ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py - ph); ctx.stroke();
     }
     ctx.lineWidth = 1.5; ctx.beginPath();
-    for (let z = 14; z < ph; z += 14) {
-      const a = [b.tx * T + 3, (b.ty + b.size) * T - 3], c = [(b.tx + b.size) * T - 3, (b.ty + b.size) * T - 3], d = [(b.tx + b.size) * T - 3, b.ty * T + 3];
-      ctx.moveTo(isoX(...a), isoY(...a) - z); ctx.lineTo(isoX(...c), isoY(...c) - z); ctx.lineTo(isoX(...d), isoY(...d) - z);
-    }
+    const a = isoV(X0, Y1), c = isoV(X1, Y1), d = isoV(X1, Y0);
+    for (let z = 14; z < ph; z += 14) { ctx.moveTo(a[0], a[1] - z); ctx.lineTo(c[0], c[1] - z); ctx.lineTo(d[0], d[1] - z); }
     ctx.stroke();
     bar(cx - L / 2, cy - 6, L, b.progress, '#d4a84b');
   } else {
     if (dark) ctx.globalAlpha = 0.75;
     ctx.drawImage(spr.c, sx, sy);
     ctx.globalAlpha = 1;
-    if (spr.smoke) puff(ix + spr.smoke[0], iy + spr.smoke[1], (b.id % 7) / 7, 1);
+    if (spr.smoke) puff(cx + spr.smoke[0], cy + spr.smoke[1], (b.id % 7) / 7, 1);
     const f = b.hp / b.maxhp;
     if (f < 0.6) puff(cx - 6, cy - spr.top * 0.7, (b.id % 5) / 5, 1.2 - f, true);
     if (f < 0.35) fire(cx, cy - spr.top * 0.35, b.id);
   }
   if (G.sel.has(b) || (b.hp < b.maxhp && b.built)) bar(cx - L / 2, cy - spr.top - 14, L, b.hp / b.maxhp, hpCol(b.hp / b.maxhp));
   if (b.type === 'hall' && b.built && (b.alarm || b.lord || b.lordIn)) {
-    const [gx, gy] = [isoX(bcx(b), (b.ty + b.size) * T), isoY(bcx(b), (b.ty + b.size) * T)];
+    const [gx, gy] = [isoX(bcx(b), (b.ty + fpH(b)) * T), isoY(bcx(b), (b.ty + fpH(b)) * T)];
     if (b.alarm) {
       const sw = Math.sin(G.t * 9) * 0.5, bx = gx, by = gy - 74;
       ctx.save(); ctx.translate(bx, by); ctx.rotate(sw);
@@ -1899,7 +2048,7 @@ function drawShip(u) {
   for (const mx of masts) {
     const base = P(mx, 0, 8), top = [base[0], base[1] - (war ? 34 : 40) * K];
     seg(ctx, base, top, '#3a2c1e', 3);
-    const w = (war ? 12 : 15) * K, f = c - s > 0;
+    const w = (war ? 12 : 15) * K, f = Math.cos(viewFace(u.face)) - Math.sin(viewFace(u.face)) > 0;
     ctx.fillStyle = '#e8e0c8'; ctx.beginPath(); ctx.moveTo(top[0] - w, top[1] + 5 * K); ctx.quadraticCurveTo(top[0] + (f ? 5 : -5) * K, top[1] + 15 * K, top[0] - w, top[1] + 27 * K); ctx.lineTo(top[0] + w, top[1] + 27 * K); ctx.quadraticCurveTo(top[0] + (f ? 9 : -1) * K, top[1] + 15 * K, top[0] + w, top[1] + 5 * K); ctx.closePath(); ctx.fill();
     ctx.fillStyle = tc; ctx.fillRect(top[0] - w, top[1] + 12 * K, w * 2, 5 * K);
     ctx.fillStyle = tc; ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.lineTo(top[0] + 10 * K, top[1] + 3 * K); ctx.lineTo(top[0], top[1] + 6 * K); ctx.fill();
@@ -1943,7 +2092,7 @@ function drawUnit(u) {
   if (isNaval(u)) return drawShip(u);
   if (UDEF[u.type].siege) return drawSiege(u);
   const sx = isoX(u.x, u.y), sy = isoY(u.x, u.y) - (u.z || 0), d = UDEF[u.type], tc = TEAM[u.team], dk = shadeHex(tc, -0.35);
-  const sdx = Math.cos(u.face) - Math.sin(u.face), flip = sdx < 0 ? -1 : 1;
+  const vf = viewFace(u.face), sdx = Math.cos(vf) - Math.sin(vf), flip = sdx < 0 ? -1 : 1;
   const moving = G.t - (u.mvT || -9) < 0.12, ph = moving ? Math.sin((u.walk || 0) * 0.32) : 0;
   const working = G.t - (u.wkT || -9) < 0.15, atk = G.t - (u.atkT || -9) < 0.25;
   const big = u.type === 'knight';
@@ -2016,18 +2165,18 @@ function drawCorpse(f) {
   ctx.restore();
 }
 function drawRubble(f) {
-  const n = f.size * 7;
-  ctx.fillStyle = 'rgba(70,60,48,0.55)'; diamond(f.tx * T + 4, f.ty * T + 4, (f.tx + f.size) * T - 4, (f.ty + f.size) * T - 4); ctx.fill();
+  const n = Math.ceil(Math.sqrt(fpW(f) * fpH(f)) * 7);
+  ctx.fillStyle = 'rgba(70,60,48,0.55)'; diamond(f.tx * T + 4, f.ty * T + 4, (f.tx + fpW(f)) * T - 4, (f.ty + fpH(f)) * T - 4); ctx.fill();
   for (let k = 0; k < n; k++) {
-    const wx = (f.tx + hsh(f.id, k) * f.size) * T, wy = (f.ty + hsh(f.id, k + 50) * f.size) * T, px = isoX(wx, wy), py = isoY(wx, wy);
+    const wx = (f.tx + hsh(f.id, k) * fpW(f)) * T, wy = (f.ty + hsh(f.id, k + 50) * fpH(f)) * T, px = isoX(wx, wy), py = isoY(wx, wy);
     ctx.fillStyle = k % 3 ? '#8c887a' : '#5e4630'; ctx.fillRect(px - 3, py - 3, 6, 4);
   }
-  if (f.t > 12) puff(isoX((f.tx + f.size / 2) * T, (f.ty + f.size / 2) * T), isoY((f.tx + f.size / 2) * T, (f.ty + f.size / 2) * T), 0.3, Math.min(1, (f.t - 12) / 8), true);
+  if (f.t > 12) puff(isoX((f.tx + fpW(f) / 2) * T, (f.ty + fpH(f) / 2) * T), isoY((f.tx + fpW(f) / 2) * T, (f.ty + fpH(f) / 2) * T), 0.3, Math.min(1, (f.t - 12) / 8), true);
 }
-function placeValid(type, tx, ty, team = ME) {
-  const s = BDEF[type].size;
+function placeValid(type, tx, ty, team = ME, o = 0) {
+  const s = BDEF[type].size, [fw, fh] = dimsOf(type, o);
   const wallHere = (x, y) => { const b = inb(x, y) && bgrid[y * W + x]; return type === 'gate' && b && b.type === 'wall' && b.team === team && b.built; };
-  for (let y = ty; y < ty + s; y++) for (let x = tx; x < tx + s; x++) if (!(freeTile(x, y) || wallHere(x, y)) || (team === ME && !explored[y * W + x])) return false;
+  for (let y = ty; y < ty + fh; y++) for (let x = tx; x < tx + fw; x++) if (!(freeTile(x, y) || wallHere(x, y)) || (team === ME && !explored[y * W + x])) return false;
   if (type === 'dock') {
     let shore = false;
     for (let y = ty - 1; y <= ty + s && !shore; y++) for (let x = tx - 1; x <= tx + s; x++) if ((x < tx || x >= tx + s || y < ty || y >= ty + s) && (x === tx - 1 || x === tx + s) !== (y === ty - 1 || y === ty + s) && waterPass(x, y)) { shore = true; break; }
@@ -2035,7 +2184,19 @@ function placeValid(type, tx, ty, team = ME) {
   }
   return true;
 }
-function ghostTile(type, wx, wy) { const s = BDEF[type].size; return { tx: Math.floor(wx / T - s / 2 + 0.5), ty: Math.floor(wy / T - s / 2 + 0.5) }; }
+function ghostTile(type, wx, wy) {
+  if (type === 'gate') {
+    // on a wall the gate follows the wall's line; elsewhere it keeps the last direction (F turns it)
+    const cx = Math.floor(wx / T), cy = Math.floor(wy / T), isW = (x, y) => { const b = inb(x, y) && bgrid[y * W + x]; return b && b.type === 'wall' && b.team === ME; };
+    if (isW(cx, cy) || isW(cx - 1, cy) || isW(cx + 1, cy) || isW(cx, cy - 1) || isW(cx, cy + 1)) {
+      const alongX = isW(cx - 1, cy) || isW(cx + 1, cy), alongY = isW(cx, cy - 1) || isW(cx, cy + 1);
+      if (alongX !== alongY) G.gateO = alongY ? 1 : 0;
+    }
+    const o = G.gateO ? 1 : 0, [fw, fh] = dimsOf('gate', o);
+    return { tx: Math.floor(wx / T - fw / 2 + 0.5), ty: Math.floor(wy / T - fh / 2 + 0.5), o };
+  }
+  const s = BDEF[type].size; return { tx: Math.floor(wx / T - s / 2 + 0.5), ty: Math.floor(wy / T - s / 2 + 0.5) };
+}
 const fogC = mkCanvas(W, H), fogCtx = fogC.getContext('2d');
 function updateFogImage() {
   const img = fogCtx.createImageData(W, H), d = img.data;
@@ -2053,11 +2214,11 @@ function draw() {
   const wx0 = Math.max(0, Math.min(...cs.map(c => c.x)) - T), wx1 = Math.min(W * T, Math.max(...cs.map(c => c.x)) + T);
   const wy0 = Math.max(0, Math.min(...cs.map(c => c.y)) - T), wy1 = Math.min(H * T, Math.max(...cs.map(c => c.y)) + T);
   // cliff under the front edges of the map
-  const L0 = [isoX(0, H * T), isoY(0, H * T)], B0 = [isoX(W * T, H * T), isoY(W * T, H * T)], R0 = [isoX(W * T, 0), isoY(W * T, 0)];
+  const L0 = [-MS, MS / 2], B0 = [0, MS], R0 = [MS, MS / 2];
   poly(ctx, [L0, B0, [B0[0], B0[1] + 40], [L0[0], L0[1] + 40]], '#4a3b29'); poly(ctx, [B0, R0, [R0[0], R0[1] + 40], [B0[0], B0[1] + 40]], '#33291c');
   // ground
   if (wx1 > wx0 && wy1 > wy0) {
-    ctx.save(); ctx.transform(1, 0.5, -1, 0.5, 0, 0); ctx.imageSmoothingEnabled = true;
+    ctx.save(); ctx.transform(1, 0.5, -1, 0.5, 0, 0); ctx.transform(...rotM()); ctx.imageSmoothingEnabled = true;
     const mip = cam.z < 0.35 ? terrMips[1] : cam.z < 0.7 ? terrMips[0] : null, k = mip ? (mip === terrMips[1] ? 4 : 2) : 1;
     ctx.drawImage(mip || terr, wx0 / k, wy0 / k, (wx1 - wx0) / k, (wy1 - wy0) / k, wx0, wy0, wx1 - wx0, wy1 - wy0); ctx.restore();
   }
@@ -2080,14 +2241,14 @@ function draw() {
       if (!ok) { ctx.fillStyle = 'rgba(217,83,79,0.18)'; ctx.fill(); }
       ctx.strokeStyle = 'rgba(236,230,210,0.16)'; ctx.stroke();
     }
-    const type = G.placing || G.pending.type, s = BDEF[type].size, list = G.placing ? placingTiles() : G.pending.list;
+    const type = G.placing || G.pending.type, list = G.placing ? placingTiles() : G.pending.list;
     for (const g of list) {
-      const ok = placeValid(type, g.tx, g.ty);
-      ctx.fillStyle = ok ? (G.pending ? 'rgba(212,168,75,0.35)' : 'rgba(127,178,74,0.35)') : 'rgba(217,83,79,0.45)'; diamond(g.tx * T, g.ty * T, (g.tx + s) * T, (g.ty + s) * T); ctx.fill();
+      const ok = placeValid(type, g.tx, g.ty, ME, g.o), [fw, fh] = dimsOf(type, g.o);
+      ctx.fillStyle = ok ? (G.pending ? 'rgba(212,168,75,0.35)' : 'rgba(127,178,74,0.35)') : 'rgba(217,83,79,0.45)'; diamond(g.tx * T, g.ty * T, (g.tx + fw) * T, (g.ty + fh) * T); ctx.fill();
       ctx.strokeStyle = ok ? (G.pending ? '#d4a84b' : '#a6d873') : '#e2726e'; ctx.lineWidth = 2; ctx.stroke();
     }
   }
-  if (G.pending && G.pending.kind === 'demolish') { const b = G.pending.b; ctx.fillStyle = 'rgba(217,83,79,0.35)'; diamond(b.tx * T, b.ty * T, (b.tx + b.size) * T, (b.ty + b.size) * T); ctx.fill(); }
+  if (G.pending && G.pending.kind === 'demolish') { const b = G.pending.b; ctx.fillStyle = 'rgba(217,83,79,0.35)'; diamond(b.tx * T, b.ty * T, (b.tx + fpW(b)) * T, (b.ty + fpH(b)) * T); ctx.fill(); }
   // depth-sorted objects
   // trees and rocks only change when a tile is cut down or explored: keep them in one pre-sorted list
   if (natureDirty) {
@@ -2095,8 +2256,8 @@ function draw() {
     for (let i = 0; i < N; i++) {
       const t = tiles[i]; if (!explored[i] || t === GRASS || t === WATER) continue;
       const x = i % W, y = (i / W) | 0;
-      if (t === FOREST) for (let k = 0; k < 2; k++) { const px = x * T + 5 + hsh(i, k * 2) * 22, py = y * T + 5 + hsh(i, k * 2 + 1) * 22; nature.push({ d: px + py, k: 0, s: treeSpr[Math.floor(hsh(i, 9 + k) * treeSpr.length)], ix: isoX(px, py), iy: isoY(px, py) }); }
-      else { const px = x * T + 16, py = y * T + 16; nature.push({ d: px + py, k: 0, s: rockSpr[t][Math.floor(hsh(i, 3) * 3)], ix: isoX(px, py), iy: isoY(px, py) }); }
+      if (t === FOREST) for (let k = 0; k < 2; k++) { const px = x * T + 5 + hsh(i, k * 2) * 22, py = y * T + 5 + hsh(i, k * 2 + 1) * 22; nature.push({ d: depthOf(px, py), k: 0, s: treeSpr[Math.floor(hsh(i, 9 + k) * treeSpr.length)], ix: isoX(px, py), iy: isoY(px, py) }); }
+      else { const px = x * T + 16, py = y * T + 16; nature.push({ d: depthOf(px, py), k: 0, s: rockSpr[t][Math.floor(hsh(i, 3) * 3)], ix: isoX(px, py), iy: isoY(px, py) }); }
     }
     nature.sort((a, b) => a.d - b.d);
   }
@@ -2104,9 +2265,9 @@ function draw() {
   const statics = nature.filter(n => n.ix > vx0 && n.ix < vx1 && n.iy > vy0 && n.iy < vy1);
   const items = [];
   const inView = (x, y) => { const ix = isoX(x, y), iy = isoY(x, y); return ix > cam.x - 140 && ix < cam.x + ww + 140 && iy > cam.y - 40 && iy < cam.y + wh + 200; };
-  for (const b of G.blds) if (!b.dead && seen(b) && inView(bcx(b), bcy(b))) items.push({ d: (b.tx + b.ty + b.size) * T, k: 1, e: b });
-  for (const u of G.units) if (!u.dead && seen(u) && inView(u.x, u.y)) items.push({ d: u.gar ? (u.gar.tx + u.gar.ty + u.gar.size) * T + 1 + u.slot : u.x + u.y, k: 2, e: u });
-  for (const f of G.fx) if (f.k === 'corpse' && vis[tileOf(f.y) * W + tileOf(f.x)] && inView(f.x, f.y)) items.push({ d: f.x + f.y - 20, k: 3, e: f });
+  for (const b of G.blds) if (!b.dead && seen(b) && inView(bcx(b), bcy(b))) items.push({ d: depthOf(bcx(b), bcy(b)), k: 1, e: b });
+  for (const u of G.units) if (!u.dead && seen(u) && inView(u.x, u.y)) items.push({ d: u.gar ? depthOf(bcx(u.gar), bcy(u.gar)) + 1 + u.slot : depthOf(u.x, u.y), k: 2, e: u });
+  for (const f of G.fx) if (f.k === 'corpse' && vis[tileOf(f.y) * W + tileOf(f.x)] && inView(f.x, f.y)) items.push({ d: depthOf(f.x, f.y) - 20, k: 3, e: f });
   items.sort((a, b) => a.d - b.d);
   // merge the two sorted lists while drawing
   let si = 0;
@@ -2130,16 +2291,22 @@ function draw() {
     p.px = px; p.py = py;
   }
   // fog of war, softened by bilinear scaling of the per-tile mask
-  ctx.save(); ctx.transform(1, 0.5, -1, 0.5, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(fogC, 0, 0, W * T, H * T); ctx.restore();
+  ctx.save(); ctx.transform(1, 0.5, -1, 0.5, 0, 0); ctx.transform(...rotM()); ctx.imageSmoothingEnabled = true; ctx.drawImage(fogC, 0, 0, W * T, H * T); ctx.restore();
   for (const m of G.marks) { ctx.strokeStyle = m.col; ctx.globalAlpha = Math.min(1, m.t * 2); ctx.lineWidth = 2.5; const r = 6 + (0.6 - m.t) * 18; ell(isoX(m.x, m.y), isoY(m.x, m.y), r, r / 2); ctx.stroke(); ctx.globalAlpha = 1; }
   for (const f of G.fx) if (f.k === 'dust' && vis[tileOf(f.y) * W + tileOf(f.x)]) { ctx.fillStyle = `rgba(150,130,100,${f.t * 0.6})`; ell(isoX(f.x, f.y), isoY(f.x, f.y) - 6, 26 - f.t * 14, 13 - f.t * 7); ctx.fill(); }
   // building ghost on top
   {
     const type = G.placing || (G.pending && G.pending.kind === 'build' && G.pending.type);
     if (type) {
-      const spr = getSprite(type, ME), list = (G.placing ? placingTiles() : G.pending.list).slice().sort((a, b) => a.tx + a.ty - b.tx - b.ty);
+      const list = (G.placing ? placingTiles() : G.pending.list).filter(g => placeValid(type, g.tx, g.ty, ME, g.o));
+      const ctr = g => { const [fw, fh] = dimsOf(type, g.o); return [(g.tx + fw / 2) * T, (g.ty + fh / 2) * T]; };
+      list.sort((a, b) => depthOf(...ctr(a)) - depthOf(...ctr(b)));
+      const laid = type === 'wall' ? new Set(list.map(g => g.ty * W + g.tx)) : null;
       ctx.globalAlpha = G.pending ? 0.75 : 0.6;
-      for (const g of list) if (placeValid(type, g.tx, g.ty)) ctx.drawImage(spr.c, isoX(g.tx * T, g.ty * T) - spr.ox, isoY(g.tx * T, g.ty * T) - spr.oy);
+      for (const g of list) {
+        const spr = getSprite(type, ME, g.o || 0, laid ? wallMask(g.tx, g.ty, ME, laid) : 0), [x, y] = ctr(g);
+        ctx.drawImage(spr.c, isoX(x, y) - spr.ox, isoY(x, y) - spr.oy);
+      }
       ctx.globalAlpha = 1;
     }
   }
@@ -2164,13 +2331,13 @@ function drawMini() {
   }
   const put = (x, y, rgb) => { if (!inb(x, y)) return; const o = (y * W + x) * 4; d[o] = rgb[0]; d[o + 1] = rgb[1]; d[o + 2] = rgb[2]; };
   const TC = [[90, 160, 255], [240, 130, 70], [120, 210, 100], [190, 130, 240]], TL = [[200, 225, 255], [255, 170, 120], [180, 240, 160], [225, 190, 255]];
-  for (const b of G.blds) if (!b.dead && seen(b)) for (let y = b.ty; y < b.ty + b.size; y++) for (let x = b.tx; x < b.tx + b.size; x++) put(x, y, TC[b.team]);
+  for (const b of G.blds) if (!b.dead && seen(b)) for (let y = b.ty; y < b.ty + fpH(b); y++) for (let x = b.tx; x < b.tx + fpW(b); x++) put(x, y, TC[b.team]);
   for (const u of G.units) if (!u.dead && seen(u)) put(tileOf(u.x), tileOf(u.y), TL[u.team] || TL[1]);
   mmCtx.putImageData(img, 0, 0);
   const k = mini.width / ((W + H) * T);
   mctx.setTransform(1, 0, 0, 1, 0, 0); mctx.fillStyle = '#0c0e09'; mctx.fillRect(0, 0, mini.width, mini.height);
   mctx.imageSmoothingEnabled = false;
-  mctx.setTransform(T * k, T * k / 2, -T * k, T * k / 2, H * T * k, 0); mctx.drawImage(mmBuf, 0, 0);
+  mctx.setTransform(T * k, T * k / 2, -T * k, T * k / 2, H * T * k, 0); mctx.transform(...rotM(W)); mctx.drawImage(mmBuf, 0, 0);
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.strokeStyle = '#ece6d2'; mctx.lineWidth = 1.5;
   mctx.strokeRect((cam.x + H * T) * k, cam.y * k, vw / cam.z * k, vh / cam.z * k);
@@ -2369,10 +2536,11 @@ function execCommand(team, us, wx, wy, e, rt, fm, dir) {
   return busy;
 }
 function mark(x, y, col) { G.marks.push({ x, y, col, t: 0.6 }); }
+// a wall runs straight along the map's grid: the drag snaps to whichever axis it is closer to, never diagonal
 function lineTiles(a, b) {
-  let x0 = a.tx, y0 = a.ty; const x1 = b.tx, y1 = b.ty, dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
-  let err = dx + dy; const out = [];
-  for (;;) { out.push({ tx: x0, ty: y0 }); if (out.length >= 40 || (x0 === x1 && y0 === y1)) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } }
+  const dx = b.tx - a.tx, dy = b.ty - a.ty, alongX = Math.abs(dx) >= Math.abs(dy), n = Math.min(40, Math.abs(alongX ? dx : dy) + 1), st = Math.sign(alongX ? dx : dy);
+  const out = [];
+  for (let k = 0; k < n; k++) out.push(alongX ? { tx: a.tx + k * st, ty: a.ty } : { tx: a.tx, ty: a.ty + k * st });
   return out;
 }
 function placingTiles() {
@@ -2382,7 +2550,7 @@ function placingTiles() {
   return [g];
 }
 function createPending(type, list) {
-  if (!list.some(q => placeValid(type, q.tx, q.ty))) { toast('اینجا نمی‌شود ساخت', true); return; }
+  if (!list.some(q => placeValid(type, q.tx, q.ty, ME, q.o))) { toast('اینجا نمی‌شود ساخت', true); return; }
   if (!canPay(ME, BDEF[type].cost)) { toast(lackMsg(BDEF[type].cost), true); G.placing = null; hudDirty = true; return; }
   G.pending = { kind: 'build', type, list, keep: type === 'wall' };
   G.placing = null;
@@ -2390,8 +2558,8 @@ function createPending(type, list) {
 }
 function pendingTileAt(w) {
   const p = G.pending; if (!p || p.kind !== 'build') return false;
-  const s = BDEF[p.type].size, tx = Math.floor(w.x / T), ty = Math.floor(w.y / T);
-  return p.list.some(q => tx >= q.tx && tx < q.tx + s && ty >= q.ty && ty < q.ty + s);
+  const tx = Math.floor(w.x / T), ty = Math.floor(w.y / T);
+  return p.list.some(q => { const [fw, fh] = dimsOf(p.type, q.o); return tx >= q.tx && tx < q.tx + fw && ty >= q.ty && ty < q.ty + fh; });
 }
 function showConfirm() {
   const p = G.pending;
@@ -2402,9 +2570,9 @@ function showConfirm() {
 function positionConfirm() {
   const p = G.pending, el = $('confirm'); if (!p || el.hidden) return;
   let minY = 1e9, sumX = 0, n = 0, top;
-  const add = (tx, ty, s) => { for (const [a, b] of [[0, 0], [s, 0], [0, s], [s, s]]) { const x = (tx + a) * T, y = (ty + b) * T; sumX += isoX(x, y); n++; minY = Math.min(minY, isoY(x, y)); } };
-  if (p.kind === 'build') { const s = BDEF[p.type].size; p.list.forEach(q => add(q.tx, q.ty, s)); top = BSPR[p.type].top; }
-  else { add(p.b.tx, p.b.ty, p.b.size); top = BSPR[p.b.type].top; }
+  const add = (tx, ty, s, s2 = s) => { for (const [a, b] of [[0, 0], [s, 0], [0, s2], [s, s2]]) { const x = (tx + a) * T, y = (ty + b) * T; sumX += isoX(x, y); n++; minY = Math.min(minY, isoY(x, y)); } };
+  if (p.kind === 'build') { p.list.forEach(q => add(q.tx, q.ty, ...dimsOf(p.type, q.o))); top = BSPR[p.type].top; }
+  else { add(p.b.tx, p.b.ty, fpW(p.b), fpH(p.b)); top = BSPR[p.b.type].top; }
   const w = el.offsetWidth, h = el.offsetHeight;
   let x = (sumX / n - cam.x) * cam.z - w / 2, y = (minY - top - 8 - cam.y) * cam.z - h;
   x = Math.max(8, Math.min(vw - w - 8, x)); y = Math.max(8, Math.min(vh - h - 8, y));
@@ -2423,11 +2591,12 @@ function execPlace(team, type, list, builderIds) {
   const cost = BDEF[type].cost, made = [];
   let skipped = 0;
   for (const q of list.slice(0, 40)) {
-    if (!placeValid(type, q.tx, q.ty, team)) { skipped++; continue; }
+    const o = type === 'gate' && q.o ? 1 : 0, [fw, fh] = dimsOf(type, o);
+    if (!placeValid(type, q.tx, q.ty, team, o)) { skipped++; continue; }
     if (!canPay(team, cost)) { skipped++; continue; }
     pay(team, cost);
-    if (type === 'gate' && bgrid[q.ty * W + q.tx]) removeBuilding(bgrid[q.ty * W + q.tx], false);
-    made.push(addBuilding(type, team, q.tx, q.ty, false));
+    if (type === 'gate') for (let y = q.ty; y < q.ty + fh; y++) for (let x = q.tx; x < q.tx + fw; x++) if (bgrid[y * W + x]) removeBuilding(bgrid[y * W + x], false);
+    made.push(addBuilding(type, team, q.tx, q.ty, false, o));
   }
   if (!made.length) { notify(team, canPay(team, cost) ? 'اینجا دیگر جای خالی نیست' : lackMsg(cost, team), true); return; }
   let ws = builderIds.map(byId).filter(u => u && u.kind === 'u' && u.team === team && u.type === 'worker' && !u.dead);
@@ -2599,6 +2768,7 @@ cv.addEventListener('pointermove', e => {
 }, true);
 const endTouch = e => { touches.delete(e.pointerId); if (touches.size < 2) pinch = null; };
 cv.addEventListener('pointerup', endTouch, true); cv.addEventListener('pointercancel', endTouch, true);
+document.querySelectorAll('[data-rot]').forEach(b => b.addEventListener('click', () => rotateView(+b.dataset.rot)));
 document.querySelectorAll('[data-zoom]').forEach(b => b.addEventListener('click', () => zoomBy(b.dataset.zoom === 'in' ? 1.25 : 1 / 1.25)));
 function miniIso(e) { const r = mini.getBoundingClientRect(), k = (W + H) * T / r.width; return { x: (e.clientX - r.left) * k - H * T, y: (e.clientY - r.top) * k }; }
 function miniTo(e) { const i = miniIso(e); return isoToWorld(i.x, i.y); }
@@ -2620,6 +2790,9 @@ window.addEventListener('keydown', e => {
   else if (e.code === 'Equal' || e.code === 'NumpadAdd') zoomBy(1.15);
   else if (e.code === 'Minus' || e.code === 'NumpadSubtract') zoomBy(1 / 1.15);
   else if (e.code === 'KeyP') togglePause();
+  else if (e.code === 'BracketLeft' || e.code === 'Comma') rotateView(1);
+  else if (e.code === 'BracketRight' || e.code === 'Period') rotateView(-1);
+  else if (e.code === 'KeyF' && G.placing === 'gate') G.gateO = G.gateO ? 0 : 1;
   else if (e.code === 'KeyH') doAct('home');
   else if (/^Digit[1-5]$/.test(e.code)) { e.preventDefault(); const n = +e.code.slice(5); if (e.ctrlKey || e.metaKey) saveGroup(n, myUnits()); else pickGroup(n); }
   else if (HOTKEYS.includes(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) { const btns = [...document.querySelectorAll('#cmds .cmd')]; const b = btns[HOTKEYS.indexOf(e.code)]; if (b && !b.disabled) doAct(b.dataset.act); }
@@ -2928,7 +3101,7 @@ function snapshot() {
       if (now - (u.atkT || -9) < 0.25) r.a = 1;
       return r;
     }),
-    b: G.blds.map(b => ({ i: b.id, y: BT.indexOf(b.type), m: b.team, x: b.tx, z: b.ty, h: Math.ceil(b.hp), bt: b.built ? 1 : 0, ld: b.lord ? 1 : 0, sh: b.shelter ? b.shelter.length : 0, al: b.alarm ? 1 : 0, p: Math.round(b.progress * 1000), q: b.queue, qt: Math.round(b.qt * 10), r: b.rally ? [b.rally.tx, b.rally.ty] : 0, bl: b.blocked ? 1 : 0 })),
+    b: G.blds.map(b => ({ i: b.id, y: BT.indexOf(b.type), m: b.team, x: b.tx, z: b.ty, o: b.o || 0, h: Math.ceil(b.hp), bt: b.built ? 1 : 0, ld: b.lord ? 1 : 0, sh: b.shelter ? b.shelter.length : 0, al: b.alarm ? 1 : 0, p: Math.round(b.progress * 1000), q: b.queue, qt: Math.round(b.qt * 10), r: b.rally ? [b.rally.tx, b.rally.ty] : 0, bl: b.blocked ? 1 : 0 })),
     p: G.proj.map(q => [Math.round(q.x), Math.round(q.y), Math.round(q.h || 0), q.stone ? 1 : 0])
   };
 }
@@ -2941,7 +3114,7 @@ function applySnapshot(s) {
   let footprintChanged = s.b.length !== G.blds.length;
   for (const r of s.b) {
     let b = bm.get(r.i);
-    if (!b) { const type = BT[r.y]; b = { id: r.i, kind: 'b', type, team: r.m, tx: r.x, ty: r.z, size: BDEF[type].size, maxhp: BDEF[type].hp, cd: 0 }; footprintChanged = true; }
+    if (!b) { const type = BT[r.y]; const [fw, fh] = dimsOf(type, r.o); b = { id: r.i, kind: 'b', type, team: r.m, tx: r.x, ty: r.z, size: BDEF[type].size, w: fw, h: fh, o: r.o || 0, maxhp: BDEF[type].hp, cd: 0 }; footprintChanged = true; }
     if (r.al && !b.alarm && b.team === ME) playBell();
     b.lordIn = !!r.ld; b.shN = r.sh || 0; b.alarm = !!r.al;
     b.hp = r.h; b.built = !!r.bt; b.progress = r.p / 1000; b.queue = r.q; b.qt = r.qt / 10; b.rally = r.r ? { tx: r.r[0], ty: r.r[1] } : null; b.blocked = !!r.bl;
@@ -2949,7 +3122,7 @@ function applySnapshot(s) {
   }
   for (const b of bm.values()) { b.dead = true; G.sel.delete(b); }
   G.blds = blds;
-  if (footprintChanged) { bgrid.fill(null); for (const b of blds) for (let y = b.ty; y < b.ty + b.size; y++) for (let x = b.tx; x < b.tx + b.size; x++) bgrid[y * W + x] = b; }
+  if (footprintChanged) { bgrid.fill(null); for (const b of blds) for (let y = b.ty; y < b.ty + fpH(b); y++) for (let x = b.tx; x < b.tx + fpW(b); x++) bgrid[y * W + x] = b; }
   const byB = new Map(blds.map(b => [b.id, b]));
   // units: positions are targets the guest glides toward between snapshots
   const um = new Map(G.units.map(u => [u.id, u])), units = [];
@@ -3499,7 +3672,7 @@ function restoreGame(sv) {
   if (Array.isArray(sv.amt) && sv.amt.length === N) amt.set(sv.amt);
   const e = unb64(sv.explored); if (e.length === N) explored.set(e);
   bgrid.fill(null);
-  for (const b of G.blds) if (!b.dead) for (let y = b.ty; y < b.ty + b.size; y++) for (let x = b.tx; x < b.tx + b.size; x++) bgrid[y * W + x] = b;
+  for (const b of G.blds) if (!b.dead) for (let y = b.ty; y < b.ty + fpH(b); y++) for (let x = b.tx; x < b.tx + fpW(b); x++) bgrid[y * W + x] = b;
   if (sv.cam) { cam.z = Math.max(0.3, Math.min(3, +sv.cam.z || 1)); cam.x = +sv.cam.x || 0; cam.y = +sv.cam.y || 0; clampCam(); $('zLevel').textContent = fa(Math.round(cam.z * 100)) + '٪'; }
   natureDirty = true; hudDirty = true; savedAt = G.t;
   computeFog(); updateFogImage();
