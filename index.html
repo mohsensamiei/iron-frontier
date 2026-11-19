@@ -2274,7 +2274,10 @@ function draw() {
   const statics = nature.filter(n => n.ix > vx0 && n.ix < vx1 && n.iy > vy0 && n.iy < vy1);
   const items = [];
   const inView = (x, y) => { const ix = isoX(x, y), iy = isoY(x, y); return ix > cam.x - 140 && ix < cam.x + ww + 140 && iy > cam.y - 40 && iy < cam.y + wh + 200; };
-  for (const b of G.blds) if (!b.dead && seen(b) && inView(bcx(b), bcy(b))) items.push({ d: depthOf(bcx(b), bcy(b)), k: 1, e: b });
+  // a farm is nearly flat, so it sorts by its far corner: anyone standing on the field draws over it
+  const bDepth = b => b.type !== 'farm' ? depthOf(bcx(b), bcy(b))
+    : Math.min(depthOf(b.tx * T, b.ty * T), depthOf((b.tx + fpW(b)) * T, b.ty * T), depthOf(b.tx * T, (b.ty + fpH(b)) * T), depthOf((b.tx + fpW(b)) * T, (b.ty + fpH(b)) * T)) + 1;
+  for (const b of G.blds) if (!b.dead && seen(b) && inView(bcx(b), bcy(b))) items.push({ d: bDepth(b), k: 1, e: b });
   for (const u of G.units) if (!u.dead && seen(u) && inView(u.x, u.y)) items.push({ d: u.gar ? depthOf(bcx(u.gar), bcy(u.gar)) + 1 + u.slot : depthOf(u.x, u.y), k: 2, e: u });
   for (const f of G.fx) if (f.k === 'corpse' && vis[tileOf(f.y) * W + tileOf(f.x)] && inView(f.x, f.y)) items.push({ d: depthOf(f.x, f.y) - 20, k: 3, e: f });
   items.sort((a, b) => a.d - b.d);
@@ -2659,6 +2662,8 @@ const CURSORS = {
   up: svgCur("<circle cx='16' cy='16' r='12' fill='#1d2017' fill-opacity='.75' stroke='#7fb24a' stroke-width='2.5'/><path d='M10 18 L16 11 L22 18 M16 11 L16 23' stroke='#a6d873' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none'/>"),
   gather: svgCur("<path d='M8 26 L22 12' stroke='#1d2017' stroke-width='6' stroke-linecap='round'/><path d='M8 26 L22 12' stroke='#c49a6c' stroke-width='3' stroke-linecap='round'/><path d='M14 6 Q24 6 28 16 Q22 10 14 10 Z' fill='#d0d4d8' stroke='#1d2017' stroke-width='1.5'/>", 22, 10),
   build: svgCur("<path d='M9 26 L19 16' stroke='#1d2017' stroke-width='6' stroke-linecap='round'/><path d='M9 26 L19 16' stroke='#c49a6c' stroke-width='3' stroke-linecap='round'/><rect x='15' y='5' width='14' height='8' rx='1.5' transform='rotate(45 22 9)' fill='#9aa0a6' stroke='#1d2017' stroke-width='1.5'/>", 22, 9),
+  // a sickle: put this worker to work on the field
+  farm: svgCur("<g transform='translate(2 -2.5) scale(1.12)'><path d='M5 27 L11 21' stroke='#1d2017' stroke-width='6' stroke-linecap='round'/><path d='M5 27 L11 21' stroke='#c49a6c' stroke-width='3' stroke-linecap='round'/><path d='M10 22 Q4 10 14 5 Q22 2 24 9 Q19 5 14 8 Q8 12 12 21 Z' fill='#d0d4d8' stroke='#1d2017' stroke-width='1.5' stroke-linejoin='round'/></g>", 19, 4),
   move: svgCur("<ellipse cx='16' cy='18' rx='11' ry='6' fill='none' stroke='#1d2017' stroke-width='4'/><ellipse cx='16' cy='18' rx='11' ry='6' fill='none' stroke='#a6d873' stroke-width='2'/><path d='M16 4 L16 16' stroke='#a6d873' stroke-width='2.5' stroke-linecap='round'/>", 16, 18, 'crosshair')
 };
 let curT = 0;
@@ -2670,6 +2675,7 @@ function updateCursor() {
     const job = jobAt(ent, mine);
     if (job === 'board' || job === 'enter' || job === 'climb') c = CURSORS.up;
     else if (job === 'build') c = CURSORS.build;
+    else if (job === 'farm') c = farmerOf(ent) && !mine.includes(farmerOf(ent)) ? 'not-allowed' : CURSORS.farm;
     else if (job) c = 'pointer';
     else if (ent && ent.team === ME) c = 'pointer';
     else if (mine.length && ent && foe(ent.team, ME)) c = mine.some(u => canHurt(u, ent)) ? CURSORS.attack : 'not-allowed';
