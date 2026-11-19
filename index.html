@@ -3211,7 +3211,7 @@ function bcConn(ch, me, other, hub) {
   const post = m => { try { ch.postMessage(m); } catch (e) { /* channel closed */ } };
   return { send: o => post({ from: me, to: other, d: JSON.parse(JSON.stringify(o)) }), onData: fn => handlers.push(fn), onClose: fn => closers.push(fn), close: () => { post({ from: me, to: other, bye: 1 }); hub.delete(other); } };
 }
-async function openHost(code, onConn, onReady, onFail) {
+async function openHost(code, onConn, onReady, onFail, onState) {
   if (useBC) {
     const ch = new BroadcastChannel('if-' + code); NET.peer = { destroy: () => ch.close() };
     const hub = bcHub(ch, 'h', from => onConn(bcConn(ch, 'h', from, hub)));
@@ -3219,9 +3219,28 @@ async function openHost(code, onConn, onReady, onFail) {
   }
   try { await ensurePeer(); } catch (e) { onFail('اتصال به اینترنت برای دعوت دوستان لازم است'); return; }
   const peer = new Peer(PEER_PREFIX + code); NET.peer = peer;
-  peer.on('open', () => onReady(code));
-  peer.on('connection', c => c.on('open', () => onConn(wrapPeerConn(c))));
-  peer.on('error', e => onFail(e.type === 'unavailable-id' ? 'retry' : e.type === 'network' || e.type === 'server-error' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type));
+  // Only a failure before the code first opens is the caller's to handle. After that, losing the matchmaker
+  // must never end the lobby or the battle: links already open keep working, and we take our code back
+  // from the matchmaker (same name, same token) so friends whose link broke can find us again.
+  let opened = false, retryT = 0, tries = 0;
+  const live = () => NET.peer === peer && !peer.destroyed;
+  const again = delay => {
+    if (!live() || retryT) return;
+    retryT = setTimeout(() => {
+      retryT = 0; if (!live() || !peer.disconnected) return;
+      tries++; try { peer.reconnect(); } catch (e) { again(); }
+    }, delay !== undefined ? delay : Math.min(10000, 1000 * 2 ** Math.min(tries, 4)));
+  };
+  peer.wake = () => { if (live() && peer.disconnected) { clearTimeout(retryT); retryT = 0; again(0); } };
+  peer.on('open', () => { tries = 0; if (!opened) { opened = true; onReady(code); } else if (onState) onState(''); });
+  peer.on('connection', c => c.on('open', () => { if (live()) onConn(wrapPeerConn(c)); else try { c.close(); } catch (e) { /* closed */ } }));
+  peer.on('disconnected', () => { if (!live() || !opened) return; if (onState) onState('ارتباط با سرور بازی قطع شد؛ در حال وصل شدن دوباره…'); again(); });
+  peer.on('error', e => {
+    if (NET.peer !== peer) return;
+    if (!opened) { onFail(e.type === 'unavailable-id' ? 'retry' : e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error' || e.type === 'socket-closed' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type); return; }
+    // a friend's link failing, or the matchmaker hiccuping: keep going and keep knocking
+    if (peer.disconnected) again();
+  });
 }
 async function openGuest(code, onConn, onFail) {
   if (useBC) {
@@ -3233,13 +3252,22 @@ async function openGuest(code, onConn, onFail) {
   const peer = new Peer(); NET.peer = peer;
   // a link that opens after we gave up on it is closed, not used
   let settled = false;
-  const fail = msg => { if (settled || NET.peer !== peer) return; settled = true; onFail(msg); };
+  // one clock for the whole attempt: reaching the matchmaker can hang as long as the link to the host can
+  const timer = setTimeout(() => fail(peer.open ? 'بازی با این کد جواب نداد؛ کد را دوباره بررسی کن' : 'سرور اتصال جواب نداد؛ اینترنت را بررسی کن'), 15000);
+  const fail = msg => {
+    clearTimeout(timer);
+    if (settled || NET.peer !== peer) return; settled = true;
+    try { peer.destroy(); } catch (e) { /* closed */ }
+    onFail(msg);
+  };
   peer.on('open', () => {
+    if (settled) return;
     const c = peer.connect(PEER_PREFIX + code, { reliable: true });
-    const timer = setTimeout(() => fail('بازی با این کد جواب نداد؛ کد را دوباره بررسی کن'), 12000);
     c.on('open', () => { clearTimeout(timer); if (settled || NET.peer !== peer) { try { c.close(); } catch (e) { /* closed */ } return; } settled = true; onConn(wrapPeerConn(c)); });
+    c.on('error', () => fail('اتصال به میزبان برقرار نشد'));
+    c.on('close', () => fail('اتصال به میزبان برقرار نشد'));
   });
-  peer.on('error', e => fail(e.type === 'peer-unavailable' ? 'بازی‌ای با این کد پیدا نشد' : e.type === 'network' || e.type === 'server-error' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type));
+  peer.on('error', e => fail(e.type === 'peer-unavailable' ? 'بازی‌ای با این کد پیدا نشد' : e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error' || e.type === 'socket-closed' ? 'سرور اتصال در دسترس نیست؛ اینترنت را بررسی کن' : 'خطای اتصال: ' + e.type));
 }
 // ---------- setup screen and lobby ----------
 // LOBBY is the host's truth (solo counts as hosting for nobody); a guest holds the copy the host sends
@@ -3401,7 +3429,7 @@ function dropPeer(p, kicked) {
     netSend({ t: 'toast', m: 'ارتباط ' + TEAM_NAME[p.seat] + ' قطع شد؛ بازی متوقف شد تا برگردد', w: true });
     netBanner(); return;
   }
-  if (i >= 0) { if (kicked) LOBBY.seats.splice(i, 1); else { LOBBY.seats[i] = { kind: 'open', ally: LOBBY.seats[i].ally }; } }
+  if (i >= 0) { if (kicked) LOBBY.seats.splice(i, 1); else { LOBBY.seats[i] = { kind: 'open', ally: LOBBY.seats[i].ally, tok: LOBBY.seats[i].tok }; } }
   lobbyChanged();
 }
 // seats of the battle whose player is not connected right now
@@ -3424,11 +3452,11 @@ function admit(p, tok) {
     if (NET.awayPause && !awaySeats().length) { NET.awayPause = false; G.paused = false; $('pauseBtn').textContent = 'توقف'; notifyAll('همه برگشتند؛ بازی ادامه پیدا کرد'); }
     netBanner(); return;
   }
-  let i = LOBBY.seats.findIndex(x => x.kind === 'human' && x.tok === p.tok);
+  let i = LOBBY.seats.findIndex(x => (x.kind === 'human' || x.kind === 'open') && x.tok === p.tok);
   if (i < 0) i = LOBBY.seats.findIndex(x => x.kind === 'open');
   if (i < 0 && LOBBY.seats.length < MAPS[LOBBY.mapId].seats) { LOBBY.seats.push({ kind: 'open', ally: freeTeam() }); i = LOBBY.seats.length - 1; }
   if (i < 0) { safeSend(p.conn, { t: 'full', m: 'لابی پر است' }); return; }
-  const back = LOBBY.seats[i].kind === 'human';
+  const back = LOBBY.seats[i].tok === p.tok;
   LOBBY.seats[i] = { kind: 'human', ally: LOBBY.seats[i].ally, pid: p.id, tok: p.tok };
   p.ready = true; p.rx = Date.now(); NET.peers.push(p);
   toast(back ? 'دوستت دوباره وصل شد' : 'دوستت وارد لابی شد'); lobbyChanged();
@@ -3464,19 +3492,26 @@ function openLobby() {
   }
   $('lbCode').textContent = '…'; $('lbLink').textContent = ''; $('lbQr').hidden = true;
   renderSetup(); setStatus('در حال آماده‌سازی لابی…');
-  openHost(NET.code, hostConn, code => { showInvite(code); renderSetup(); }, err => { if (err === 'retry') { NET.role = 'solo'; openLobby(); return; } closeLobby(); setStatus(err, true); });
+  openHost(NET.code, hostConn, code => { showInvite(code); renderSetup(); }, err => { if (err === 'retry') { NET.role = 'solo'; openLobby(); return; } closeLobby(); setStatus(err, true); }, hostState);
 }
 // a restored battle opens the same code again, so friends' browsers find it; the matchmaker may hold the old name for a while
 function reopenHost(code, tries = 0) {
   if (window.claude || !G || G.over) return;
   if (NET.peer) try { NET.peer.destroy(); } catch (e) { /* closed */ }
   NET.peer = null; NET.role = 'host'; NET.code = code; NET.hostErr = '';
+  // friends' browsers only know this code, so keep trying it for as long as the battle is open
   openHost(code, hostConn, () => { NET.hostErr = ''; netBanner(); }, err => {
     if (NET.role !== 'host' || NET.code !== code) return;
-    if (err === 'retry' && tries < 40) { NET.hostErr = 'در حال باز کردن دوبارهٔ کد بازی…'; netBanner(); setTimeout(() => { if (NET.role === 'host' && NET.code === code) reopenHost(code, tries + 1); }, 3000); return; }
-    NET.hostErr = err === 'retry' ? 'کد بازی هنوز آزاد نشده است' : err; netBanner();
-  });
+    NET.hostErr = err === 'retry' ? 'در حال باز کردن دوبارهٔ کد بازی…' : err + ' · دوباره تلاش می‌کنیم…'; netBanner();
+    setTimeout(() => { if (NET.role === 'host' && NET.code === code && !NET.peer?.open) reopenHost(code, tries + 1); }, Math.min(10000, 3000 + tries * 1000));
+  }, hostState);
   netBanner();
+}
+// the host lost or got back the matchmaker; links already open keep working meanwhile
+function hostState(msg) {
+  if (NET.role !== 'host') return;
+  NET.hostErr = msg; netBanner();
+  if (!inBattle() && !$('startOv').hidden) { if (msg) setStatus(msg, true); else renderSetup(); }
 }
 function showInvite(code) {
   $('lbCode').textContent = code;
@@ -3522,7 +3557,7 @@ function joinGame(code, opts = {}) {
   const keepMe = ME, rejoin = opts.rejoin ? NET.rejoin || { code, tok, n: 0 } : null;
   leaveNet();
   NET.role = 'guest'; NET.joined = { code, tok }; NET.rx = Date.now();
-  if (rejoin) { NET.rejoin = rejoin; rejoin.n++; ME = keepMe; netBanner(); }
+  if (rejoin) { NET.rejoin = rejoin; rejoin.n++; rejoin.at = Date.now(); ME = keepMe; netBanner(); if (!inBattle()) setStatus(rejoinText(rejoin), true); }
   else setStatus('در حال پیوستن به لابی ' + code + '…');
   openGuest(code, conn => {
     NET.conn = conn; NET.rx = Date.now();
@@ -3565,20 +3600,25 @@ function joinGame(code, opts = {}) {
     });
     conn.onClose(() => { if (NET.conn !== conn || NET.role !== 'guest') return; lostHost(); });
   }, err => {
-    if (rejoin && NET.rejoin === rejoin) { const n = rejoin.n; setTimeout(() => { if (NET.rejoin === rejoin && rejoin.n === n) joinGame(code, { tok, rejoin: true }); }, 3000); return; }
+    if (rejoin && NET.rejoin === rejoin) {
+      // a lobby is not worth knocking on forever (the host may have closed it); a battle is, until the player leaves it
+      if (!inBattle() && rejoin.n >= 20) { leaveNet(); clearGuestSession(); backToSolo(); setStatus('میزبان دیگر جواب نمی‌دهد', true); return; }
+      const n = rejoin.n; setTimeout(() => { if (NET.rejoin === rejoin && rejoin.n === n) joinGame(code, { tok, rejoin: true }); }, Math.min(5000, 1000 + n * 500)); return;
+    }
     leaveNet(); renderSetup(); setStatus(err, true);
   });
 }
-// the link to the host broke: mid-battle we keep the screen and keep knocking; in the lobby we go back to playing alone
+// the link to the host broke: in the battle or the lobby we keep the screen and keep knocking with the same token
 function lostHost() {
   if (NET.role !== 'guest') return;
-  if (inBattle() && NET.joined) { G.paused = true; const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); return; }
+  if (NET.joined && (inBattle() || !$('startOv').hidden)) { if (inBattle()) G.paused = true; const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); return; }
   leaveNet(); toast('ارتباط با میزبان قطع شد', true); backToSolo(); setStatus('ارتباط با میزبان قطع شد', true);
 }
+const rejoinText = r => 'ارتباط با میزبان قطع شد؛ در حال وصل شدن دوباره' + (r.n > 1 ? ' (تلاش ' + fa(r.n) + ')' : '') + '…';
 function netBanner() {
   const el = $('netWait'); if (!el) return;
   let text = '', btn = '';
-  if (NET.role === 'guest' && NET.rejoin) { text = 'ارتباط با میزبان قطع شد؛ در حال وصل شدن دوباره' + (NET.rejoin.n > 1 ? ' (تلاش ' + fa(NET.rejoin.n) + ')' : '') + '…'; btn = 'ترک نبرد'; }
+  if (NET.role === 'guest' && NET.rejoin) { if (inBattle()) { text = rejoinText(NET.rejoin); btn = 'ترک نبرد'; } }
   else if (NET.role === 'host' && inBattle()) {
     const away = awaySeats();
     if (NET.hostErr) text = NET.hostErr;
@@ -3594,13 +3634,15 @@ $('netWaitBtn').addEventListener('click', () => {
 // heartbeats: friends say they are still here, the host says it is (its snapshots stop while its tab is hidden)
 setInterval(() => {
   const now = Date.now();
-  if (NET.role === 'guest' && NET.conn) {
-    safeSend(NET.conn, { c: 'ping' });
-    if (inBattle() && !NET.rejoin && now - (NET.rx || now) > 9000) lostHost();
-    else if (NET.rejoin && now - (NET.rx || now) > 15000) { const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); }
+  if (NET.role === 'guest') {
+    if (NET.conn) safeSend(NET.conn, { c: 'ping' });
+    // the host went quiet: the link can be dead long before WebRTC itself says so
+    if (NET.conn && !NET.rejoin && now - (NET.rx || now) > 9000 && (inBattle() || !$('startOv').hidden)) lostHost();
+    // an attempt that never settled (no answer, no error) is started again, so nothing hangs on "connecting"
+    else if (NET.rejoin && now - (NET.rejoin.at || now) > 25000) { const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); }
   } else if (NET.role === 'host') {
     NET.peers.forEach(p => { if (p.ready) safeSend(p.conn, { t: 'ka' }); });
-    if (inBattle()) NET.peers.filter(p => p.seat >= 0 && now - p.rx > 15000).forEach(p => dropPeer(p, false));
+    NET.peers.filter(p => now - p.rx > 15000).forEach(p => dropPeer(p, false));
   }
   if (NET.role === 'guest' && inBattle()) saveGuestSession();
 }, 2000);
@@ -3610,6 +3652,13 @@ function backToSolo() {
   $('endOv').hidden = true; $('startOv').hidden = false; if (G) G.paused = true; renderSetup();
 }
 $('leaveBtn').addEventListener('click', () => { leaveNet(); clearGuestSession(); backToSolo(); });
+// the network came back (or the tab did): knock now instead of waiting for the next try
+function netWake() {
+  if (NET.role === 'host' && NET.peer && NET.peer.wake) NET.peer.wake();
+  else if (NET.role === 'guest' && NET.rejoin && !NET.conn && NET.joined) { const j = NET.joined; joinGame(j.code, { tok: j.tok, rejoin: true }); }
+}
+addEventListener('online', netWake);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') netWake(); });
 $('joinBtn').addEventListener('click', () => joinGame($('joinCode').value));
 $('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') joinGame($('joinCode').value); });
 $('lbCopy').addEventListener('click', () => { const t = $('lbLink').textContent; navigator.clipboard?.writeText(t).then(() => toast('لینک کپی شد'), () => { const r = document.createRange(); r.selectNodeContents($('lbLink')); getSelection().removeAllRanges(); getSelection().addRange(r); }); });
