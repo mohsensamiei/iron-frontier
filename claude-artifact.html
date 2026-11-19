@@ -3114,6 +3114,20 @@ function snapshot() {
     p: G.proj.map(q => [Math.round(q.x), Math.round(q.y), Math.round(q.h || 0), q.stone ? 1 : 0])
   };
 }
+// every snapshot holds the whole battle, so one a link can't carry yet is simply skipped: a slow link gets
+// fewer snapshots instead of a queue that grows until nothing (keep-alives included) gets through in time.
+// The tile log and effects ride in a snapshot, so a friend who skipped some gets them in the next one they take.
+const SNAP_QUEUE_MAX = 96 * 1024;
+function sendSnapshots() {
+  const snap = snapshot(), tl = snap.tl, fx = snap.fx;
+  for (const p of NET.peers) {
+    if (p.seat < 0) continue;
+    p.tl = (p.tl || []).concat(tl); p.fx = (p.fx || []).concat(fx);
+    if (p.conn.queued && p.conn.queued() > SNAP_QUEUE_MAX) { if (p.fx.length > 200) p.fx = p.fx.slice(-200); continue; }
+    snap.tl = p.tl; snap.fx = p.fx; p.tl = []; p.fx = [];
+    safeSend(p.conn, JSON.stringify(snap));
+  }
+}
 function applySnapshot(s) {
   G.paused = s.paused; G.players.forEach((P, i) => { if (P.ai && s.ai[i]) { P.ai.waveT = s.ai[i][0]; P.ai.wave = s.ai[i][1]; } P.out = !!s.out[i]; }); G.res = s.res; G.pop = s.pop; G.cap = s.cap; G.stats = s.st;
   for (const i of s.tl) { tiles[i] = GRASS; amt[i] = 0; natureDirty = true; }
@@ -3189,7 +3203,9 @@ async function ensurePeer() {
 }
 function wrapPeerConn(c) {
   return {
-    send: o => c.send(JSON.stringify(o)),
+    send: o => c.send(typeof o === 'string' ? o : JSON.stringify(o)),
+    // bytes still waiting to leave this link: PeerJS's own queue plus the data channel's
+    queued: () => (c.bufferSize || 0) * 16384 + ((c.dataChannel && c.dataChannel.bufferedAmount) || 0),
     onData: fn => c.on('data', d => { try { fn(typeof d === 'string' ? JSON.parse(d) : d); } catch (e) { /* ignore bad packet */ } }),
     onClose: fn => { c.on('close', fn); c.on('error', fn); },
     close: () => c.close()
@@ -3209,7 +3225,7 @@ function bcConn(ch, me, other, hub) {
   const handlers = [], closers = [];
   hub.set(other, { data: d => handlers.forEach(f => f(d)), bye: () => closers.forEach(f => f()) });
   const post = m => { try { ch.postMessage(m); } catch (e) { /* channel closed */ } };
-  return { send: o => post({ from: me, to: other, d: JSON.parse(JSON.stringify(o)) }), onData: fn => handlers.push(fn), onClose: fn => closers.push(fn), close: () => { post({ from: me, to: other, bye: 1 }); hub.delete(other); } };
+  return { send: o => post({ from: me, to: other, d: typeof o === 'string' ? JSON.parse(o) : JSON.parse(JSON.stringify(o)) }), queued: () => 0, onData: fn => handlers.push(fn), onClose: fn => closers.push(fn), close: () => { post({ from: me, to: other, bye: 1 }); hub.delete(other); } };
 }
 async function openHost(code, onConn, onReady, onFail, onState) {
   if (useBC) {
@@ -3443,8 +3459,20 @@ function admit(p, tok) {
   const old = NET.peers.find(q => q.tok === p.tok);
   if (old) { NET.peers = NET.peers.filter(q => q !== old); try { old.conn.close(); } catch (e) { /* closed */ } }
   if (inBattle()) {
-    const seat = NET.game ? NET.game.toks[p.tok] : undefined;
-    if (seat === undefined) { safeSend(p.conn, { t: 'full', m: 'نبرد شروع شده است' }); return; }
+    let seat = NET.game ? NET.game.toks[p.tok] : undefined;
+    // that seat is already being played from another browser (it took the seat over): find this one another
+    if (seat !== undefined && NET.peers.some(q => q.seat === seat)) { delete NET.game.toks[p.tok]; seat = undefined; }
+    // anyone with the code may take over a seat whose player is gone, from any browser
+    if (seat === undefined) {
+      const away = awaySeats();
+      if (!away.length) { safeSend(p.conn, { t: 'full', m: 'نبرد شروع شده است و جای خالی‌ای در آن نیست' }); return; }
+      seat = away[0];
+      const was = Object.keys(NET.game.toks).filter(k => NET.game.toks[k] === seat);
+      was.forEach(k => delete NET.game.toks[k]);
+      NET.game.toks[p.tok] = seat;
+      // the lobby row of that seat now belongs to the newcomer, so a return to the lobby keeps them in it
+      const st = LOBBY.seats.find(x => was.includes(x.tok)); if (st) st.tok = p.tok;
+    }
     p.seat = seat; p.ready = true; p.rx = Date.now(); NET.peers.push(p);
     const st = LOBBY.seats.find(x => x.tok === p.tok); if (st) { st.kind = 'human'; st.pid = p.id; }
     sendInit(p, true);
@@ -3595,7 +3623,7 @@ function joinGame(code, opts = {}) {
       } else if (m.t === 'back') { $('endOv').hidden = true; $('startOv').hidden = false; saveGuestSession(); renderSetup(); }
       else if (m.t === 's' && G && NET.role === 'guest' && $('startOv').hidden) { applySnapshot(m); if (G.over) clearGuestSession(); }
       else if (m.t === 'toast') toast(String(m.m).slice(0, 120), !!m.w);
-      else if (m.t === 'full') { const was = !!NET.rejoin; leaveNet(); clearGuestSession(); if (was) { backToSolo(); toast('میزبان این نبرد را دیگر ندارد', true); } renderSetup(); setStatus(String(m.m || 'لابی پر است').slice(0, 80), true); }
+      else if (m.t === 'full') { const was = !!NET.rejoin; leaveNet(); clearGuestSession(); if (was) { backToSolo(); toast(String(m.m || 'میزبان این نبرد را دیگر ندارد').slice(0, 80), true); } renderSetup(); setStatus(String(m.m || 'لابی پر است').slice(0, 80), true); }
       else if (m.t === 'kicked') { leaveNet(); clearGuestSession(); backToSolo(); setStatus('میزبان لابی را بست', true); }
     });
     conn.onClose(() => { if (NET.conn !== conn || NET.role !== 'guest') return; lostHost(); });
@@ -3825,7 +3853,7 @@ function frame(now) {
     handlePan(dt);
     if (NET.role === 'guest') guestTick(dt);
     else if (!G.paused && !G.over) update(dt);
-    if (NET.role === 'host' && NET.peers.length && $('startOv').hidden) { NET.sendT -= dt; if (NET.sendT <= 0) { NET.sendT = 0.1; const snap = snapshot(); NET.peers.forEach(p => { if (p.seat >= 0) safeSend(p.conn, snap); }); } }
+    if (NET.role === 'host' && NET.peers.length && $('startOv').hidden) { NET.sendT -= dt; if (NET.sendT <= 0) { NET.sendT = 0.1; sendSnapshots(); } }
     if (NET.role !== 'guest' && inBattle() && !G.practice) { saveT -= dt; if (saveT <= 0) { saveT = 10; saveGame(); } }
   }
   draw(); hudTick(dt); if (G && G.pending) positionConfirm();
